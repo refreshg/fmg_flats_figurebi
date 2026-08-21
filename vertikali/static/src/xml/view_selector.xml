@@ -26,6 +26,12 @@
                     <button class="btn btn-sm btn-secondary" t-on-click="startDraw"
                             t-att-disabled="state.drawing">+ Draw zone</button>
                     <button class="btn btn-sm btn-secondary"
+                            t-on-click="applyShapeToAll"
+                            t-att-disabled="!state.selected"
+                            title="Copy the selected zone's outline to every other zone, keeping each floor's height">
+                        Apply shape to all
+                    </button>
+                    <button class="btn btn-sm btn-secondary"
                             t-on-click="distributeBetweenEnds"
                             title="Place the top and bottom zone, then spread the rest evenly between them">
                         Distribute
@@ -49,8 +55,11 @@
                     <button class="btn btn-link btn-sm p-0 ms-2" t-on-click="cancelDraw">cancel</button>
                 </t>
                 <t t-else="">
-                    Drag a zone to move it, or drag its corner handles to match the
-                    render's perspective. Shape changes are saved on Save.
+                    Drag a zone to move it, or drag a corner handle to reshape it.
+                    Click a small hollow handle on an edge to <b>add a bend</b>
+                    (for a stepped roofline); right-click a corner to remove it.
+                    Shape one band, then <b>Apply shape to all</b> — or place the
+                    top and bottom band and <b>Distribute</b>. Changes save on Save.
                 </t>
             </div>
 
@@ -99,12 +108,23 @@
                                      t-on-pointerdown="(ev) => this.startDragZone(ev, z)"/>
                         </t>
 
-                        <!-- Corner handles for the selected zone. -->
+                        <!-- Handles for the selected zone: corners to drag,
+                             edge midpoints to add a bend. -->
                         <t t-if="state.editing and state.selected">
+                            <t t-foreach="edgeMidpoints(state.selected.pts)" t-as="m" t-key="'m'+m.i">
+                                <circle class="o_vk_mid"
+                                        t-att-cx="m.x" t-att-cy="m.y" r="0.006"
+                                        t-on-click.stop="() => this.addPointAfter(state.selected, m.i)">
+                                    <title>Add a point here</title>
+                                </circle>
+                            </t>
                             <t t-foreach="state.selected.pts" t-as="p" t-key="p_index">
                                 <circle class="o_vk_vtx"
-                                        t-att-cx="p[0]" t-att-cy="p[1]" r="0.008"
-                                        t-on-pointerdown="(ev) => this.startDragVertex(ev, state.selected, p_index)"/>
+                                        t-att-cx="p[0]" t-att-cy="p[1]" r="0.009"
+                                        t-on-pointerdown="(ev) => this.startDragVertex(ev, state.selected, p_index)"
+                                        t-on-contextmenu.prevent.stop="() => this.removePoint(state.selected, p_index)">
+                                    <title>Drag to move · right-click to remove</title>
+                                </circle>
                             </t>
                         </t>
 

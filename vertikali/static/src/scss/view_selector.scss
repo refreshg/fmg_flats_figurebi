@@ -95,6 +95,21 @@
         &:hover { fill: #ffe0d9; }
     }
 
+    // Hollow, smaller than a corner: click to insert a bend on that edge.
+    .o_vk_mid {
+        fill: rgba(255, 255, 255, .55);
+        stroke: var(--vk-accent);
+        stroke-width: .002;
+        stroke-dasharray: .004 .003;
+        vector-effect: non-scaling-stroke;
+        cursor: copy;
+
+        &:hover {
+            fill: #fff;
+            stroke-dasharray: none;
+        }
+    }
+
     .o_vk_draft {
         fill: rgba(236, 48, 19, .14);
         stroke: var(--vk-accent);

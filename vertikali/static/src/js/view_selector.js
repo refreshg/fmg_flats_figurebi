@@ -348,21 +348,64 @@ export class VertikaliSelector extends Component {
     }
 
     /**
-     * Lay the zones out as evenly spaced bands between two reference zones.
-     * Dragging the top and bottom floor into place and interpolating the rest
-     * follows the render's perspective without dragging all 21 by hand.
+     * Insert a point midway along the edge that follows `index`, so a zone can
+     * be bent to follow a stepped roofline instead of being stuck as a quad.
+     */
+    addPointAfter(zone, index) {
+        const a = zone.pts[index];
+        const b = zone.pts[(index + 1) % zone.pts.length];
+        const mid = [
+            Math.round(((a[0] + b[0]) / 2) * 10000) / 10000,
+            Math.round(((a[1] + b[1]) / 2) * 10000) / 10000,
+        ];
+        zone.pts.splice(index + 1, 0, mid);
+        this.state.dirty.add(zone.id);
+    }
+
+    removePoint(zone, index) {
+        if (zone.pts.length <= 3) {
+            this.notification.add("A zone needs at least 3 points.", { type: "warning" });
+            return;
+        }
+        zone.pts.splice(index, 1);
+        this.state.dirty.add(zone.id);
+    }
+
+    /** Midpoints of every edge, used to render the "add point" handles. */
+    edgeMidpoints(pts) {
+        return pts.map((p, i) => {
+            const q = pts[(i + 1) % pts.length];
+            return { i, x: (p[0] + q[0]) / 2, y: (p[1] + q[1]) / 2 };
+        });
+    }
+
+    /**
+     * Lay the zones out between the first and last, interpolating point by
+     * point. Placing the top and bottom floor then spreads the rest along the
+     * render's perspective instead of dragging all 21 by hand.
+     *
+     * Works with any point count as long as the two reference zones agree:
+     * a stepped roofline needs the same bend on both ends to interpolate.
      */
     distributeBetweenEnds() {
-        const zones = this.state.zones.filter((z) => z.pts.length === 4);
+        const zones = this.state.zones;
         if (zones.length < 3) {
             this.notification.add(
-                "Need at least 3 four-point zones to distribute.", { type: "warning" });
+                "Need at least 3 zones to distribute.", { type: "warning" });
             return;
         }
         const first = zones[0];
         const last = zones[zones.length - 1];
+        if (first.pts.length !== last.pts.length) {
+            this.notification.add(
+                `The first zone has ${first.pts.length} points and the last has ` +
+                `${last.pts.length}. Give both the same number of points ` +
+                `(use the small + handles on the edges), then distribute.`,
+                { type: "warning" }
+            );
+            return;
+        }
         const n = zones.length - 1;
-        // Corner-wise interpolation, so a sloping roofline stays sloping.
         zones.forEach((z, i) => {
             if (i === 0 || i === n) {
                 return;
@@ -377,6 +420,36 @@ export class VertikaliSelector extends Component {
         this.notification.add(
             `Distributed ${n - 1} zone(s) between the first and last.`,
             { type: "success" });
+    }
+
+    /**
+     * Copy the selected zone's outline onto every other zone, keeping each
+     * one's vertical position. Shaping one band around a stepped roofline and
+     * applying it everywhere beats repeating the same bends 21 times.
+     */
+    applyShapeToAll() {
+        const src = this.state.selected;
+        if (!src) {
+            this.notification.add("Select the zone to copy first.", { type: "warning" });
+            return;
+        }
+        const srcTop = Math.min(...src.pts.map((p) => p[1]));
+        let n = 0;
+        for (const z of this.state.zones) {
+            if (z.id === src.id) {
+                continue;
+            }
+            // Offset by the difference in vertical position, so each band
+            // keeps its own floor while adopting the outline.
+            const dy = Math.min(...z.pts.map((p) => p[1])) - srcTop;
+            z.pts = src.pts.map(([x, y]) => [
+                x,
+                Math.min(1, Math.max(0, Math.round((y + dy) * 10000) / 10000)),
+            ]);
+            this.state.dirty.add(z.id);
+            n++;
+        }
+        this.notification.add(`Applied the outline to ${n} zone(s).`, { type: "success" });
     }
 }
 
