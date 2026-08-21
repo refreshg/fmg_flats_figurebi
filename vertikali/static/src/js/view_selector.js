@@ -8,11 +8,11 @@ import { Component, onWillStart, onWillUnmount, useRef, useState } from "@odoo/o
  * Renders a vertikali.view image with its polygons drawn on top as clickable
  * SVG regions, and lets a manager reshape or draw those regions in place.
  *
- * Geometry: points are stored normalized (0..1) against the *image*, not the
- * container. The SVG is sized and positioned onto the rendered image box
- * (letterboxed by object-fit: contain), so a zone stays glued to the same spot
- * on the render at any window size or aspect ratio. Stretching the SVG over
- * the container instead would drift as soon as the two ratios differ.
+ * Geometry: points are stored normalized (0..1) against the *image*. The image
+ * and the SVG share one CSS grid cell, so the browser keeps the overlay
+ * exactly on the picture and clicks normalize against that same frame --
+ * measuring the picture in JS and positioning the overlay from it meant any
+ * stale layout showed up as a drifted, wrongly-proportioned overlay.
  *
  * Real renders are photographs in perspective: floors slope and wings sit at
  * different heights, so zones are arbitrary quadrilaterals dragged into place
@@ -876,16 +876,30 @@ export class VertikaliSelector extends Component {
      * copy keeps the outline, so only its position needs adjusting.
      */
     async duplicateDown() {
+        await this.duplicateBy(1);
+    }
+
+    async duplicateUp() {
+        await this.duplicateBy(-1);
+    }
+
+    /** Copy the selected zone one band up (-1) or down (+1). */
+    async duplicateBy(direction) {
         const src = this.state.selected;
         if (!src) {
             this.notification.add("Select a zone to copy first.", { type: "warning" });
             return;
         }
-        const step = this.bandStep(src);
+        const step = this.bandStep(src) * direction;
         const pts = src.pts.map(([x, y]) => [
             x,
-            Math.min(1, Math.round((y + step) * 10000) / 10000),
+            Math.min(1, Math.max(0, Math.round((y + step) * 10000) / 10000)),
         ]);
+        const ys = pts.map((p) => p[1]);
+        if (Math.max(...ys) <= 0 || Math.min(...ys) >= 1) {
+            this.notification.add("No room left in that direction.", { type: "warning" });
+            return;
+        }
         await this.createZone(pts);
     }
 
@@ -1016,6 +1030,61 @@ export class VertikaliSelector extends Component {
         }
     }
 
+    /**
+     * Point a facade zone at a floor. A zone with no floor leads nowhere, so
+     * this has to be reachable while drawing rather than only in a form.
+     */
+    async assignFloor(zone, floor) {
+        const n = parseInt(floor, 10);
+        const vals = { floor: Number.isNaN(n) ? false : n, name: `Floor ${n}` };
+        // Wire it to that floor's plan too, so the drill-down works at once.
+        const target = this.floorList.find((v) => v.floor === n);
+        vals.target_view_id = target ? target.id : false;
+        try {
+            await this.orm.write("vertikali.polygon", [zone.id], vals);
+            zone.floor = vals.floor;
+            zone.name = vals.name;
+            zone.target_view_id = target ? [target.id, target.name] : false;
+        } catch (e) {
+            this.notification.add(e.message || String(e), { type: "danger" });
+        }
+    }
+
+    /**
+     * Number the zones top to bottom from a starting storey. Tracing 21 bands
+     * and then setting each floor by hand is the slow part, not the drawing.
+     */
+    async autoNumberZones() {
+        const zones = [...this.state.zones];
+        if (!zones.length) {
+            return;
+        }
+        const start = window.prompt(
+            "Top zone is which floor? (numbering runs downwards)",
+            String(this.state.block?.floors || zones.length + 1)
+        );
+        if (!start) {
+            return;
+        }
+        let floor = parseInt(start, 10);
+        if (Number.isNaN(floor)) {
+            return;
+        }
+        // Top of the image first, so the order matches the building.
+        zones.sort((a, b) => {
+            const ay = Math.min(...a.pts.map((p) => p[1]));
+            const by = Math.min(...b.pts.map((p) => p[1]));
+            return ay - by;
+        });
+        let done = 0;
+        for (const z of zones) {
+            await this.assignFloor(z, floor);
+            floor--;
+            done++;
+        }
+        this.notification.add(`Numbered ${done} zones.`, { type: "success" });
+    }
+
     /** Shift the selected zone by a small step, for fine alignment. */
     nudge(dy) {
         const z = this.state.selected;
@@ -1137,87 +1206,8 @@ export class VertikaliSelector extends Component {
             { type: "success" });
     }
 
-    /**
-     * Stack N copies of the selected zone downwards, each offset by one band
-     * height. Traces the whole facade from a single hand-drawn band.
-     */
-    async repeatDown() {
-        const src = this.state.selected;
-        if (!src) {
-            this.notification.add("Select a zone to repeat first.", { type: "warning" });
-            return;
-        }
-        const answer = window.prompt("How many copies below this one?", "20");
-        if (!answer) {
-            return;
-        }
-        const count = Math.max(1, Math.min(60, parseInt(answer, 10) || 0));
-        const step = this.bandStep(src);
-
-        const vals = [];
-        for (let i = 1; i <= count; i++) {
-            const pts = src.pts.map(([x, y]) => [
-                x,
-                Math.min(1, Math.round((y + step * i) * 10000) / 10000),
-            ]);
-            // Stop once a copy would fall off the bottom of the image.
-            if (Math.min(...pts.map((p) => p[1])) >= 1) {
-                break;
-            }
-            vals.push({
-                name: `${src.name} +${i}`,
-                view_id: this.state.view.id,
-                points: JSON.stringify(pts),
-            });
-        }
-        if (!vals.length) {
-            this.notification.add("No room left below this zone.", { type: "warning" });
-            return;
-        }
-        try {
-            const ids = await this.orm.create("vertikali.polygon", vals);
-            const recs = await this.orm.read(
-                "vertikali.polygon", ids,
-                ["name", "floor", "points", "target_view_id", "product_tmpl_id"]
-            );
-            for (const rec of recs) {
-                this.state.zones.push({ ...rec, pts: this.parsePoints(rec.points) });
-            }
-            this.notification.add(`Added ${recs.length} copies.`, { type: "success" });
-        } catch (e) {
-            this.notification.add(e.message || String(e), { type: "danger" });
-        }
-    }
-
-    /**
-     * Copy the selected zone's outline onto every other zone, keeping each
-     * one's vertical position. Shaping one band around a stepped roofline and
-     * applying it everywhere beats repeating the same bends 21 times.
-     */
-    applyShapeToAll() {
-        const src = this.state.selected;
-        if (!src) {
-            this.notification.add("Select the zone to copy first.", { type: "warning" });
-            return;
-        }
-        const srcTop = Math.min(...src.pts.map((p) => p[1]));
-        let n = 0;
-        for (const z of this.state.zones) {
-            if (z.id === src.id) {
-                continue;
-            }
-            // Offset by the difference in vertical position, so each band
-            // keeps its own floor while adopting the outline.
-            const dy = Math.min(...z.pts.map((p) => p[1])) - srcTop;
-            z.pts = src.pts.map(([x, y]) => [
-                x,
-                Math.min(1, Math.max(0, Math.round((y + dy) * 10000) / 10000)),
-            ]);
-            this.state.dirty.add(z.id);
-            n++;
-        }
-        this.notification.add(`Applied the outline to ${n} zone(s).`, { type: "success" });
-    }
+    
+    
 }
 
 registry.category("actions").add("vertikali_selector", VertikaliSelector);

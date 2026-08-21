@@ -327,22 +327,22 @@
                     <button class="btn btn-sm btn-secondary" t-on-click="startDraw"
                             t-att-disabled="state.drawing">+ Draw zone</button>
                     <button class="btn btn-sm btn-secondary"
+                            t-on-click="duplicateUp"
+                            t-att-disabled="!state.selected or state.drawing"
+                            title="Copy the selected zone one band higher">
+                        Copy up
+                    </button>
+                    <button class="btn btn-sm btn-secondary"
                             t-on-click="duplicateDown"
                             t-att-disabled="!state.selected or state.drawing"
                             title="Copy the selected zone one band lower">
                         Copy down
                     </button>
                     <button class="btn btn-sm btn-secondary"
-                            t-on-click="repeatDown"
-                            t-att-disabled="!state.selected or state.drawing"
-                            title="Stack many copies below the selected zone">
-                        Repeat…
-                    </button>
-                    <button class="btn btn-sm btn-secondary"
-                            t-on-click="applyShapeToAll"
-                            t-att-disabled="!state.selected or state.drawing"
-                            title="Copy the selected zone's outline to every other zone, keeping each floor's height">
-                        Shape → all
+                            t-on-click="autoNumberZones"
+                            t-att-disabled="!state.zones.length or state.drawing"
+                            title="Number the zones downwards from a starting floor and link each to its plan">
+                        Number floors…
                     </button>
                     <button class="btn btn-sm btn-secondary"
                             t-on-click="distributeBetweenEnds"
@@ -376,10 +376,11 @@
                     <button class="btn btn-link btn-sm p-0 ms-2" t-on-click="cancelDraw">cancel</button>
                 </t>
                 <t t-else="">
-                    Trace one band with <b>+ Draw zone</b> (any number of points),
-                    then <b>Copy down</b> or <b>Repeat…</b> to stack the facade.
-                    Drag a zone or its corners to adjust. Select a zone and press
-                    <b>Delete</b> to remove it. Changes save on <b>Save</b>.
+                    Trace one band with <b>+ Draw zone</b>, then <b>Copy up</b> /
+                    <b>Copy down</b> to stack the facade. Give each band its
+                    storey with <b>Number floors…</b> — a zone without a floor
+                    opens nothing. Select a zone and press <b>Delete</b> to
+                    remove it. Changes save on <b>Save</b>.
                 </t>
             </div>
 
@@ -709,6 +710,16 @@
                                     t-on-click="() => this.nudge(0.004)"
                                     title="Move down">↓</button>
                         </div>
+                        <!-- Which floor this zone opens. Without it the zone
+                             is drawn but leads nowhere. -->
+                        <div t-if="state.editing and state.mode === 'facade'" class="mt-2">
+                            <label class="o_vk_kicker d-block mb-1">Opens floor</label>
+                            <input type="number" class="o_vk_num w-100"
+                                   t-att-value="state.selected.floor or ''"
+                                   placeholder="e.g. 12"
+                                   t-on-change="(ev) => this.assignFloor(state.selected, ev.target.value)"/>
+                        </div>
+
                         <button t-if="state.editing"
                                 class="btn btn-outline-danger btn-sm w-100 mt-2"
                                 t-on-click="() => this.deleteZone(state.selected)">
