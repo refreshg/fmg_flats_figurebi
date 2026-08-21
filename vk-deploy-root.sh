@@ -21,6 +21,9 @@ DB="odoo"
 ODOO_PY="/opt/odoo/odoo-19/venv/bin/python"
 ODOO_BIN="/opt/odoo/odoo-19/odoo-bin"
 ODOO_CONF="/etc/odoo/odoo.conf"
+# Absolute path: sudo's secure_path may omit /usr/sbin, and a bare `runuser`
+# then fails with exit 255 and no output at all.
+RUNUSER="/usr/sbin/runuser"
 
 case "${1:-}" in
     install) FLAG="-i" ;;
@@ -32,7 +35,7 @@ case "${1:-}" in
         echo "--- module files ---";    find "$DEST" -type f 2>&1 | head -20
         echo "--- addons_path ---";     grep addons_path "$ODOO_CONF" 2>&1
         echo "--- odoo user can read? ---"
-        runuser -u odoo -- test -r "$DEST/__manifest__.py" \
+        "$RUNUSER" -u odoo -- test -r "$DEST/__manifest__.py" \
             && echo "readable" || echo "NOT READABLE"
         echo "--- last deploy log ---"; tail -40 /tmp/vk-deploy-last.log 2>&1
         exit 0 ;;
@@ -58,7 +61,7 @@ systemctl stop odoo
 # the fact -- piping straight to tail loses the traceback on error.
 LOG="/tmp/vk-deploy-last.log"
 set +e
-runuser -u odoo -- "$ODOO_PY" "$ODOO_BIN" -c "$ODOO_CONF" -d "$DB" \
+"$RUNUSER" -u odoo -- "$ODOO_PY" "$ODOO_BIN" -c "$ODOO_CONF" -d "$DB" \
         "$FLAG" "$MODULE" --stop-after-init >"$LOG" 2>&1
 RC=$?
 set -e
