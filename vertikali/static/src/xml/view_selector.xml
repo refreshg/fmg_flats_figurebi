@@ -184,18 +184,23 @@
                 <div class="o_vk_stage flex-grow-1 position-relative" t-ref="stage"
                      t-att-class="{ 'o_vk_drawing': state.drawing }"
                      t-on-click="onStageClick">
-                    <img t-if="coverSrc(state.project)" t-att-src="coverSrc(state.project)"
-                         t-ref="img" class="o_vk_img" alt="" t-on-load="onImageLoad"/>
-                    <div t-else="" class="o_vk_noimg">
+                    <div t-if="!coverSrc(state.project)" class="o_vk_noimg">
                         <div>
                             <strong>No cover image</strong>
                             <div class="small">Upload one on the project to highlight blocks here.</div>
                         </div>
                     </div>
-                    <svg class="o_vk_svg" viewBox="0 0 1 1" preserveAspectRatio="none"
-                         t-attf-style="left:{{state.box.left}}px;top:{{state.box.top}}px;width:{{state.box.width}}px;height:{{state.box.height}}px">
+                    <!-- Image and overlay share one grid cell, so they line up
+                         without any measured geometry. -->
+                    <div t-else="" class="o_vk_frame" t-ref="frame">
+                    <img t-att-src="coverSrc(state.project)"
+                         t-ref="img" class="o_vk_img" alt="" t-on-load="onImageLoad"/>
+                    <svg class="o_vk_svg" viewBox="0 0 1 1" preserveAspectRatio="none">
+                        <!-- Existing outlines fade while a new one is traced,
+                             so they cannot be mistaken for what is being drawn. -->
                         <t t-foreach="projectBlocks" t-as="b" t-key="b.id">
                             <polygon t-if="b.points" class="o_vk_bzone"
+                                     t-att-class="{ 'o_vk_dim': state.drawing }"
                                      t-attf-style="fill:{{b.color}}"
                                      t-att-points="pointsAttr(b.points)"
                                      t-on-click="() => this.selectBlock(b)"/>
@@ -220,6 +225,7 @@
                             </t>
                         </t>
                     </svg>
+                    </div>
                     <div class="o_vk_hint">
                         <t t-if="!projectBlocks.length">
                             No blocks yet — press <b>+ add</b> on the right, then
@@ -553,10 +559,7 @@
                      t-att-class="{ 'o_vk_drawing': state.drawing }"
                      t-on-click="onStageClick">
 
-                    <img t-if="imageSrc" t-att-src="imageSrc" t-ref="img"
-                         class="o_vk_img" alt="View background"
-                         t-on-load="onImageLoad"/>
-                    <div t-else="" class="o_vk_noimg">
+                    <div t-if="!imageSrc" class="o_vk_noimg">
                         <div>
                             <strong>No image uploaded</strong>
                             <div class="small">
@@ -565,12 +568,14 @@
                         </div>
                     </div>
 
-                    <!-- Sized onto the rendered image box, not the container:
-                         object-fit letterboxes the image, so matching the
-                         container would drift whenever the ratios differ. -->
+                    <!-- Image and overlay share one grid cell, so the zones
+                         always cover exactly the picture. -->
+                    <div t-else="" class="o_vk_frame" t-ref="frame">
+                    <img t-att-src="imageSrc" t-ref="img"
+                         class="o_vk_img" alt="View background"
+                         t-on-load="onImageLoad"/>
                     <svg class="o_vk_svg" viewBox="0 0 1 1"
-                         preserveAspectRatio="none"
-                         t-attf-style="left:{{state.box.left}}px;top:{{state.box.top}}px;width:{{state.box.width}}px;height:{{state.box.height}}px">
+                         preserveAspectRatio="none">
 
                         <t t-foreach="state.zones" t-as="z" t-key="z.id">
                             <t t-set="zu" t-value="zoneUnit(z)"/>
@@ -641,6 +646,7 @@
                             </t>
                         </t>
                     </svg>
+                    </div>
 
                     <!-- Floor stepper, as on a printed plan: the storey you
                          are on, with its neighbours faded above and below. -->

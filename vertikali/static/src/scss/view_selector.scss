@@ -573,10 +573,6 @@
 
     // ---- stage ----
     .o_vk_stage {
-        // The overlay is absolutely positioned from state.box, which is
-        // measured relative to this element -- without a containing block
-        // here it anchors to an outer ancestor instead and the shapes drift
-        // sideways from where they were clicked.
         position: relative;
         overflow: hidden;
         display: flex;
@@ -584,11 +580,30 @@
         justify-content: center;
     }
 
+    // The image and the overlay are stacked in one grid cell, so the browser
+    // keeps them exactly on top of each other. Measuring the picture in JS and
+    // positioning the SVG from that measurement meant any stale layout showed
+    // up as a drifted, wrongly-proportioned overlay.
+    .o_vk_frame {
+        display: grid;
+        place-items: center;
+        max-width: 100%;
+        max-height: 100%;
+        min-height: 0;
+        position: relative;
+
+        > * { grid-area: 1 / 1; }
+    }
+
+    // No object-fit: the element is sized to the picture itself, so the frame
+    // (and therefore the overlay) is exactly the drawn area -- no letterbox to
+    // compensate for.
     .o_vk_img {
         display: block;
         max-width: 100%;
         max-height: 100%;
-        object-fit: contain;
+        width: auto;
+        height: auto;
     }
 
     .o_vk_noimg {
@@ -604,10 +619,11 @@
         border: 2px dashed var(--vk-rule);
     }
 
-    // Positioned onto the measured image box by inline style, so the zones
-    // stay glued to the render rather than to the container.
+    // Stacked over the image by the grid, so it always covers exactly the
+    // picture -- no inline geometry, nothing to drift.
     .o_vk_svg {
-        position: absolute;
+        width: 100%;
+        height: 100%;
         overflow: visible;
     }
 

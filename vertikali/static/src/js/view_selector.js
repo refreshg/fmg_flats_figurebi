@@ -27,6 +27,7 @@ export class VertikaliSelector extends Component {
         this.action = useService("action");
         this.notification = useService("notification");
         this.imgRef = useRef("img");
+        this.frameRef = useRef("frame");
         this.stageRef = useRef("stage");
 
         this.state = useState({
@@ -714,23 +715,16 @@ export class VertikaliSelector extends Component {
         if (!width || !height) {
             return [0, 0];
         }
-        // Measure against the rendered image. It is the thing the normalized
-        // coordinates describe, so its rect is the only correct reference --
-        // the overlay and the stage can each be sized differently.
-        const img = this.imgRef.el;
-        if (img) {
-            const r = img.getBoundingClientRect();
-            // object-fit: contain letterboxes the picture inside the element,
-            // so back out the bars before normalizing.
-            const scale = Math.min(r.width / img.naturalWidth, r.height / img.naturalHeight);
-            const dw = img.naturalWidth * scale;
-            const dh = img.naturalHeight * scale;
-            const dx = r.left + (r.width - dw) / 2;
-            const dy = r.top + (r.height - dh) / 2;
-            if (dw && dh) {
+        // The frame is exactly the picture -- the image sizes it and the SVG
+        // fills it -- so one rect serves both the click and the drawing. No
+        // letterbox to back out, and nothing to fall out of sync.
+        const frame = this.frameRef.el;
+        if (frame) {
+            const r = frame.getBoundingClientRect();
+            if (r.width && r.height) {
                 return [
-                    Math.min(1, Math.max(0, Math.round(((ev.clientX - dx) / dw) * 10000) / 10000)),
-                    Math.min(1, Math.max(0, Math.round(((ev.clientY - dy) / dh) * 10000) / 10000)),
+                    Math.min(1, Math.max(0, Math.round(((ev.clientX - r.left) / r.width) * 10000) / 10000)),
+                    Math.min(1, Math.max(0, Math.round(((ev.clientY - r.top) / r.height) * 10000) / 10000)),
                 ];
             }
         }
