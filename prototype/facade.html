@@ -1,0 +1,348 @@
+<title>კორპუსი A — ფასადი</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Archivo:wght@400;600;800&family=Noto+Sans+Georgian:wght@400;600;800&display=swap');
+:root{
+  --color-bg:#f3f2f2; --color-surface:#eae9e9; --color-text:#201e1d;
+  --color-accent:#ec3013; --color-divider:color-mix(in srgb,#201e1d 40%,transparent);
+  --color-neutral-200:#eae7e7; --color-neutral-300:#d7d3d3; --color-neutral-400:#bab6b6;
+  --color-neutral-600:#7d7979; --color-neutral-700:#605d5d; --color-neutral-800:#444141;
+  --color-accent-100:#fff2ef; --color-accent-200:#ffe0d9; --color-accent-600:#dd2b0f; --color-accent-700:#ae1800;
+  --font-heading:"Archivo","Noto Sans Georgian",system-ui,sans-serif;
+  --font-body:"Archivo","Noto Sans Georgian",system-ui,sans-serif;
+  --space-2:8px; --space-3:12px; --space-4:16px; --space-6:24px;
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --color-bg:#1a1918; --color-surface:#232120; --color-text:#f3f2f2;
+    --color-divider:color-mix(in srgb,#f3f2f2 35%,transparent);
+    --color-neutral-200:#383535; --color-neutral-300:#4a4747; --color-neutral-400:#605d5d;
+    --color-neutral-600:#9b9797; --color-neutral-700:#bab6b6; --color-neutral-800:#d7d3d3;
+    --color-accent:#ff563c; --color-accent-100:#3d1710; --color-accent-200:#5c1e14;
+    --color-accent-600:#ff7a66; --color-accent-700:#ff9783;
+  }
+}
+:root[data-theme="dark"]{
+  --color-bg:#1a1918; --color-surface:#232120; --color-text:#f3f2f2;
+  --color-divider:color-mix(in srgb,#f3f2f2 35%,transparent);
+  --color-neutral-200:#383535; --color-neutral-300:#4a4747; --color-neutral-400:#605d5d;
+  --color-neutral-600:#9b9797; --color-neutral-700:#bab6b6; --color-neutral-800:#d7d3d3;
+  --color-accent:#ff563c; --color-accent-100:#3d1710; --color-accent-200:#5c1e14;
+  --color-accent-600:#ff7a66; --color-accent-700:#ff9783;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--color-bg);color:var(--color-text);font-family:var(--font-body);font-size:14px;line-height:1.45}
+h1,h3,h4{font-family:var(--font-heading);font-weight:800;margin:0;letter-spacing:-.01em}
+.wrap{max-width:1240px;margin:0 auto;padding:var(--space-6) var(--space-4)}
+.topbar{border-bottom:2px solid var(--color-divider);padding-bottom:var(--space-3);margin-bottom:var(--space-4)}
+.crumb{font-size:12px;color:var(--color-neutral-700);margin-bottom:6px}
+.crumb a{color:var(--color-neutral-700);text-decoration:none;border-bottom:1px solid var(--color-neutral-400)}
+.crumb a:hover{color:var(--color-accent-700);border-color:var(--color-accent)}
+.titlerow{display:flex;flex-wrap:wrap;gap:var(--space-4);align-items:baseline;justify-content:space-between}
+h1{font-size:clamp(20px,3vw,28px)}
+.sub{font-size:13px;color:var(--color-neutral-700)}
+
+.layout{display:grid;grid-template-columns:minmax(0,1fr) 320px;gap:var(--space-4);align-items:start}
+@media (max-width:900px){.layout{grid-template-columns:1fr}}
+
+/* ---- stage ---- */
+.stage{border:2px solid var(--color-divider);background:var(--color-surface);position:relative;overflow:hidden}
+.stage svg{display:block;width:100%;height:auto}
+
+/* floor bands drawn over the building */
+.band{fill:transparent;stroke:transparent;stroke-width:1;cursor:pointer;transition:fill .08s}
+.band:hover{fill:color-mix(in srgb,#ec3013 26%,transparent);stroke:#ec3013;stroke-width:2}
+.band:focus-visible{outline:none;fill:color-mix(in srgb,#ec3013 26%,transparent);stroke:#ec3013;stroke-width:3}
+.band.sel{fill:color-mix(in srgb,#ec3013 34%,transparent);stroke:#ec3013;stroke-width:2.5}
+.band.sold{cursor:not-allowed}
+.band.sold:hover{fill:color-mix(in srgb,#605d5d 34%,transparent);stroke:#605d5d}
+
+.flabel{font-family:var(--font-heading);font-weight:800;font-size:11px;fill:#fff;pointer-events:none;paint-order:stroke;stroke:#201e1d;stroke-width:3px;stroke-linejoin:round}
+.fcount{font-size:9px;fill:#fff;pointer-events:none;paint-order:stroke;stroke:#201e1d;stroke-width:3px;stroke-linejoin:round}
+
+.hint{position:absolute;left:0;bottom:0;right:0;background:color-mix(in srgb,#201e1d 78%,transparent);color:#f3f2f2;font-size:11.5px;padding:7px 10px}
+
+/* ---- side ---- */
+.card{border:2px solid var(--color-divider)}
+.card + .card{margin-top:var(--space-4)}
+.card-h{padding:10px var(--space-3);border-bottom:2px solid var(--color-divider);background:var(--color-surface);font-family:var(--font-heading);font-weight:800;font-size:13px}
+.card-b{padding:var(--space-3)}
+.kpis{display:grid;grid-template-columns:1fr 1fr}
+.kpi{padding:10px var(--space-3);border-right:1px solid var(--color-neutral-300);border-bottom:1px solid var(--color-neutral-300)}
+.kpi:nth-child(2n){border-right:0}
+.kpi-v{font-family:var(--font-heading);font-weight:800;font-size:20px;line-height:1.1}
+.kpi.acc .kpi-v{color:var(--color-accent-700)}
+.kpi-l{font-size:10.5px;text-transform:uppercase;letter-spacing:.05em;color:var(--color-neutral-600)}
+
+.flist{max-height:420px;overflow-y:auto}
+.frow{display:grid;grid-template-columns:38px 1fr auto;gap:8px;align-items:center;width:100%;
+  background:transparent;border:0;border-bottom:1px solid var(--color-neutral-300);
+  font:inherit;color:inherit;padding:8px 10px;cursor:pointer;text-align:left}
+.frow:hover{background:var(--color-accent-100)}
+.frow:focus-visible{outline:2px solid var(--color-accent);outline-offset:-2px}
+.frow.sel{background:var(--color-accent-200);box-shadow:inset 3px 0 0 var(--color-accent)}
+.frow.sold{color:var(--color-neutral-600);cursor:not-allowed}
+.frow.sold:hover{background:transparent}
+.fnum{font-family:var(--font-heading);font-weight:800;font-size:15px}
+.fmeta{font-size:11px;color:var(--color-neutral-700)}
+.fbar{width:52px;height:6px;background:var(--color-neutral-300);position:relative}
+.fbar i{position:absolute;left:0;top:0;bottom:0;background:var(--color-accent)}
+
+.btn{appearance:none;border:2px solid var(--color-accent);background:var(--color-accent);color:#fff;
+  font:inherit;font-weight:600;font-size:13px;padding:9px 14px;cursor:pointer;text-align:left;width:100%}
+.btn:hover{background:var(--color-accent-600);border-color:var(--color-accent-600)}
+.btn:focus-visible{outline:2px solid var(--color-accent);outline-offset:2px}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+.btn-sec{background:transparent;color:var(--color-text);border-color:var(--color-divider);margin-top:var(--space-2)}
+.btn-sec:hover{background:var(--color-accent-100);border-color:var(--color-accent);color:var(--color-accent-700)}
+.seg{display:flex;border:2px solid var(--color-divider);margin-bottom:var(--space-4)}
+.seg-opt{appearance:none;background:transparent;border:0;border-right:2px solid var(--color-divider);
+  font:inherit;font-size:12px;padding:6px 14px;cursor:pointer;color:var(--color-text);text-align:left}
+.seg-opt:last-child{border-right:0}
+.seg-opt:hover{background:var(--color-accent-100)}
+.seg-opt[aria-pressed="true"]{background:var(--color-accent);color:#fff;font-weight:600}
+.note{margin-top:var(--space-4);padding-top:var(--space-3);border-top:2px solid var(--color-divider);font-size:12px;color:var(--color-neutral-700)}
+.note b{color:var(--color-text)}
+.swapbox{font-size:11.5px;color:var(--color-neutral-700);border:1px dashed var(--color-neutral-400);padding:8px 10px;margin-top:var(--space-3)}
+code{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:11px;background:var(--color-neutral-200);padding:1px 4px}
+</style>
+
+<div class="wrap">
+  <div class="topbar">
+    <div class="crumb"><a href="#">გენგეგმა</a> / <a href="#">მწვანე კვარტალი</a> / კორპუსი A</div>
+    <div class="titlerow">
+      <h1>კორპუსი A — ფასადი</h1>
+      <div class="sub">22 სართული · 126 ბინა + კომერცია · ჩაბარება IV კვ. 2027</div>
+    </div>
+  </div>
+
+  <div class="seg" role="group" aria-label="ხედი">
+    <button class="seg-opt" aria-pressed="true">ფასადი</button>
+    <button class="seg-opt" aria-pressed="false" onclick="location.href='shakhmatka.html'">შახმატკა</button>
+    <button class="seg-opt" aria-pressed="false">სია</button>
+  </div>
+
+  <div class="layout">
+    <div>
+      <div class="stage">
+        <!-- viewBox 0..1000 x 0..760 — normalized so polygons scale with any image -->
+        <svg viewBox="0 0 1000 760" role="img" aria-label="კორპუს A-ს ფასადი სართულების არჩევით">
+          <defs>
+            <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stop-color="#c9dcea"/><stop offset="100%" stop-color="#e8eef2"/>
+            </linearGradient>
+            <linearGradient id="towerL" x1="0" y1="0" x2="1" y2="0">
+              <stop offset="0%" stop-color="#cfc9c2"/><stop offset="100%" stop-color="#e8e3dc"/>
+            </linearGradient>
+            <linearGradient id="towerR" x1="0" y1="0" x2="1" y2="0">
+              <stop offset="0%" stop-color="#efeae3"/><stop offset="100%" stop-color="#d8d2ca"/>
+            </linearGradient>
+            <linearGradient id="core" x1="0" y1="0" x2="1" y2="0">
+              <stop offset="0%" stop-color="#b9a894"/><stop offset="100%" stop-color="#cbbca9"/>
+            </linearGradient>
+          </defs>
+
+          <!-- sky + ground -->
+          <rect x="0" y="0" width="1000" height="760" fill="url(#sky)"/>
+          <ellipse cx="150" cy="700" rx="180" ry="42" fill="#8fa06f" opacity=".55"/>
+          <ellipse cx="880" cy="706" rx="190" ry="40" fill="#8fa06f" opacity=".5"/>
+          <rect x="0" y="712" width="1000" height="48" fill="#9a9a93"/>
+
+          <!-- ==== TOWER MASSING (stand-in for the render) ==== -->
+          <!-- left wing -->
+          <polygon points="250,180 420,140 420,712 250,712" fill="url(#towerL)"/>
+          <!-- recessed centre core -->
+          <polygon points="420,140 560,120 560,712 420,712" fill="url(#core)"/>
+          <!-- right wing (taller, front-facing) -->
+          <polygon points="560,120 760,150 760,712 560,712" fill="url(#towerR)"/>
+          <!-- crown -->
+          <polygon points="250,180 420,140 560,120 760,150 760,132 560,102 420,122 250,162" fill="#b7b1a9"/>
+          <!-- ground floor / commercial band -->
+          <rect x="250" y="660" width="510" height="52" fill="#6f6a64" opacity=".85"/>
+          <text x="262" y="692" class="fcount" style="stroke-width:2.5px">კომერციული ფართები — პირველი სართული</text>
+
+          <!-- window texture: generated per floor by script -->
+          <g id="tex"></g>
+          <!-- clickable floor bands: generated by script -->
+          <g id="bands"></g>
+        </svg>
+        <div class="hint">დააკლიკეთ სართულს ფასადზე — ან აირჩიეთ სიიდან. გაყიდული სართულები გამორთულია.</div>
+      </div>
+      <div class="swapbox">
+        <b>რეალურ ფოტოზე გადასართავად:</b> SVG-ში დაამატეთ
+        <code>&lt;image href="korpus-a.jpg" width="1000" height="760"/&gt;</code>
+        და წაშალეთ massing-ის polygon-ები. პოლიგონები <b>normalized</b> viewBox-შია (0–1000 × 0–760),
+        ამიტომ ნებისმიერ ზომაზე სწორად დაჯდება.
+      </div>
+    </div>
+
+    <div>
+      <div class="card">
+        <div class="card-h">კორპუსი A</div>
+        <div class="kpis">
+          <div class="kpi"><div class="kpi-v" id="k-tot">—</div><div class="kpi-l">ბინა</div></div>
+          <div class="kpi acc"><div class="kpi-v" id="k-free">—</div><div class="kpi-l">თავისუფალი</div></div>
+          <div class="kpi"><div class="kpi-v">22</div><div class="kpi-l">სართული</div></div>
+          <div class="kpi"><div class="kpi-v">3 180</div><div class="kpi-l">საშ. ₾/მ²</div></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-h">სართულები</div>
+        <div class="flist" id="flist"></div>
+      </div>
+
+      <div class="card">
+        <div class="card-b">
+          <div style="font-size:11px;text-transform:uppercase;letter-spacing:.05em;color:var(--color-neutral-600)">არჩეული</div>
+          <h3 id="sel-t" style="font-size:17px;margin:2px 0 4px">სართული არ არის არჩეული</h3>
+          <div class="fmeta" id="sel-m">აირჩიეთ სართული ფასადზე ან სიაში.</div>
+          <button class="btn" id="go" disabled style="margin-top:12px"
+            onclick="location.href='floor.html'">სართულის გეგმაზე გადასვლა</button>
+          <button class="btn btn-sec" id="go2" disabled onclick="location.href='shakhmatka.html'">შახმატკაზე ნახვა</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="note">
+    <b>პროტოტიპი.</b> ფასადი დროებით SVG-ით არის დახატული — თქვენი რენდერის პროპორციებით (22 სართული, სამი მოცულობა).
+    რეალურ მოდულში აქ თქვენი ფოტო ჩაჯდება, პოლიგონებს კი <b>ადმინი თავად დახაზავს</b> კონფიგურაციის გარემოში.
+  </div>
+</div>
+
+<script>
+// ---- demo data: 22 floors, 6 units each (floor 1 = commercial) ----
+const FLOORS = 22;
+const PER = 6;
+// Shared generator — identical to floor.html / shakhmatka.html so all three
+// screens report the same numbers for the same floor.
+const rnd = (s => () => (s = s*16807 % 2147483647) / 2147483647)(42);
+const data = [];
+for (let f = FLOORS; f >= 2; f--){
+  // higher floors sell better in this demo
+  const sold = Math.min(PER, Math.round(rnd()*3 + (f < 10 ? 2 : 0)));
+  const res  = Math.min(PER - sold, Math.round(rnd()*2));
+  const cells = [...Array(sold).fill("s"), ...Array(res).fill("r"),
+                 ...Array(PER - sold - res).fill("f")];
+  // consume the same shuffle draws, so the sequence stays in step
+  for (let i = cells.length - 1; i > 0; i--){
+    const j = Math.floor(rnd() * (i + 1));
+    [cells[i], cells[j]] = [cells[j], cells[i]];
+  }
+  data.push({floor:f, total:PER, cells:cells.join(""),
+             sold, res, free:PER - sold - res});
+}
+
+// ---- geometry: map floor -> trapezoid band across the 3 masses ----
+// Building occupies y 140..660 for floors 22..2 (ground floor is the dark band)
+const TOP = 132, BOT = 660;
+const bandH = (BOT - TOP) / (FLOORS - 1);
+// left/right edges interpolate because the tower is drawn in perspective
+function edges(y){
+  const t = (y - TOP) / (BOT - TOP);          // 0 at top, 1 at bottom
+  const xl = 250 + (1 - t) * 0;                // left edge is vertical
+  const xr = 760;
+  // top of tower is narrower on the left (roofline slopes)
+  const lTop = 162, lBot = 712;
+  const leftX = 250 + (y < 180 ? (180 - y) * 0.0 : 0);
+  return [250, 760];
+}
+
+const bandsG = document.getElementById("bands");
+const texG   = document.getElementById("tex");
+const listEl = document.getElementById("flist");
+const SVGNS  = "http://www.w3.org/2000/svg";
+
+data.forEach((d, i) => {
+  const y = TOP + i * bandH;
+  const h = bandH;
+  const [x1, x2] = edges(y);
+
+  // --- window texture rows (visual only) ---
+  for (let c = 0; c < 18; c++){
+    const wx = x1 + 10 + c * ((x2 - x1 - 20) / 18);
+    const r = document.createElementNS(SVGNS, "rect");
+    r.setAttribute("x", wx); r.setAttribute("y", y + h*0.22);
+    r.setAttribute("width", (x2-x1-20)/18 * 0.62); r.setAttribute("height", h*0.5);
+    r.setAttribute("fill", c > 6 && c < 11 ? "#8d99a6" : "#7f8b98");
+    r.setAttribute("opacity", .55);
+    texG.appendChild(r);
+  }
+
+  // --- clickable band ---
+  const g = document.createElementNS(SVGNS, "g");
+  const p = document.createElementNS(SVGNS, "rect");
+  p.setAttribute("x", x1); p.setAttribute("y", y);
+  p.setAttribute("width", x2 - x1); p.setAttribute("height", h);
+  p.setAttribute("class", "band" + (d.free === 0 ? " sold" : ""));
+  p.setAttribute("tabindex", d.free === 0 ? "-1" : "0");
+  p.setAttribute("role", "button");
+  p.setAttribute("data-f", d.floor);
+  p.setAttribute("aria-label", `სართული ${d.floor}, ${d.free} თავისუფალი`);
+  g.appendChild(p);
+
+  const t1 = document.createElementNS(SVGNS, "text");
+  t1.setAttribute("x", x1 + 8); t1.setAttribute("y", y + h*0.62);
+  t1.setAttribute("class", "flabel"); t1.textContent = d.floor;
+  g.appendChild(t1);
+
+  const t2 = document.createElementNS(SVGNS, "text");
+  t2.setAttribute("x", x2 - 8); t2.setAttribute("y", y + h*0.62);
+  t2.setAttribute("text-anchor", "end");
+  t2.setAttribute("class", "fcount");
+  t2.textContent = d.free ? `${d.free} თავის.` : "გაყიდულია";
+  g.appendChild(t2);
+
+  bandsG.appendChild(g);
+
+  // --- side list row ---
+  const b = document.createElement("button");
+  b.className = "frow" + (d.free === 0 ? " sold" : "");
+  b.dataset.f = d.floor;
+  if (d.free === 0) b.disabled = true;
+  b.innerHTML = `<span class="fnum">${d.floor}</span>
+    <span><span class="fmeta">${d.free} თავის. · ${d.res} ჯავშ. · ${d.sold} გაყ.</span></span>
+    <span class="fbar"><i style="width:${d.free/d.total*100}%"></i></span>`;
+  listEl.appendChild(b);
+});
+
+// commercial ground floor row
+const cb = document.createElement("button");
+cb.className = "frow"; cb.dataset.f = 1;
+cb.innerHTML = `<span class="fnum">1</span><span><span class="fmeta">კომერცია · 2 ერთეული</span></span><span class="fbar"><i style="width:100%"></i></span>`;
+listEl.appendChild(cb);
+
+// ---- selection (shared by facade + list) ----
+const selT = document.getElementById("sel-t"), selM = document.getElementById("sel-m");
+function select(f){
+  const d = data.find(x => x.floor === +f);
+  document.querySelectorAll(".band.sel").forEach(e => e.classList.remove("sel"));
+  document.querySelectorAll(".frow.sel").forEach(e => e.classList.remove("sel"));
+  document.querySelector(`.band[data-f="${f}"]`)?.classList.add("sel");
+  document.querySelector(`.frow[data-f="${f}"]`)?.classList.add("sel");
+  if (+f === 1){
+    selT.textContent = "სართული 1 — კომერცია";
+    selM.textContent = "2 კომერციული ერთეული · 118.4 მ²";
+  } else {
+    selT.textContent = `სართული ${f}`;
+    selM.textContent = `${d.total} ბინა · ${d.free} თავისუფალი · ${d.res} დაჯავშნილი · ${d.sold} გაყიდული`;
+  }
+  document.getElementById("go").disabled = false;
+  document.getElementById("go2").disabled = false;
+}
+bandsG.addEventListener("click", e => {
+  const b = e.target.closest(".band"); if (!b || b.classList.contains("sold")) return;
+  select(b.dataset.f);
+});
+bandsG.addEventListener("keydown", e => {
+  if (e.key !== "Enter" && e.key !== " ") return;
+  const b = e.target.closest(".band"); if (!b || b.classList.contains("sold")) return;
+  e.preventDefault(); select(b.dataset.f);
+});
+listEl.addEventListener("click", e => {
+  const r = e.target.closest(".frow"); if (!r || r.disabled) return;
+  select(r.dataset.f);
+});
+document.getElementById("k-free").textContent = data.reduce((s,d) => s + d.free, 0);
+document.getElementById("k-tot").textContent  = data.reduce((s,d) => s + d.total, 0);
+</script>

@@ -1,0 +1,102 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- Form: apartment data on its own notebook page, shown only for units. -->
+    <record id="view_product_template_form_vertikali" model="ir.ui.view">
+        <field name="name">product.template.form.vertikali</field>
+        <field name="model">product.template</field>
+        <field name="inherit_id" ref="product.product_template_form_view"/>
+        <field name="arch" type="xml">
+
+            <!-- The flag lives next to sale_ok so it reads as a product-kind switch. -->
+            <xpath expr="//div[@name='options']" position="inside">
+                <span name="vk_unit_option" class="d-inline-flex">
+                    <field name="vk_is_unit"/>
+                    <label for="vk_is_unit"/>
+                </span>
+            </xpath>
+
+            <xpath expr="//notebook" position="inside">
+                <page string="Unit" name="vertikali_unit" invisible="not vk_is_unit">
+                    <group>
+                        <group string="Location" name="vk_location">
+                            <field name="vk_building" placeholder="e.g. A"/>
+                            <field name="vk_floor"/>
+                            <field name="vk_rooms"/>
+                            <field name="vk_orientation"/>
+                        </group>
+                        <group string="Areas" name="vk_areas">
+                            <field name="vk_area_total"/>
+                            <field name="vk_area_living"/>
+                            <field name="vk_area_balcony"/>
+                        </group>
+                        <group string="Commercial" name="vk_commercial">
+                            <field name="vk_price_sqm"/>
+                            <field name="vk_handover"/>
+                        </group>
+                    </group>
+                </page>
+            </xpath>
+        </field>
+    </record>
+
+    <!-- List: the inventory screen from the approved mockup (1g). -->
+    <record id="view_product_template_list_vertikali" model="ir.ui.view">
+        <field name="name">product.template.list.vertikali</field>
+        <field name="model">product.template</field>
+        <field name="inherit_id" ref="product.product_template_tree_view"/>
+        <field name="arch" type="xml">
+            <xpath expr="//field[@name='default_code']" position="after">
+                <field name="vk_building" optional="show"/>
+                <field name="vk_floor" optional="show"/>
+                <field name="vk_rooms" optional="show"/>
+                <field name="vk_area_total" optional="show" sum="Total m²"/>
+                <field name="vk_price_sqm" optional="show"/>
+            </xpath>
+        </field>
+    </record>
+
+    <!-- Search: the filters the sales team actually uses. -->
+    <record id="view_product_template_search_vertikali" model="ir.ui.view">
+        <field name="name">product.template.search.vertikali</field>
+        <field name="model">product.template</field>
+        <field name="inherit_id" ref="product.product_template_search_view"/>
+        <field name="arch" type="xml">
+            <xpath expr="//search" position="inside">
+                <separator/>
+                <filter name="vk_units" string="Units"
+                        domain="[('vk_is_unit', '=', True)]"/>
+                <group expand="0" string="Unit Grouping">
+                    <filter name="vk_group_building" string="Building"
+                            context="{'group_by': 'vk_building'}"/>
+                    <filter name="vk_group_floor" string="Floor"
+                            context="{'group_by': 'vk_floor'}"/>
+                    <filter name="vk_group_rooms" string="Layout"
+                            context="{'group_by': 'vk_rooms'}"/>
+                </group>
+            </xpath>
+        </field>
+    </record>
+
+    <!-- Action scoped to units so the Estate menu never shows ordinary products. -->
+    <record id="action_vertikali_units" model="ir.actions.act_window">
+        <field name="name">Units</field>
+        <field name="res_model">product.template</field>
+        <field name="view_mode">list,kanban,form</field>
+        <field name="domain">[('vk_is_unit', '=', True)]</field>
+        <field name="context">{'default_vk_is_unit': True, 'default_type': 'consu'}</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">Create your first unit</p>
+            <p>Apartments are standard products flagged as units, so they reuse
+               pricing, inventory and the quotation flow.</p>
+        </field>
+    </record>
+
+    <!-- Project / building hierarchy reuses product categories. -->
+    <record id="action_vertikali_categories" model="ir.actions.act_window">
+        <field name="name">Projects &amp; Buildings</field>
+        <field name="res_model">product.category</field>
+        <field name="view_mode">list,form</field>
+    </record>
+
+</odoo>

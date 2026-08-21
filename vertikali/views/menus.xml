@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- Top-level app. Restricted to the sales team: this is an internal tool. -->
+    <menuitem id="menu_vertikali_root"
+              name="Estate"
+              groups="sales_team.group_sale_salesman"
+              sequence="15"/>
+
+    <menuitem id="menu_vertikali_inventory"
+              name="Inventory"
+              parent="menu_vertikali_root"
+              sequence="10"/>
+
+    <menuitem id="menu_vertikali_units"
+              name="Units"
+              parent="menu_vertikali_inventory"
+              action="action_vertikali_units"
+              sequence="10"/>
+
+    <menuitem id="menu_vertikali_categories"
+              name="Projects &amp; Buildings"
+              parent="menu_vertikali_inventory"
+              action="action_vertikali_categories"
+              groups="sales_team.group_sale_manager"
+              sequence="20"/>
+
+</odoo>

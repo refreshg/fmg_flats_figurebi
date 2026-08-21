@@ -1,0 +1,371 @@
+<title>პოლიგონების რედაქტორი</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Archivo:wght@400;600;800&family=Noto+Sans+Georgian:wght@400;600;800&display=swap');
+:root{
+  --color-bg:#f3f2f2; --color-surface:#eae9e9; --color-text:#201e1d;
+  --color-accent:#ec3013; --color-divider:color-mix(in srgb,#201e1d 40%,transparent);
+  --color-neutral-200:#eae7e7; --color-neutral-300:#d7d3d3; --color-neutral-400:#bab6b6;
+  --color-neutral-600:#7d7979; --color-neutral-700:#605d5d;
+  --color-accent-100:#fff2ef; --color-accent-200:#ffe0d9; --color-accent-600:#dd2b0f; --color-accent-700:#ae1800;
+  --font-heading:"Archivo","Noto Sans Georgian",system-ui,sans-serif;
+  --font-body:"Archivo","Noto Sans Georgian",system-ui,sans-serif;
+  --space-2:8px; --space-3:12px; --space-4:16px; --space-6:24px;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --color-bg:#1a1918; --color-surface:#232120; --color-text:#f3f2f2;
+  --color-divider:color-mix(in srgb,#f3f2f2 35%,transparent);
+  --color-neutral-200:#383535; --color-neutral-300:#4a4747; --color-neutral-400:#605d5d;
+  --color-neutral-600:#9b9797; --color-neutral-700:#bab6b6;
+  --color-accent:#ff563c; --color-accent-100:#3d1710; --color-accent-200:#5c1e14;
+  --color-accent-600:#ff7a66; --color-accent-700:#ff9783;
+}}
+:root[data-theme="dark"]{
+  --color-bg:#1a1918; --color-surface:#232120; --color-text:#f3f2f2;
+  --color-divider:color-mix(in srgb,#f3f2f2 35%,transparent);
+  --color-neutral-200:#383535; --color-neutral-300:#4a4747; --color-neutral-400:#605d5d;
+  --color-neutral-600:#9b9797; --color-neutral-700:#bab6b6;
+  --color-accent:#ff563c; --color-accent-100:#3d1710; --color-accent-200:#5c1e14;
+  --color-accent-600:#ff7a66; --color-accent-700:#ff9783;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--color-bg);color:var(--color-text);font-family:var(--font-body);font-size:14px;line-height:1.45}
+h1,h3{font-family:var(--font-heading);font-weight:800;margin:0;letter-spacing:-.01em}
+.wrap{max-width:1320px;margin:0 auto;padding:var(--space-6) var(--space-4)}
+.topbar{border-bottom:2px solid var(--color-divider);padding-bottom:var(--space-3);margin-bottom:var(--space-4)}
+.crumb{font-size:12px;color:var(--color-neutral-700);margin-bottom:6px}
+h1{font-size:clamp(19px,3vw,26px)}
+.sub{font-size:13px;color:var(--color-neutral-700);margin-top:4px}
+
+.toolbar{display:flex;flex-wrap:wrap;gap:var(--space-2);align-items:center;margin-bottom:var(--space-3)}
+.btn{appearance:none;border:2px solid var(--color-accent);background:var(--color-accent);color:#fff;
+  font:inherit;font-weight:600;font-size:13px;padding:8px 14px;cursor:pointer;text-align:left}
+.btn:hover{background:var(--color-accent-600);border-color:var(--color-accent-600)}
+.btn:focus-visible{outline:2px solid var(--color-accent);outline-offset:2px}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+.btn-sec{background:transparent;color:var(--color-text);border-color:var(--color-divider)}
+.btn-sec:hover:not(:disabled){background:var(--color-accent-100);border-color:var(--color-accent);color:var(--color-accent-700)}
+.btn-sm{font-size:12px;padding:6px 10px}
+.spacer{flex:1}
+.mode{font-size:12px;color:var(--color-neutral-700)}
+.mode b{color:var(--color-accent-700)}
+
+.layout{display:grid;grid-template-columns:minmax(0,1fr) 330px;gap:var(--space-4);align-items:start}
+@media (max-width:960px){.layout{grid-template-columns:1fr}}
+
+/* ---- canvas ---- */
+.stage{border:2px solid var(--color-divider);background:var(--color-surface);position:relative;overflow:hidden;min-height:300px}
+.stage.drawing{cursor:crosshair}
+.stage svg{display:block;width:100%;height:auto}
+.dropzone{padding:60px 20px;text-align:center;color:var(--color-neutral-600);font-size:13px}
+.dropzone.over{background:var(--color-accent-100);color:var(--color-accent-700)}
+.dropzone b{display:block;font-family:var(--font-heading);font-size:15px;color:var(--color-text);margin-bottom:6px}
+
+.poly{fill:color-mix(in srgb,#ec3013 22%,transparent);stroke:#ec3013;stroke-width:2;cursor:pointer}
+.poly:hover{fill:color-mix(in srgb,#ec3013 34%,transparent)}
+.poly.sel{fill:color-mix(in srgb,#ec3013 40%,transparent);stroke-width:3;stroke-dasharray:6 3}
+.draft{fill:color-mix(in srgb,#ec3013 16%,transparent);stroke:#ec3013;stroke-width:2;stroke-dasharray:5 4;pointer-events:none}
+.vtx{fill:#fff;stroke:#ec3013;stroke-width:2;cursor:grab}
+.vtx:hover{fill:#ffe0d9}
+.plabel{font-family:var(--font-heading);font-weight:800;font-size:12px;fill:#fff;pointer-events:none;
+  paint-order:stroke;stroke:#201e1d;stroke-width:3px;stroke-linejoin:round}
+.hint{position:absolute;left:0;right:0;bottom:0;background:color-mix(in srgb,#201e1d 80%,transparent);
+  color:#f3f2f2;font-size:11.5px;padding:7px 10px}
+
+/* ---- side ---- */
+.card{border:2px solid var(--color-divider)}
+.card + .card{margin-top:var(--space-4)}
+.card-h{padding:9px var(--space-3);border-bottom:2px solid var(--color-divider);background:var(--color-surface);
+  font-family:var(--font-heading);font-weight:800;font-size:13px;display:flex;justify-content:space-between;align-items:center}
+.count{font-family:var(--font-body);font-weight:400;font-size:11px;color:var(--color-neutral-600)}
+.card-b{padding:var(--space-3)}
+.plist{max-height:300px;overflow-y:auto}
+.prow{display:grid;grid-template-columns:1fr auto;gap:6px;align-items:center;width:100%;background:transparent;
+  border:0;border-bottom:1px solid var(--color-neutral-300);font:inherit;color:inherit;
+  padding:8px 10px;cursor:pointer;text-align:left}
+.prow:hover{background:var(--color-accent-100)}
+.prow.sel{background:var(--color-accent-200);box-shadow:inset 3px 0 0 var(--color-accent)}
+.pname{font-family:var(--font-heading);font-weight:600;font-size:13px}
+.pmeta{font-size:11px;color:var(--color-neutral-700)}
+.del{border:0;background:transparent;color:var(--color-neutral-600);cursor:pointer;font-size:16px;padding:2px 6px;line-height:1}
+.del:hover{color:var(--color-accent)}
+.field{margin-bottom:var(--space-3)}
+.field label{display:block;font-size:11px;text-transform:uppercase;letter-spacing:.05em;color:var(--color-neutral-600);margin-bottom:3px}
+.input{width:100%;font:inherit;font-size:13px;padding:7px 9px;border:2px solid var(--color-divider);
+  background:var(--color-bg);color:var(--color-text);border-radius:0}
+.input:focus{outline:2px solid var(--color-accent);outline-offset:-2px;border-color:var(--color-accent)}
+.empty{font-size:12.5px;color:var(--color-neutral-600);padding:var(--space-3)}
+.steps{font-size:12px;color:var(--color-neutral-700);padding-left:18px;margin:0}
+.steps li{margin-bottom:5px}
+pre{background:var(--color-neutral-200);border:1px solid var(--color-neutral-300);padding:10px;
+  font-family:ui-monospace,Menlo,Consolas,monospace;font-size:10.5px;overflow-x:auto;max-height:200px;margin:0}
+.note{margin-top:var(--space-4);padding-top:var(--space-3);border-top:2px solid var(--color-divider);font-size:12px;color:var(--color-neutral-700)}
+.note b{color:var(--color-text)}
+kbd{font-family:ui-monospace,monospace;font-size:11px;background:var(--color-neutral-200);
+  border:1px solid var(--color-neutral-400);padding:1px 5px}
+</style>
+
+<div class="wrap">
+  <div class="topbar">
+    <div class="crumb">Estate / კონფიგურაცია / ვიზუალური ხედები</div>
+    <h1>პოლიგონების რედაქტორი</h1>
+    <div class="sub">ატვირთეთ ფასადის ან გენგეგმის სურათი და დახაზეთ შესასვლელი ზონები — თითო სართული ან კორპუსი.</div>
+  </div>
+
+  <div class="toolbar">
+    <button class="btn" id="t-draw">+ ზონის დახაზვა</button>
+    <button class="btn btn-sec btn-sm" id="t-auto">ავტო-დაყოფა სართულებად…</button>
+    <button class="btn btn-sec btn-sm" id="t-undo" disabled>გაუქმება</button>
+    <button class="btn btn-sec btn-sm" id="t-img">სურათის შეცვლა</button>
+    <div class="spacer"></div>
+    <div class="mode" id="mode">რეჟიმი: <b>დათვალიერება</b></div>
+  </div>
+
+  <div class="layout">
+    <div>
+      <div class="stage" id="stage">
+        <div class="dropzone" id="dz">
+          <b>ჩააგდეთ სურათი აქ</b>
+          ან დააკლიკეთ ასარჩევად · PNG / JPG / WebP<br>
+          <span style="font-size:11.5px">დემოსთვის: „ავტო-დაყოფა სართულებად“ მუშაობს სურათის გარეშეც</span>
+        </div>
+        <svg id="svg" viewBox="0 0 1000 700" hidden>
+          <image id="bg" href="" x="0" y="0" width="1000" height="700" preserveAspectRatio="xMidYMid slice"/>
+          <g id="polys"></g>
+          <g id="draftg"></g>
+          <g id="verts"></g>
+        </svg>
+        <div class="hint" id="hint" hidden></div>
+      </div>
+      <input type="file" id="file" accept="image/*" hidden>
+    </div>
+
+    <div>
+      <div class="card">
+        <div class="card-h">ზონები <span class="count" id="cnt">0</span></div>
+        <div class="plist" id="plist"><div class="empty">ჯერ არცერთი ზონა არ არის დახაზული.</div></div>
+      </div>
+
+      <div class="card">
+        <div class="card-h">არჩეული ზონა</div>
+        <div class="card-b" id="editor">
+          <div class="empty" style="padding:0">აირჩიეთ ზონა სიიდან ან სურათზე.</div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-h">როგორ მუშაობს</div>
+        <div class="card-b">
+          <ol class="steps">
+            <li>ატვირთეთ ფასადის სურათი</li>
+            <li>„+ ზონის დახაზვა“ → დააკლიკეთ კუთხეებზე</li>
+            <li>დასრულება: <kbd>Enter</kbd>, ან ორმაგი კლიკი, ან პირველ წერტილზე დაბრუნება</li>
+            <li>მიაბით სართული/კორპუსი მარჯვენა პანელში</li>
+          </ol>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-h">შესანახი მონაცემი</div>
+        <div class="card-b"><pre id="json">[]</pre></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="note">
+    <b>ეს არის PRD-ის FR-9 — ყველაზე კრიტიკული კომპონენტი.</b>
+    კოორდინატები ინახება <b>normalized</b> სახით (0–1), ამიტომ სურათის ნებისმიერ ზომაზე სწორად ჯდება.
+    Odoo-ში ეს გახდება <code>vertikali.polygon</code> და OWL კომპონენტი.
+  </div>
+</div>
+
+<script>
+const svg = document.getElementById("svg"), stage = document.getElementById("stage");
+const polysG = document.getElementById("polys"), draftG = document.getElementById("draftg"), vertsG = document.getElementById("verts");
+const dz = document.getElementById("dz"), fileInput = document.getElementById("file");
+const listEl = document.getElementById("plist"), editorEl = document.getElementById("editor");
+const hint = document.getElementById("hint"), modeEl = document.getElementById("mode");
+const NS = "http://www.w3.org/2000/svg";
+const W = 1000, H = 700;
+
+let zones = [];        // {id,name,floor,pts:[[x,y]...] in viewBox coords}
+let mode = "view";     // view | draw
+let draft = [];        // current polygon points
+let selId = null, nextId = 1;
+
+// ---------- image ----------
+dz.addEventListener("click", () => fileInput.click());
+document.getElementById("t-img").addEventListener("click", () => fileInput.click());
+["dragenter","dragover"].forEach(ev => dz.addEventListener(ev, e => {e.preventDefault(); dz.classList.add("over")}));
+["dragleave","drop"].forEach(ev => dz.addEventListener(ev, e => {e.preventDefault(); dz.classList.remove("over")}));
+dz.addEventListener("drop", e => { const f = e.dataTransfer.files[0]; if (f) loadImg(f); });
+fileInput.addEventListener("change", e => { const f = e.target.files[0]; if (f) loadImg(f); });
+function loadImg(file){
+  const r = new FileReader();
+  r.onload = () => {
+    document.getElementById("bg").setAttribute("href", r.result);
+    dz.hidden = true; svg.hidden = false; hint.hidden = false;
+    setHint("დააკლიკეთ „+ ზონის დახაზვა“ დასაწყებად.");
+  };
+  r.readAsDataURL(file);
+}
+function setHint(t){ hint.textContent = t; hint.hidden = false; }
+
+// ---------- coordinate helper ----------
+function pt(e){
+  const r = svg.getBoundingClientRect();
+  return [ (e.clientX - r.left) / r.width * W, (e.clientY - r.top) / r.height * H ];
+}
+
+// ---------- draw mode ----------
+document.getElementById("t-draw").addEventListener("click", () => {
+  if (svg.hidden){ svg.hidden = false; dz.hidden = true; }   // allow drawing without an image
+  mode = "draw"; draft = []; renderDraft();
+  stage.classList.add("drawing");
+  modeEl.innerHTML = 'რეჟიმი: <b>ხაზვა</b>';
+  setHint("დააკლიკეთ კუთხეებზე. დასრულება: Enter / ორმაგი კლიკი. გაუქმება: Esc.");
+  document.getElementById("t-undo").disabled = false;
+});
+svg.addEventListener("click", e => {
+  if (mode !== "draw") return;
+  const p = pt(e);
+  // close if clicking near the first point
+  if (draft.length >= 3){
+    const d = Math.hypot(p[0]-draft[0][0], p[1]-draft[0][1]);
+    if (d < 14){ finish(); return; }
+  }
+  draft.push(p); renderDraft();
+});
+svg.addEventListener("dblclick", e => { if (mode === "draw") { e.preventDefault(); finish(); } });
+document.addEventListener("keydown", e => {
+  if (mode !== "draw") return;
+  if (e.key === "Enter") finish();
+  if (e.key === "Escape"){ mode = "view"; draft = []; renderDraft(); stage.classList.remove("drawing");
+    modeEl.innerHTML = 'რეჟიმი: <b>დათვალიერება</b>'; }
+});
+document.getElementById("t-undo").addEventListener("click", () => {
+  if (mode === "draw" && draft.length){ draft.pop(); renderDraft(); }
+  else if (zones.length){ zones.pop(); render(); }
+});
+
+function finish(){
+  if (draft.length < 3){ setHint("ზონას მინიმუმ 3 წერტილი სჭირდება."); return; }
+  const z = {id: nextId++, name: `ზონა ${zones.length+1}`, floor: "", pts: draft.slice()};
+  zones.push(z); draft = []; mode = "view";
+  stage.classList.remove("drawing");
+  modeEl.innerHTML = 'რეჟიმი: <b>დათვალიერება</b>';
+  selId = z.id; render(); renderDraft();
+  setHint("ზონა დაემატა. მიაბით სართული მარჯვნივ.");
+}
+
+// ---------- auto-split (the real time-saver for towers) ----------
+document.getElementById("t-auto").addEventListener("click", () => {
+  const n = prompt("რამდენი სართული გავყოთ?", "22");
+  if (!n) return;
+  const count = Math.max(1, Math.min(60, parseInt(n) || 0));
+  if (svg.hidden){ svg.hidden = false; dz.hidden = true; }
+  // split the middle 80% of the frame into horizontal bands, top floor first
+  const top = H*0.08, bot = H*0.92, x1 = W*0.25, x2 = W*0.76;
+  const bh = (bot - top) / count;
+  zones = []; nextId = 1;
+  for (let i = 0; i < count; i++){
+    const y = top + i*bh, fl = count - i;
+    zones.push({id: nextId++, name: `სართული ${fl}`, floor: String(fl),
+      pts: [[x1,y],[x2,y],[x2,y+bh],[x1,y+bh]]});
+  }
+  selId = null; render();
+  setHint(`${count} ზონა შეიქმნა. გადაათრიეთ წერტილები ფასადზე მოსარგებად.`);
+});
+
+// ---------- render ----------
+function render(){
+  polysG.innerHTML = ""; vertsG.innerHTML = "";
+  zones.forEach(z => {
+    const p = document.createElementNS(NS, "polygon");
+    p.setAttribute("points", z.pts.map(a => a.join(",")).join(" "));
+    p.setAttribute("class", "poly" + (z.id === selId ? " sel" : ""));
+    p.addEventListener("click", ev => { ev.stopPropagation(); if (mode==="draw") return; selId = z.id; render(); });
+    polysG.appendChild(p);
+
+    const c = centroid(z.pts);
+    const t = document.createElementNS(NS, "text");
+    t.setAttribute("x", c[0]); t.setAttribute("y", c[1]+4);
+    t.setAttribute("text-anchor","middle"); t.setAttribute("class","plabel");
+    t.textContent = z.floor ? z.floor : z.name;
+    polysG.appendChild(t);
+
+    if (z.id === selId) z.pts.forEach((a, i) => {
+      const cir = document.createElementNS(NS, "circle");
+      cir.setAttribute("cx", a[0]); cir.setAttribute("cy", a[1]); cir.setAttribute("r", 6);
+      cir.setAttribute("class", "vtx");
+      cir.addEventListener("pointerdown", ev => startDrag(ev, z, i));
+      vertsG.appendChild(cir);
+    });
+  });
+  renderList(); renderEditor(); renderJSON();
+  document.getElementById("cnt").textContent = zones.length;
+}
+function renderDraft(){
+  draftG.innerHTML = "";
+  if (!draft.length) return;
+  if (draft.length > 1){
+    const p = document.createElementNS(NS, "polygon");
+    p.setAttribute("points", draft.map(a => a.join(",")).join(" "));
+    p.setAttribute("class","draft"); draftG.appendChild(p);
+  }
+  draft.forEach((a,i) => {
+    const c = document.createElementNS(NS, "circle");
+    c.setAttribute("cx",a[0]); c.setAttribute("cy",a[1]);
+    c.setAttribute("r", i===0 ? 7 : 5); c.setAttribute("class","vtx");
+    draftG.appendChild(c);
+  });
+}
+function centroid(pts){
+  const x = pts.reduce((s,a)=>s+a[0],0)/pts.length, y = pts.reduce((s,a)=>s+a[1],0)/pts.length;
+  return [x,y];
+}
+// vertex dragging
+function startDrag(ev, z, i){
+  ev.preventDefault(); ev.stopPropagation();
+  const move = e => { z.pts[i] = pt(e); render(); };
+  const up = () => { window.removeEventListener("pointermove", move); window.removeEventListener("pointerup", up); };
+  window.addEventListener("pointermove", move); window.addEventListener("pointerup", up);
+}
+
+function renderList(){
+  if (!zones.length){ listEl.innerHTML = '<div class="empty">ჯერ არცერთი ზონა არ არის დახაზული.</div>'; return; }
+  listEl.innerHTML = "";
+  zones.forEach(z => {
+    const b = document.createElement("div");
+    b.className = "prow" + (z.id === selId ? " sel" : "");
+    b.innerHTML = `<span><span class="pname">${z.name}</span>
+      <span class="pmeta">${z.pts.length} წერტილი${z.floor ? " · სართ. "+z.floor : " · მიბმის გარეშე"}</span></span>
+      <button class="del" title="წაშლა">&times;</button>`;
+    b.addEventListener("click", e => {
+      if (e.target.classList.contains("del")){ zones = zones.filter(x => x.id !== z.id); if (selId===z.id) selId=null; render(); return; }
+      selId = z.id; render();
+    });
+    listEl.appendChild(b);
+  });
+}
+function renderEditor(){
+  const z = zones.find(x => x.id === selId);
+  if (!z){ editorEl.innerHTML = '<div class="empty" style="padding:0">აირჩიეთ ზონა სიიდან ან სურათზე.</div>'; return; }
+  editorEl.innerHTML = `
+    <div class="field"><label>დასახელება</label><input class="input" id="e-name" value="${z.name}"></div>
+    <div class="field"><label>სართული (Odoo-ს ჩანაწერი)</label>
+      <input class="input" id="e-floor" value="${z.floor}" placeholder="მაგ. 5"></div>
+    <button class="btn btn-sec btn-sm" id="e-del">ზონის წაშლა</button>`;
+  document.getElementById("e-name").addEventListener("input", e => { z.name = e.target.value; renderList(); renderJSON(); });
+  document.getElementById("e-floor").addEventListener("input", e => { z.floor = e.target.value; render(); });
+  document.getElementById("e-del").addEventListener("click", () => { zones = zones.filter(x=>x.id!==z.id); selId=null; render(); });
+}
+function renderJSON(){
+  // normalized 0..1 — resolution independent, exactly what Odoo will store
+  const out = zones.map(z => ({
+    name: z.name, floor: z.floor || null,
+    points: z.pts.map(a => [ +(a[0]/W).toFixed(4), +(a[1]/H).toFixed(4) ])
+  }));
+  document.getElementById("json").textContent = JSON.stringify(out, null, 1);
+}
+render();
+</script>

@@ -1,0 +1,35 @@
+# --- secrets: never commit ---
+# .claude/settings.json records approved commands verbatim, including any
+# tokens/API keys that appeared in them.
+.claude/
+.env
+.env.*
+*.key
+*_key
+*_key.pub
+deploy_key*
+secrets/
+
+# --- python ---
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+
+# --- odoo ---
+*.log
+.odoo_history
+odoo.conf
+filestore/
+
+# --- os / editor ---
+Thumbs.db
+Desktop.ini
+.DS_Store
+.idea/
+*.swp
+
+# --- build artifacts ---
+*.zip
+!research/*.zip
