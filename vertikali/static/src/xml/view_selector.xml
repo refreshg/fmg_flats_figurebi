@@ -4,28 +4,118 @@
     <t t-name="vertikali.Selector">
         <div class="o_vk_selector d-flex flex-column h-100">
 
-            <!-- Project, then the steps that project actually uses. -->
-            <div class="o_vk_steps d-flex align-items-center gap-3 px-2 pt-2 flex-wrap"
-                 t-if="state.projects.length">
-                <select class="form-select form-select-sm w-auto"
-                        t-on-change="(ev) => this.selectProject(state.projects.find(p => p.id === parseInt(ev.target.value)))">
-                    <t t-foreach="state.projects" t-as="p" t-key="p.id">
-                        <option t-att-value="p.id"
-                                t-att-selected="state.project and p.id === state.project.id">
-                            <t t-esc="p.name"/>
-                        </option>
+            <!-- Breadcrumb + steps, once a project is chosen. -->
+            <div class="o_vk_steps d-flex align-items-center gap-3 px-3 pt-2 flex-wrap"
+                 t-if="state.project">
+                <div class="o_vk_crumb d-flex align-items-center gap-2">
+                    <button class="o_vk_link" t-on-click="backToProjects"
+                            t-if="state.projects.length > 1">← Projects</button>
+                    <span class="o_vk_crumb_n"><t t-esc="state.project.name"/></span>
+                    <t t-if="state.block">
+                        <span class="o_vk_crumb_s">/</span>
+                        <span class="o_vk_crumb_n">Block <t t-esc="state.block.code"/></span>
                     </t>
-                </select>
+                </div>
 
-                <div class="o_vk_tabs d-flex">
+                <div class="o_vk_tabs d-flex" t-if="state.mode !== 'masterplan'">
                     <t t-foreach="steps" t-as="s" t-key="s.key">
-                        <button class="o_vk_tab"
+                        <button t-if="s.key !== 'masterplan'" class="o_vk_tab"
                                 t-att-class="{ 'o_vk_tab_on': state.mode === s.key }"
                                 t-on-click="() => this.setMode(s.key)">
                             <span class="o_vk_tab_i"><t t-esc="s.icon"/></span>
                             <span><t t-esc="s.label"/></span>
                         </button>
                     </t>
+                </div>
+
+                <!-- Block switcher: coloured swatches, as on the render. -->
+                <div class="o_vk_blocks d-flex align-items-center gap-2 ms-auto"
+                     t-if="projectBlocks.length > 1">
+                    <span class="o_vk_flabel">Block</span>
+                    <t t-foreach="projectBlocks" t-as="b" t-key="b.id">
+                        <button class="o_vk_bsw"
+                                t-att-class="{ 'o_vk_bsw_on': state.block and state.block.id === b.id }"
+                                t-attf-style="background:{{b.color}}"
+                                t-on-click="() => this.selectBlock(b)"
+                                t-att-title="b.name + ' — ' + b.available_count + ' free'">
+                            <t t-esc="b.code"/>
+                        </button>
+                    </t>
+                </div>
+            </div>
+
+            <!-- One t-if chain for the whole body: error and loading first, so
+                 a failure is never hidden behind a half-rendered screen. -->
+            <div t-if="state.error" class="alert alert-danger m-3"><t t-esc="state.error"/></div>
+            <div t-elif="state.loading and !state.project" class="text-muted p-4">Loading…</div>
+
+            <!-- Project chooser: cards, not a dropdown. -->
+            <div t-elif="!state.project and state.projects.length"
+                 class="o_vk_pick flex-grow-1 overflow-auto p-4">
+                <h3 class="o_vk_pick_h">Choose a project</h3>
+                <div class="o_vk_cards">
+                    <t t-foreach="state.projects" t-as="p" t-key="p.id">
+                        <button class="o_vk_card" t-on-click="() => this.selectProject(p)">
+                            <span class="o_vk_card_img">
+                                <img t-if="coverSrc(p)" t-att-src="coverSrc(p)" alt=""/>
+                                <span t-else="" class="o_vk_card_ph">no cover</span>
+                            </span>
+                            <span class="o_vk_card_b">
+                                <span class="o_vk_card_t"><t t-esc="p.name"/></span>
+                                <span class="o_vk_card_s" t-if="p.tagline"><t t-esc="p.tagline"/></span>
+                                <span class="o_vk_card_d" t-if="p.description"><t t-esc="p.description"/></span>
+                                <span class="o_vk_card_stats">
+                                    <span><b t-esc="p.available_count"/> free / <t t-esc="p.unit_count"/></span>
+                                    <span t-if="p.price_from">from <b t-esc="fmtMoney(p.price_from)"/></span>
+                                    <span t-if="p.handover"><t t-esc="p.handover"/></span>
+                                </span>
+                            </span>
+                        </button>
+                    </t>
+                </div>
+            </div>
+
+            <!-- Masterplan: pick a block off the cover render. -->
+            <div t-elif="state.mode === 'masterplan'" class="o_vk_body d-flex flex-grow-1 overflow-hidden">
+                <div class="o_vk_stage flex-grow-1 position-relative" t-ref="stage">
+                    <img t-if="coverSrc(state.project)" t-att-src="coverSrc(state.project)"
+                         t-ref="img" class="o_vk_img" alt="" t-on-load="onImageLoad"/>
+                    <div t-else="" class="o_vk_noimg">
+                        <div>
+                            <strong>No cover image</strong>
+                            <div class="small">Upload one on the project to highlight blocks here.</div>
+                        </div>
+                    </div>
+                    <svg class="o_vk_svg" viewBox="0 0 1 1" preserveAspectRatio="none"
+                         t-attf-style="left:{{state.box.left}}px;top:{{state.box.top}}px;width:{{state.box.width}}px;height:{{state.box.height}}px">
+                        <t t-foreach="projectBlocks" t-as="b" t-key="b.id">
+                            <polygon t-if="b.points" class="o_vk_bzone"
+                                     t-attf-style="fill:{{b.color}}"
+                                     t-att-points="pointsAttr(b.points)"
+                                     t-on-click="() => this.selectBlock(b)"/>
+                        </t>
+                    </svg>
+                    <div class="o_vk_hint">Pick a block on the render, or use the swatches below.</div>
+                </div>
+                <div class="o_vk_side">
+                    <div class="o_vk_side_h">Blocks</div>
+                    <div class="o_vk_list">
+                        <t t-foreach="projectBlocks" t-as="b" t-key="b.id">
+                            <div class="o_vk_row d-flex align-items-center gap-2"
+                                 t-on-click="() => this.selectBlock(b)">
+                                <span class="o_vk_bsw" t-attf-style="background:{{b.color}}">
+                                    <t t-esc="b.code"/>
+                                </span>
+                                <span class="flex-grow-1">
+                                    <span class="o_vk_row_n"><t t-esc="b.name"/></span>
+                                    <span class="o_vk_row_m">
+                                        <t t-esc="b.available_count"/> free of <t t-esc="b.unit_count"/>
+                                        <t t-if="b.floors"> · <t t-esc="b.floors"/> floors</t>
+                                    </span>
+                                </span>
+                            </div>
+                        </t>
+                    </div>
                 </div>
             </div>
 
@@ -115,7 +205,6 @@
                 </t>
             </div>
 
-            <div t-if="state.error" class="alert alert-danger m-3"><t t-esc="state.error"/></div>
             <div t-elif="state.loading" class="text-muted p-4">Loading…</div>
 
             <!-- Grid: no image, the units themselves are the interface. -->

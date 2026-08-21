@@ -32,6 +32,8 @@ export class VertikaliSelector extends Component {
         this.state = useState({
             projects: [],
             project: null,
+            blocks: [],
+            block: null,
             mode: null,          // masterplan | facade | floor | grid
             views: [],
             view: null,
@@ -80,9 +82,16 @@ export class VertikaliSelector extends Component {
             try {
                 this.state.projects = await this.orm.searchRead(
                     "vertikali.project", [],
-                    ["name", "building", "use_masterplan", "use_facade",
-                     "use_floorplan", "use_grid"],
+                    ["name", "building", "tagline", "description", "handover",
+                     "image", "unit_count", "available_count", "price_from",
+                     "use_masterplan", "use_facade", "use_floorplan", "use_grid"],
                     { order: "sequence, id" }
+                );
+                this.state.blocks = await this.orm.searchRead(
+                    "vertikali.block", [],
+                    ["name", "code", "project_id", "color", "floors", "points",
+                     "facade_view_id", "unit_count", "available_count"],
+                    { order: "sequence, code" }
                 );
                 const views = await this.orm.searchRead(
                     "vertikali.view", [],
@@ -91,9 +100,11 @@ export class VertikaliSelector extends Component {
                 );
                 this.state.views = views;
 
-                if (this.state.projects.length) {
+                // Start on the chooser when there is a choice to make;
+                // a single project goes straight in.
+                if (this.state.projects.length === 1) {
                     await this.selectProject(this.state.projects[0]);
-                } else if (views.length) {
+                } else if (!this.state.projects.length && views.length) {
                     await this.loadView(views[0].id);
                 }
             } catch (e) {
@@ -118,18 +129,64 @@ export class VertikaliSelector extends Component {
         return p ? all.filter((s) => s.on) : all;
     }
 
-    /** Views belonging to the current project and mode. */
+    /** Views for the current project, mode and (if chosen) block. */
     get modeViews() {
-        return this.state.views.filter((v) =>
-            v.view_type === this.state.mode &&
-            (!this.state.project || v.project_id?.[0] === this.state.project.id)
-        );
+        const block = this.state.block;
+        return this.state.views.filter((v) => {
+            if (v.view_type !== this.state.mode) {
+                return false;
+            }
+            if (this.state.project && v.project_id?.[0] !== this.state.project.id) {
+                return false;
+            }
+            // Views carrying a building label belong to that block only.
+            if (block && v.building && v.building !== block.code) {
+                return false;
+            }
+            return true;
+        });
+    }
+
+    /** Blocks of the current project. */
+    get projectBlocks() {
+        const p = this.state.project;
+        return p ? this.state.blocks.filter((b) => b.project_id?.[0] === p.id) : [];
     }
 
     async selectProject(project) {
         this.state.project = project;
+        this.state.block = null;
+        this.state.unit = null;
+        const blocks = this.projectBlocks;
+        // With several blocks, the masterplan is where you pick one.
+        if (blocks.length > 1 && project.use_masterplan) {
+            this.state.mode = "masterplan";
+            this.state.view = null;
+            this.state.zones = [];
+            return;
+        }
+        if (blocks.length) {
+            await this.selectBlock(blocks[0]);
+            return;
+        }
         const steps = this.steps;
         await this.setMode(steps.length ? steps[0].key : null);
+    }
+
+    async selectBlock(block) {
+        this.state.block = block;
+        const steps = this.steps.filter((s) => s.key !== "masterplan");
+        await this.setMode(steps.length ? steps[0].key : null);
+    }
+
+    backToProjects() {
+        this.state.project = null;
+        this.state.block = null;
+        this.state.mode = null;
+        this.state.view = null;
+        this.state.unit = null;
+        this.state.zones = [];
+        this.state.units = [];
     }
 
     async setMode(mode) {
@@ -155,9 +212,12 @@ export class VertikaliSelector extends Component {
     async loadGrid() {
         this.state.loading = true;
         try {
+            // The chosen block wins over the project's own label, so a
+            // multi-block project shows one tower at a time.
             const domain = [["vk_is_unit", "=", true]];
-            if (this.state.project?.building) {
-                domain.push(["vk_building", "=", this.state.project.building]);
+            const building = this.state.block?.code || this.state.project?.building;
+            if (building) {
+                domain.push(["vk_building", "=", building]);
             }
             this.state.units = await this.orm.searchRead(
                 "product.template", domain,
@@ -343,6 +403,20 @@ export class VertikaliSelector extends Component {
     get imageSrc() {
         const v = this.state.view;
         return v && v.image ? `data:image/png;base64,${v.image}` : null;
+    }
+
+    /** Project cover, used on the chooser and as the masterplan backdrop. */
+    coverSrc(project) {
+        return project?.image ? `data:image/png;base64,${project.image}` : null;
+    }
+
+    pointsAttr(raw) {
+        try {
+            const p = JSON.parse(raw || "[]");
+            return Array.isArray(p) ? p.map((q) => q.join(",")).join(" ") : "";
+        } catch {
+            return "";
+        }
     }
 
     // ------------------------------------------------------------ geometry
