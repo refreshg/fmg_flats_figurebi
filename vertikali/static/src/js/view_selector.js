@@ -39,7 +39,11 @@ export class VertikaliSelector extends Component {
             view: null,
             zones: [],
             units: [],           // grid mode
+            floorUnits: [],      // units on the open floor plan
+            unitById: {},
             unit: null,          // unit shown in the detail panel
+            card: null,          // unit opened as a full card
+            plan2d: true,        // 2D / 3D toggle on the card
             filters: { rooms: [], status: [], areaMin: null, areaMax: null, priceMax: null },
             selected: null,
             loading: true,
@@ -345,6 +349,50 @@ export class VertikaliSelector extends Component {
         this.state.unit = unit;
     }
 
+    /** Open the full unit card (the plan + specs screen). */
+    openCard(unit) {
+        if (!unit) {
+            return;
+        }
+        this.state.card = unit;
+        this.state.plan2d = true;
+    }
+
+    closeCard() {
+        this.state.card = null;
+    }
+
+    /** Room areas parsed from the free-text field, for the card breakdown. */
+    get cardRooms() {
+        const raw = this.state.card?.vk_rooms_detail || "";
+        return raw.split("\n").map((line) => {
+            const t = line.trim();
+            if (!t) {
+                return null;
+            }
+            const m = t.match(/^(.*?)[\s]+([\d.,]+)$/);
+            return m
+                ? { label: m[1], area: m[2] }
+                : { label: t, area: null };
+        }).filter(Boolean);
+    }
+
+    /**
+     * Where the card's unit sits among the others on its floor -- the small
+     * map at the bottom of the panel. Ordered by code so the strip is stable.
+     */
+    get floorStrip() {
+        const card = this.state.card;
+        if (!card) {
+            return [];
+        }
+        const source = this.state.floorUnits.length ? this.state.floorUnits : this.state.units;
+        return source
+            .filter((u) => u.vk_floor === card.vk_floor)
+            .sort((a, b) => String(a.default_code).localeCompare(String(b.default_code)))
+            .map((u) => ({ ...u, current: u.id === card.id }));
+    }
+
     openUnitRecord(unit) {
         this.action.doAction({
             type: "ir.actions.act_window",
@@ -380,10 +428,59 @@ export class VertikaliSelector extends Component {
                 { order: "sequence, id" }
             );
             this.state.zones = zones.map((z) => ({ ...z, pts: this.parsePoints(z.points) }));
+
+            // On a floor plan the zones stand for units, so pull their status
+            // and price: the plan has to show what is sold before it is useful.
+            if (view.view_type === "floor") {
+                await this.loadFloorUnits(view.floor);
+            }
         } catch (e) {
             this.state.error = e.message || String(e);
         } finally {
             this.state.loading = false;
+        }
+    }
+
+    /** Units on one floor, keyed by template id for the plan overlay. */
+    async loadFloorUnits(floor) {
+        const domain = [["vk_is_unit", "=", true], ["vk_floor", "=", floor]];
+        const building = this.state.block?.code || this.state.project?.building;
+        if (building) {
+            domain.push(["vk_building", "=", building]);
+        }
+        const units = await this.orm.searchRead(
+            "product.template", domain,
+            ["default_code", "vk_floor", "vk_section", "vk_rooms", "vk_area_total",
+             "vk_area_balcony", "vk_orientation", "list_price", "vk_price_sqm",
+             "vk_state", "vk_handover", "vk_rooms_detail", "vk_condition"],
+            { order: "default_code" }
+        );
+        this.state.floorUnits = units;
+        this.state.unitById = Object.fromEntries(units.map((u) => [u.id, u]));
+    }
+
+    /** The unit a floor-plan zone stands for, if it is linked. */
+    zoneUnit(zone) {
+        const id = zone.product_tmpl_id?.[0];
+        return id ? this.state.unitById[id] : null;
+    }
+
+    /** Floors available for the stepper, high to low. */
+    get floorList() {
+        return this.state.views
+            .filter((v) => v.view_type === "floor"
+                && (!this.state.project || v.project_id?.[0] === this.state.project.id)
+                && (!this.state.block || !v.building || v.building === this.state.block.code))
+            .sort((a, b) => b.floor - a.floor);
+    }
+
+    /** Move up or down a storey without leaving the plan. */
+    async stepFloor(delta) {
+        const list = this.floorList;
+        const i = list.findIndex((v) => v.id === this.state.view?.id);
+        const next = list[i - delta];   // list is high-to-low, so invert
+        if (next) {
+            await this.loadView(next.id);
         }
     }
 
@@ -480,7 +577,12 @@ export class VertikaliSelector extends Component {
             this.state.mode = "floor";
             this.loadView(zone.target_view_id[0]);
         } else if (zone.product_tmpl_id) {
-            this.openUnit(zone);
+            const unit = this.zoneUnit(zone);
+            if (unit) {
+                this.openCard(unit);
+            } else {
+                this.openUnit(zone);
+            }
         }
     }
 
