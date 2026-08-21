@@ -277,13 +277,40 @@ export class VertikaliSelector extends Component {
             this.notification.add("Select a zone to copy first.", { type: "warning" });
             return;
         }
-        const ys = src.pts.map((p) => p[1]);
-        const height = Math.max(...ys) - Math.min(...ys);
+        const step = this.bandStep(src);
         const pts = src.pts.map(([x, y]) => [
             x,
-            Math.min(1, Math.round((y + height) * 10000) / 10000),
+            Math.min(1, Math.round((y + step) * 10000) / 10000),
         ]);
         await this.createZone(pts);
+    }
+
+    /**
+     * How far down one band sits from the next.
+     *
+     * Measured as the band's own thickness -- the vertical gap between its top
+     * and bottom edge at the same x -- not its bounding-box height. On a
+     * sloping or stepped band those differ a lot, and using the bounding box
+     * pushes each copy far below where the next floor actually is.
+     */
+    bandStep(zone) {
+        const pts = zone.pts;
+        if (pts.length < 4) {
+            const ys = pts.map((p) => p[1]);
+            return Math.max(...ys) - Math.min(...ys);
+        }
+        // Split the outline into an upper and a lower chain: for each point,
+        // decide which half it belongs to by comparing against the midline.
+        const ys = pts.map((p) => p[1]);
+        const mid = (Math.max(...ys) + Math.min(...ys)) / 2;
+        const upper = pts.filter((p) => p[1] <= mid);
+        const lower = pts.filter((p) => p[1] > mid);
+        if (!upper.length || !lower.length) {
+            return Math.max(...ys) - Math.min(...ys);
+        }
+        // Average thickness beats a single sample when the band is stepped.
+        const avg = (arr) => arr.reduce((s, p) => s + p[1], 0) / arr.length;
+        return Math.max(0.001, avg(lower) - avg(upper));
     }
 
     cancelDraw() {
@@ -361,6 +388,19 @@ export class VertikaliSelector extends Component {
         } catch (e) {
             this.notification.add(e.message || String(e), { type: "danger" });
         }
+    }
+
+    /** Shift the selected zone by a small step, for fine alignment. */
+    nudge(dy) {
+        const z = this.state.selected;
+        if (!z) {
+            return;
+        }
+        z.pts = z.pts.map(([x, y]) => [
+            x,
+            Math.min(1, Math.max(0, Math.round((y + dy) * 10000) / 10000)),
+        ]);
+        this.state.dirty.add(z.id);
     }
 
     /** Clear the view so a facade can be re-traced from scratch. */
@@ -486,14 +526,13 @@ export class VertikaliSelector extends Component {
             return;
         }
         const count = Math.max(1, Math.min(60, parseInt(answer, 10) || 0));
-        const ys = src.pts.map((p) => p[1]);
-        const height = Math.max(...ys) - Math.min(...ys);
+        const step = this.bandStep(src);
 
         const vals = [];
         for (let i = 1; i <= count; i++) {
             const pts = src.pts.map(([x, y]) => [
                 x,
-                Math.min(1, Math.round((y + height * i) * 10000) / 10000),
+                Math.min(1, Math.round((y + step * i) * 10000) / 10000),
             ]);
             // Stop once a copy would fall off the bottom of the image.
             if (Math.min(...pts.map((p) => p[1])) >= 1) {

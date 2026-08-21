@@ -195,6 +195,15 @@
                     <div class="o_vk_act" t-if="state.selected">
                         <div class="o_vk_kicker">Selected</div>
                         <div class="o_vk_sel_n"><t t-esc="state.selected.name"/></div>
+
+                        <div t-if="state.editing" class="d-flex gap-1 mt-2">
+                            <button class="btn btn-secondary btn-sm flex-grow-1"
+                                    t-on-click="() => this.nudge(-0.004)"
+                                    title="Move up">↑</button>
+                            <button class="btn btn-secondary btn-sm flex-grow-1"
+                                    t-on-click="() => this.nudge(0.004)"
+                                    title="Move down">↓</button>
+                        </div>
                         <button t-if="state.selected.product_tmpl_id"
                                 class="btn btn-primary btn-sm w-100 mt-2"
                                 t-on-click="() => this.openUnit(state.selected)">
