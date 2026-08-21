@@ -13,6 +13,16 @@ opportunity-დან ჯავშნამდე.
 | [`vertikali/`](vertikali/) | Odoo 19 მოდული |
 | [`prototype/`](prototype/) | HTML პროტოტიპები (ფასადი, შახმატკა, სართული, ადმინის რედაქტორი) |
 | [`research/`](research/) | კონკურენტების კვლევა, პატერნები, PRD, დიზაინი |
+| [`CLAUDE.md`](CLAUDE.md) | **კონტექსტი, ტერმინოლოგია, გადაწყვეტილებები — წაიკითხე ჯერ** |
+
+## ფუნქციონალი
+
+**Estate** მენიუ:
+- **Building Selector** — ვიზუალური ამომრჩევი: ფასადი / ზედხედი / შახმატკა.
+  საფეხურები თითო პროექტზე ირთვება
+- **Inventory → Units** — ბინები, ფილტრებით და ₾/მ²-ით
+- **Configuration → Projects** — რომელი საფეხურები აქვს პროექტს
+- **Configuration → Visual Views** — სურათები და ზონების რედაქტორი
 
 ## მოთხოვნები
 
@@ -21,19 +31,32 @@ opportunity-დან ჯავშნამდე.
 
 ## ინსტალაცია
 
+სერვერზე, git-იდან:
+
 ```bash
-# 1. მოდული addons path-ში
+cd ~/vertikali-src && ./deploy.sh install   # პირველად
+cd ~/vertikali-src && ./deploy.sh           # განახლება
+```
+
+`deploy.sh` ავტომატურად: pull → ვალიდაცია → addons-ში კოპირება →
+`-i`/`-u` → სერვისის restart.
+
+<details>
+<summary>ხელით (deploy.sh-ის გარეშე)</summary>
+
+```bash
 sudo cp -r vertikali /opt/odoo/custom-addons/
 sudo chown -R odoo:odoo /opt/odoo/custom-addons/vertikali
-
-# 2. ინსტალაცია
 sudo systemctl stop odoo
 sudo -u odoo /opt/odoo/odoo-19/venv/bin/python /opt/odoo/odoo-19/odoo-bin \
-  -c /etc/odoo/odoo.conf -d odoo -i vertikali --stop-after-init
+  -c /etc/odoo/odoo.conf -d odoo -i vertikali --stop-after-init --logfile=
 sudo systemctl start odoo
 ```
 
 `addons_path`-ში `/opt/odoo/custom-addons` უნდა იყოს ჩამატებული.
+`--logfile=` აუცილებელია, თუ `odoo.conf`-ში `logfile` წერია — თორემ
+შეცდომები ეკრანზე არ გამოჩნდება.
+</details>
 
 ## არქიტექტურა — standard-first
 
