@@ -110,6 +110,13 @@
                     <t t-if="state.block">
                         <span class="o_vk_crumb_s">/</span>
                         <span class="o_vk_crumb_n">Block <t t-esc="state.block.code"/></span>
+                        <!-- Back to the masterplan: without this the site plan
+                             is unreachable once a block has been entered. -->
+                        <button t-if="state.project.use_masterplan"
+                                class="o_vk_link ms-1"
+                                t-on-click="() => { state.block = null; state.mode = 'masterplan'; state.view = null; state.zones = []; }">
+                            ↑ masterplan
+                        </button>
                     </t>
                 </div>
 

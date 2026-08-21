@@ -675,12 +675,10 @@ export class VertikaliSelector extends Component {
         const sr = stage.getBoundingClientRect();
         const ir = img.getBoundingClientRect();
 
-        // Where the pixels actually are. The <img> element is laid out by
-        // flexbox and may be wider than its content, while object-fit: contain
-        // letterboxes the picture inside it -- so the drawn area has to be
-        // derived from the element's real rect, not from the stage. Computing
-        // the offset from the stage assumed the image filled it, which is why
-        // shapes landed left of where they were clicked.
+        // Where the pixels actually are: the <img> is laid out by flexbox and
+        // object-fit: contain letterboxes the picture inside it. toNorm() runs
+        // this same derivation on the same rect, so the overlay and the
+        // pointer cannot drift apart.
         const scale = Math.min(ir.width / img.naturalWidth, ir.height / img.naturalHeight);
         const w = img.naturalWidth * scale;
         const h = img.naturalHeight * scale;
@@ -715,17 +713,23 @@ export class VertikaliSelector extends Component {
         if (!width || !height) {
             return [0, 0];
         }
-        // Measure against the SVG overlay itself. It is the element the shape
-        // is painted into, so using its rect makes the click and the drawing
-        // agree by construction -- deriving the same box twice, once for the
-        // style and once for the pointer, left room for them to disagree.
-        const svg = this.stageRef.el.querySelector(".o_vk_svg");
-        if (svg) {
-            const r = svg.getBoundingClientRect();
-            if (r.width && r.height) {
+        // Measure against the rendered image. It is the thing the normalized
+        // coordinates describe, so its rect is the only correct reference --
+        // the overlay and the stage can each be sized differently.
+        const img = this.imgRef.el;
+        if (img) {
+            const r = img.getBoundingClientRect();
+            // object-fit: contain letterboxes the picture inside the element,
+            // so back out the bars before normalizing.
+            const scale = Math.min(r.width / img.naturalWidth, r.height / img.naturalHeight);
+            const dw = img.naturalWidth * scale;
+            const dh = img.naturalHeight * scale;
+            const dx = r.left + (r.width - dw) / 2;
+            const dy = r.top + (r.height - dh) / 2;
+            if (dw && dh) {
                 return [
-                    Math.min(1, Math.max(0, Math.round(((ev.clientX - r.left) / r.width) * 10000) / 10000)),
-                    Math.min(1, Math.max(0, Math.round(((ev.clientY - r.top) / r.height) * 10000) / 10000)),
+                    Math.min(1, Math.max(0, Math.round(((ev.clientX - dx) / dw) * 10000) / 10000)),
+                    Math.min(1, Math.max(0, Math.round(((ev.clientY - dy) / dh) * 10000) / 10000)),
                 ];
             }
         }
