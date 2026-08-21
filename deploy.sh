@@ -61,6 +61,18 @@ for p in root.rglob("*.xml"):
 print("    python + xml OK")
 PYEOF
 
+# Preferred path: a root-owned wrapper with fixed paths, granted to this user
+# through a single NOPASSWD sudoers entry, so the deploy can run unattended
+# without handing out cp/rm/chown as root. See vk-deploy-root.sh for setup.
+ROOT_HELPER="/usr/local/sbin/vk-deploy-root"
+
+if [ -x "$ROOT_HELPER" ]; then
+    echo "==> 3/5 sync + ${MODE} via root helper (service stops briefly)"
+    sudo "$ROOT_HELPER" "$MODE"
+    echo "==> 5/5 done"
+    exit 0
+fi
+
 echo "==> 3/5 syncing to $ADDONS_DIR"
 sudo mkdir -p "$ADDONS_DIR"
 sudo rm -rf "${ADDONS_DIR:?}/$MODULE"
