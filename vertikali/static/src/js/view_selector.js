@@ -2,7 +2,7 @@
 
 import { registry } from "@web/core/registry";
 import { useService } from "@web/core/utils/hooks";
-import { Component, onWillStart, useRef, useState } from "@odoo/owl";
+import { Component, onWillStart, onWillUnmount, useRef, useState } from "@odoo/owl";
 
 /**
  * Renders a vertikali.view image with its polygons drawn on top as clickable
@@ -46,6 +46,29 @@ export class VertikaliSelector extends Component {
         });
 
         this.onResize = () => this.measure();
+
+        // Delete removes the selected zone while editing; Escape cancels a
+        // draw. Bound on the document so it works wherever focus sits.
+        this.onKeydown = (ev) => {
+            if (!this.state.editing) {
+                return;
+            }
+            if (ev.key === "Escape" && this.state.drawing) {
+                this.cancelDraw();
+                return;
+            }
+            const typing = /^(INPUT|TEXTAREA|SELECT)$/.test(ev.target?.tagName || "");
+            if ((ev.key === "Delete" || ev.key === "Backspace")
+                    && this.state.selected && !this.state.drawing && !typing) {
+                ev.preventDefault();
+                this.deleteZone(this.state.selected);
+            }
+        };
+        document.addEventListener("keydown", this.onKeydown);
+        onWillUnmount(() => {
+            document.removeEventListener("keydown", this.onKeydown);
+            this._observer?.disconnect();
+        });
 
         onWillStart(async () => {
             try {
@@ -295,22 +318,44 @@ export class VertikaliSelector extends Component {
      */
     bandStep(zone) {
         const pts = zone.pts;
-        if (pts.length < 4) {
+        if (pts.length < 3) {
+            return 0.02;
+        }
+        // Measure the band vertically at several x positions and take the
+        // median. Splitting the outline into "upper" and "lower" halves by a
+        // midline fails on a sloping band, where a left-hand top point can sit
+        // below a right-hand bottom one; a vertical cut never has that problem.
+        const xs = pts.map((p) => p[0]);
+        const x0 = Math.min(...xs);
+        const x1 = Math.max(...xs);
+        if (x1 - x0 < 1e-6) {
             const ys = pts.map((p) => p[1]);
-            return Math.max(...ys) - Math.min(...ys);
+            return Math.max(0.001, Math.max(...ys) - Math.min(...ys));
         }
-        // Split the outline into an upper and a lower chain: for each point,
-        // decide which half it belongs to by comparing against the midline.
-        const ys = pts.map((p) => p[1]);
-        const mid = (Math.max(...ys) + Math.min(...ys)) / 2;
-        const upper = pts.filter((p) => p[1] <= mid);
-        const lower = pts.filter((p) => p[1] > mid);
-        if (!upper.length || !lower.length) {
-            return Math.max(...ys) - Math.min(...ys);
+
+        const samples = [];
+        const SAMPLES = 9;
+        for (let s = 1; s <= SAMPLES; s++) {
+            const x = x0 + ((x1 - x0) * s) / (SAMPLES + 1);
+            // Every y where an edge crosses this vertical line.
+            const hits = [];
+            for (let i = 0; i < pts.length; i++) {
+                const [ax, ay] = pts[i];
+                const [bx, by] = pts[(i + 1) % pts.length];
+                if ((ax <= x && bx > x) || (bx <= x && ax > x)) {
+                    hits.push(ay + ((x - ax) / (bx - ax)) * (by - ay));
+                }
+            }
+            if (hits.length >= 2) {
+                samples.push(Math.max(...hits) - Math.min(...hits));
+            }
         }
-        // Average thickness beats a single sample when the band is stepped.
-        const avg = (arr) => arr.reduce((s, p) => s + p[1], 0) / arr.length;
-        return Math.max(0.001, avg(lower) - avg(upper));
+        if (!samples.length) {
+            const ys = pts.map((p) => p[1]);
+            return Math.max(0.001, Math.max(...ys) - Math.min(...ys));
+        }
+        samples.sort((a, b) => a - b);
+        return Math.max(0.001, samples[Math.floor(samples.length / 2)]);
     }
 
     cancelDraw() {

@@ -87,6 +87,45 @@ class ProductTemplate(models.Model):
         help="Planned handover date for this unit.",
     )
 
+    # Derived from the sales pipeline rather than typed by hand, so the grid
+    # can never disagree with the orders. Stored because the shakhmatka sorts,
+    # groups and filters on it -- the standard qty_available and sales_count
+    # are non-stored computes and cannot serve that.
+    vk_state = fields.Selection(
+        selection=[
+            ('available', "Available"),
+            ('reserved', "Reserved"),
+            ('sold', "Sold"),
+        ],
+        string="Unit Status",
+        compute='_compute_vk_state',
+        store=True,
+        index=True,
+        default='available',
+    )
+
+    vk_sale_line_ids = fields.One2many(
+        'sale.order.line', 'product_template_id',
+        string="Sales Lines",
+        help="Quotations and orders this unit appears on.",
+    )
+
+    @api.depends('vk_sale_line_ids.state', 'vk_is_unit')
+    def _compute_vk_state(self):
+        for tmpl in self:
+            if not tmpl.vk_is_unit:
+                tmpl.vk_state = 'available'
+                continue
+            states = set(tmpl.vk_sale_line_ids.mapped('state'))
+            if 'sale' in states:
+                # A confirmed order takes the unit off the market.
+                tmpl.vk_state = 'sold'
+            elif states & {'draft', 'sent'}:
+                # Quoted but not confirmed: held, still winnable.
+                tmpl.vk_state = 'reserved'
+            else:
+                tmpl.vk_state = 'available'
+
     @api.depends('list_price', 'vk_area_total')
     def _compute_vk_price_sqm(self):
         for tmpl in self:

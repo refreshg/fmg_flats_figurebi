@@ -76,10 +76,9 @@
                 </t>
                 <t t-else="">
                     Trace one band with <b>+ Draw zone</b> (any number of points),
-                    then <b>Copy down</b> for the next one or <b>Repeat…</b> to
-                    stack the whole facade. Drag a zone or its corners to adjust;
-                    click a hollow edge handle to add a bend, right-click a corner
-                    to remove it. Changes save on <b>Save</b>.
+                    then <b>Copy down</b> or <b>Repeat…</b> to stack the facade.
+                    Drag a zone or its corners to adjust. Select a zone and press
+                    <b>Delete</b> to remove it. Changes save on <b>Save</b>.
                 </t>
             </div>
 
@@ -204,6 +203,11 @@
                                     t-on-click="() => this.nudge(0.004)"
                                     title="Move down">↓</button>
                         </div>
+                        <button t-if="state.editing"
+                                class="btn btn-outline-danger btn-sm w-100 mt-2"
+                                t-on-click="() => this.deleteZone(state.selected)">
+                            Delete this zone
+                        </button>
                         <button t-if="state.selected.product_tmpl_id"
                                 class="btn btn-primary btn-sm w-100 mt-2"
                                 t-on-click="() => this.openUnit(state.selected)">

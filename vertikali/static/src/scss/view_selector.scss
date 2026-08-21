@@ -148,8 +148,11 @@
     }
 
     // ---- side panel ----
+    // Never shrink away: this is where delete and the zone list live, and a
+    // squeezed viewport used to push it off-screen entirely.
     .o_vk_side {
         flex: 0 0 280px;
+        min-width: 240px;
         border-left: 2px solid var(--vk-rule);
         display: flex;
         flex-direction: column;
