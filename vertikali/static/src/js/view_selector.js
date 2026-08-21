@@ -297,8 +297,15 @@ export class VertikaliSelector extends Component {
             return;
         }
         this.state.selected = zone;
-        if (!this.state.editing && zone.target_view_id) {
+        if (this.state.editing) {
+            return;
+        }
+        // Drill down: a zone opens its target view, or the unit it holds.
+        if (zone.target_view_id) {
+            this.state.mode = "floor";
             this.loadView(zone.target_view_id[0]);
+        } else if (zone.product_tmpl_id) {
+            this.openUnit(zone);
         }
     }
 

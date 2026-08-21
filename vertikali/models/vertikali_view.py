@@ -74,6 +74,92 @@ class VertikaliProject(models.Model):
             steps.append('grid')
         return steps
 
+    def action_generate_floor_views(self):
+        """Create one floor-plan view per floor that has units.
+
+        A floor plan is a separate image per storey, so a 22-storey building
+        needs 22 records. Creating them by hand is tedious and easy to get
+        wrong, so they are derived from the units that already exist -- the
+        images are then uploaded onto the records.
+        """
+        self.ensure_one()
+        if not self.use_floorplan:
+            raise ValidationError(_(
+                "Switch on the Floor Plan step before generating floor views."))
+
+        domain = [('vk_is_unit', '=', True)]
+        if self.building:
+            domain.append(('vk_building', '=', self.building))
+        elif self.categ_id:
+            domain.append(('categ_id', 'child_of', self.categ_id.id))
+        units = self.env['product.template'].search(domain)
+        floors = sorted({u.vk_floor for u in units if u.vk_floor}, reverse=True)
+        if not floors:
+            raise ValidationError(_(
+                "No units found for this project, so there are no floors to "
+                "generate. Add the units first."))
+
+        existing = self.env['vertikali.view'].search([
+            ('project_id', '=', self.id), ('view_type', '=', 'floor')])
+        have = set(existing.mapped('floor'))
+
+        vals = [{
+            'name': _("%(building)s - Floor %(floor)s",
+                      building=self.building or self.name, floor=floor),
+            'project_id': self.id,
+            'view_type': 'floor',
+            'building': self.building,
+            'floor': floor,
+            'categ_id': self.categ_id.id,
+            'sequence': 100 - floor,
+        } for floor in floors if floor not in have]
+
+        created = self.env['vertikali.view'].create(vals) if vals else \
+            self.env['vertikali.view']
+
+        # Point the facade's floor zones at the matching floor views, so the
+        # facade actually drills through instead of dead-ending.
+        linked = self._link_facade_zones()
+
+        return {
+            'type': 'ir.actions.client',
+            'tag': 'display_notification',
+            'params': {
+                'title': _("Floor views ready"),
+                'message': _(
+                    "%(created)s created, %(skipped)s already existed, "
+                    "%(linked)s facade zones linked. Upload each floor's plan "
+                    "on its view.",
+                    created=len(created), skipped=len(floors) - len(vals),
+                    linked=linked,
+                ),
+                'type': 'success',
+                'next': {'type': 'ir.actions.act_window_close'},
+            },
+        }
+
+    def _link_facade_zones(self):
+        """Wire facade zones to the floor view with the same floor number."""
+        self.ensure_one()
+        floor_views = self.env['vertikali.view'].search([
+            ('project_id', '=', self.id), ('view_type', '=', 'floor')])
+        by_floor = {v.floor: v for v in floor_views}
+        if not by_floor:
+            return 0
+
+        zones = self.env['vertikali.polygon'].search([
+            ('view_id.project_id', '=', self.id),
+            ('view_id.view_type', '=', 'facade'),
+            ('floor', '!=', False),
+        ])
+        count = 0
+        for zone in zones:
+            target = by_floor.get(zone.floor)
+            if target and zone.target_view_id != target:
+                zone.target_view_id = target
+                count += 1
+        return count
+
 
 class VertikaliView(models.Model):
     """A clickable image: masterplan, building facade or floor plan.
@@ -126,6 +212,16 @@ class VertikaliView(models.Model):
         'vertikali.polygon', 'view_id', string="Zones")
     polygon_count = fields.Integer(
         compute='_compute_polygon_count', string="Zones")
+
+    # Generated floor views start empty, so the list needs to show at a glance
+    # which ones are still waiting for their plan.
+    has_image = fields.Boolean(
+        compute='_compute_has_image', string="Image", store=True)
+
+    @api.depends('image')
+    def _compute_has_image(self):
+        for view in self:
+            view.has_image = bool(view.image)
 
     @api.depends('polygon_ids')
     def _compute_polygon_count(self):

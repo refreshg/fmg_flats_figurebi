@@ -42,6 +42,13 @@
                 </select>
                 <span t-elif="state.view" class="o_vk_kicker"><t t-esc="state.view.name"/></span>
 
+                <!-- Back up a step after drilling into a floor. -->
+                <button t-if="state.mode === 'floor' and state.project and state.project.use_facade"
+                        class="btn btn-sm btn-link p-0"
+                        t-on-click="() => this.setMode('facade')">
+                    ← back to facade
+                </button>
+
                 <button t-if="state.mode !== 'grid'" class="btn btn-sm"
                         t-att-class="state.editing ? 'btn-primary' : 'btn-secondary'"
                         t-on-click="toggleEdit">

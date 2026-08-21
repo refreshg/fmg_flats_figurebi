@@ -24,6 +24,13 @@
         <field name="model">vertikali.project</field>
         <field name="arch" type="xml">
             <form string="Project">
+                <header>
+                    <button name="action_generate_floor_views" type="object"
+                            string="Generate Floor Views"
+                            class="btn-primary"
+                            invisible="not use_floorplan"
+                            help="Create one floor-plan view per floor that has units, and link the facade zones to them."/>
+                </header>
                 <sheet>
                     <div class="oe_title">
                         <label for="name"/>
@@ -39,15 +46,40 @@
                             <field name="active" widget="boolean_toggle"/>
                         </group>
                     </group>
-                    <group string="Navigation Steps"
-                           help="Switch off any step this project does not use.">
+                    <group string="Navigation Steps">
                         <group>
-                            <field name="use_masterplan"/>
-                            <field name="use_facade"/>
+                            <label for="use_masterplan"/>
+                            <div>
+                                <field name="use_masterplan" nolabel="1"/>
+                                <span class="text-muted d-block small">
+                                    Site plan of the whole complex — one zone per
+                                    building. Only needed with several buildings.
+                                </span>
+                            </div>
+                            <label for="use_facade"/>
+                            <div>
+                                <field name="use_facade" nolabel="1"/>
+                                <span class="text-muted d-block small">
+                                    One building's render — one zone per floor.
+                                </span>
+                            </div>
                         </group>
                         <group>
-                            <field name="use_floorplan"/>
-                            <field name="use_grid"/>
+                            <label for="use_floorplan"/>
+                            <div>
+                                <field name="use_floorplan" nolabel="1"/>
+                                <span class="text-muted d-block small">
+                                    Top-down plan of a single storey — one zone per
+                                    unit. Needs one image per floor.
+                                </span>
+                            </div>
+                            <label for="use_grid"/>
+                            <div>
+                                <field name="use_grid" nolabel="1"/>
+                                <span class="text-muted d-block small">
+                                    Floor-by-floor table. No image required.
+                                </span>
+                            </div>
                         </group>
                     </group>
                     <notebook>
@@ -84,13 +116,16 @@
         <field name="name">vertikali.view.list</field>
         <field name="model">vertikali.view</field>
         <field name="arch" type="xml">
-            <list string="Visual Views">
+            <list string="Visual Views"
+                  decoration-muted="not has_image">
                 <field name="sequence" widget="handle"/>
                 <field name="name"/>
                 <field name="view_type"/>
-                <field name="building"/>
-                <field name="floor"/>
-                <field name="categ_id"/>
+                <field name="project_id" optional="show"/>
+                <field name="building" optional="show"/>
+                <field name="floor" optional="show"/>
+                <field name="has_image" string="Image" widget="boolean_toggle"
+                       readonly="1"/>
                 <field name="polygon_count" string="Zones"/>
             </list>
         </field>
