@@ -573,6 +573,11 @@
 
     // ---- stage ----
     .o_vk_stage {
+        // The overlay is absolutely positioned from state.box, which is
+        // measured relative to this element -- without a containing block
+        // here it anchors to an outer ancestor instead and the shapes drift
+        // sideways from where they were clicked.
+        position: relative;
         overflow: hidden;
         display: flex;
         align-items: center;

@@ -715,6 +715,20 @@ export class VertikaliSelector extends Component {
         if (!width || !height) {
             return [0, 0];
         }
+        // Measure against the SVG overlay itself. It is the element the shape
+        // is painted into, so using its rect makes the click and the drawing
+        // agree by construction -- deriving the same box twice, once for the
+        // style and once for the pointer, left room for them to disagree.
+        const svg = this.stageRef.el.querySelector(".o_vk_svg");
+        if (svg) {
+            const r = svg.getBoundingClientRect();
+            if (r.width && r.height) {
+                return [
+                    Math.min(1, Math.max(0, Math.round(((ev.clientX - r.left) / r.width) * 10000) / 10000)),
+                    Math.min(1, Math.max(0, Math.round(((ev.clientY - r.top) / r.height) * 10000) / 10000)),
+                ];
+            }
+        }
         const sr = this.stageRef.el.getBoundingClientRect();
         const x = (ev.clientX - sr.left - left) / width;
         const y = (ev.clientY - sr.top - top) / height;
