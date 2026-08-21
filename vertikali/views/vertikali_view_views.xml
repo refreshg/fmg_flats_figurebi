@@ -66,16 +66,22 @@
         <field name="name">vertikali.view.search</field>
         <field name="model">vertikali.view</field>
         <field name="arch" type="xml">
+            <!-- All <field> elements come first, then filters, then the
+                 group-by box: RelaxNG rejects fields appearing after
+                 filters ("search has extra content: field"), and `expand`
+                 is not a valid attribute on <group> in Odoo 19. -->
             <search string="Visual Views">
                 <field name="name"/>
                 <field name="building"/>
+                <field name="categ_id"/>
+                <separator/>
                 <filter name="f_masterplan" string="Masterplans"
                         domain="[('view_type', '=', 'masterplan')]"/>
                 <filter name="f_facade" string="Facades"
                         domain="[('view_type', '=', 'facade')]"/>
                 <filter name="f_floor" string="Floor Plans"
                         domain="[('view_type', '=', 'floor')]"/>
-                <group expand="0" string="Group By">
+                <group>
                     <filter name="g_type" string="Type"
                             context="{'group_by': 'view_type'}"/>
                     <filter name="g_building" string="Building"
