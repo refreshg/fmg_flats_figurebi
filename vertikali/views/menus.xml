@@ -7,6 +7,12 @@
               groups="sales_team.group_sale_salesman"
               sequence="15"/>
 
+    <menuitem id="menu_vertikali_selector"
+              name="Building Selector"
+              parent="menu_vertikali_root"
+              action="action_vertikali_selector"
+              sequence="5"/>
+
     <menuitem id="menu_vertikali_inventory"
               name="Inventory"
               parent="menu_vertikali_root"

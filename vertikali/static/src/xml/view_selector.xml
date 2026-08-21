@@ -1,0 +1,109 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates xml:space="preserve">
+
+    <t t-name="vertikali.Selector">
+        <div class="o_vk_selector d-flex flex-column h-100">
+
+            <div class="o_vk_bar d-flex align-items-center gap-2 p-2">
+                <span class="o_vk_kicker">Visual selector</span>
+                <select class="o_vk_pick form-select form-select-sm w-auto"
+                        t-on-change="(ev) => this.loadView(parseInt(ev.target.value))">
+                    <t t-foreach="state.views" t-as="v" t-key="v.id">
+                        <option t-att-value="v.id"
+                                t-att-selected="state.view and v.id === state.view.id">
+                            <t t-esc="v.name"/>
+                        </option>
+                    </t>
+                </select>
+                <span class="o_vk_meta" t-if="state.view">
+                    <t t-esc="state.zones.length"/> zones
+                </span>
+            </div>
+
+            <div t-if="state.error" class="alert alert-danger m-3">
+                <t t-esc="state.error"/>
+            </div>
+
+            <div t-elif="state.loading" class="text-muted p-4">Loading…</div>
+
+            <div t-elif="!state.view" class="o_vk_empty p-4">
+                <h4>No visual view yet</h4>
+                <p class="text-muted">
+                    Create one under Estate → Configuration → Visual Views,
+                    upload a render and draw the zones.
+                </p>
+            </div>
+
+            <div t-else="" class="o_vk_body d-flex flex-grow-1 overflow-hidden">
+
+                <div class="o_vk_stage flex-grow-1 position-relative">
+                    <img t-if="imageSrc" t-att-src="imageSrc"
+                         class="o_vk_img" alt="View background"/>
+                    <div t-else="" class="o_vk_noimg">
+                        <div>
+                            <strong>No image uploaded</strong>
+                            <div class="small">
+                                Open this view and upload the building render —
+                                the zones below are already positioned.
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Normalized 0..1 viewBox: the overlay stretches with the
+                         image whatever its real dimensions are. -->
+                    <svg class="o_vk_svg" viewBox="0 0 1 1"
+                         preserveAspectRatio="none">
+                        <t t-foreach="state.zones" t-as="z" t-key="z.id">
+                            <polygon class="o_vk_zone"
+                                     t-att-class="{ 'o_vk_zone_sel': state.selected and state.selected.id === z.id }"
+                                     t-att-points="z.pointsAttr"
+                                     t-on-click="() => this.onZoneClick(z)"
+                                     t-on-mouseenter="() => (state.hovered = z)"
+                                     t-on-mouseleave="() => (state.hovered = null)"/>
+                        </t>
+                    </svg>
+                </div>
+
+                <div class="o_vk_side">
+                    <div class="o_vk_side_h">Zones</div>
+                    <div class="o_vk_list">
+                        <t t-foreach="state.zones" t-as="z" t-key="z.id">
+                            <button class="o_vk_row"
+                                    t-att-class="{ 'o_vk_row_sel': state.selected and state.selected.id === z.id }"
+                                    t-on-click="() => this.onZoneClick(z)"
+                                    t-on-mouseenter="() => (state.hovered = z)"
+                                    t-on-mouseleave="() => (state.hovered = null)">
+                                <span class="o_vk_row_n"><t t-esc="z.name"/></span>
+                                <span class="o_vk_row_m" t-if="z.product_tmpl_id">
+                                    <t t-esc="z.product_tmpl_id[1]"/>
+                                </span>
+                                <span class="o_vk_row_m" t-elif="z.target_view_id">
+                                    → <t t-esc="z.target_view_id[1]"/>
+                                </span>
+                            </button>
+                        </t>
+                        <div t-if="!state.zones.length" class="o_vk_row_m p-3">
+                            No zones drawn on this view yet.
+                        </div>
+                    </div>
+
+                    <div class="o_vk_act" t-if="state.selected">
+                        <div class="o_vk_kicker">Selected</div>
+                        <div class="o_vk_sel_n"><t t-esc="state.selected.name"/></div>
+                        <button t-if="state.selected.product_tmpl_id"
+                                class="btn btn-primary btn-sm w-100 mt-2"
+                                t-on-click="() => this.openUnit(state.selected)">
+                            Open unit
+                        </button>
+                        <button t-if="state.selected.floor"
+                                class="btn btn-secondary btn-sm w-100 mt-2"
+                                t-on-click="() => this.showFloorUnits(state.selected)">
+                            Show units on this floor
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </t>
+
+</templates>

@@ -41,6 +41,14 @@ apartment-specific fields and the visual selector are custom.
         'data/demo_building_a.xml',
     ],
 
+    'assets': {
+        'web.assets_backend': [
+            'vertikali/static/src/scss/view_selector.scss',
+            'vertikali/static/src/js/view_selector.js',
+            'vertikali/static/src/xml/view_selector.xml',
+        ],
+    },
+
     'installable': True,
     'application': True,
 }

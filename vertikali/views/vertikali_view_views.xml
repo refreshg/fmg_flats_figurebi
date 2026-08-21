@@ -91,6 +91,13 @@
         </field>
     </record>
 
+    <!-- The visual selector itself: an OWL client action, because Odoo has no
+         built-in view type that renders clickable regions over an image. -->
+    <record id="action_vertikali_selector" model="ir.actions.client">
+        <field name="name">Building Selector</field>
+        <field name="tag">vertikali_selector</field>
+    </record>
+
     <record id="action_vertikali_views" model="ir.actions.act_window">
         <field name="name">Visual Views</field>
         <field name="res_model">vertikali.view</field>
