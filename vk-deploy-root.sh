@@ -43,11 +43,17 @@ systemctl stop odoo
 
 # Already root here, so drop privileges with runuser: a nested `sudo -u odoo`
 # would re-prompt for a password and abort the unattended run.
+# Full output goes to a world-readable log so failures can be diagnosed after
+# the fact -- piping straight to tail loses the traceback on error.
+LOG="/tmp/vk-deploy-last.log"
 set +e
 runuser -u odoo -- "$ODOO_PY" "$ODOO_BIN" -c "$ODOO_CONF" -d "$DB" \
-        "$FLAG" "$MODULE" --stop-after-init 2>&1 | tail -30
-RC=${PIPESTATUS[0]}
+        "$FLAG" "$MODULE" --stop-after-init >"$LOG" 2>&1
+RC=$?
 set -e
+chmod 644 "$LOG" 2>/dev/null || true
+tail -30 "$LOG"
+echo "  (full log: $LOG)"
 
 echo "  starting odoo"
 systemctl start odoo
