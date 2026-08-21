@@ -40,7 +40,8 @@ for f in __init__.py __manifest__.py models/product_template.py \
          security/ir.model.access.csv; do
     [ -f "$REPO_DIR/$MODULE/$f" ] || { echo "    MISSING: $f" >&2; exit 1; }
 done
-"$ODOO_PY" - "$REPO_DIR/$MODULE" <<'PYEOF'
+# Uses system python3: the odoo venv is not readable by the deploying user.
+python3 - "$REPO_DIR/$MODULE" <<'PYEOF'
 import ast, pathlib, sys, xml.dom.minidom as md
 root = pathlib.Path(sys.argv[1])
 for p in root.rglob("*.py"):
