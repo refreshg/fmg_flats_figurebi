@@ -105,11 +105,10 @@ export class VertikaliSelector extends Component {
                 );
                 this.state.views = views;
 
-                // Start on the chooser when there is a choice to make;
-                // a single project goes straight in.
-                if (this.state.projects.length === 1) {
-                    await this.selectProject(this.state.projects[0]);
-                } else if (!this.state.projects.length && views.length) {
+                // Always start on the project chooser. Skipping it for a lone
+                // project dropped the user straight into a facade with no
+                // sense of where they were or how to get back out.
+                if (!this.state.projects.length && views.length) {
                     await this.loadView(views[0].id);
                 }
             } catch (e) {
@@ -304,15 +303,17 @@ export class VertikaliSelector extends Component {
         this.state.project = project;
         this.state.block = null;
         this.state.unit = null;
-        const blocks = this.projectBlocks;
-        // With several blocks, the masterplan is where you pick one.
-        if (blocks.length > 1 && project.use_masterplan) {
+        // The masterplan is the project's own screen: it shows the site and
+        // the blocks on it. Auto-entering a block skipped that entirely, even
+        // when the project had one to show.
+        if (project.use_masterplan) {
             this.state.mode = "masterplan";
             this.state.view = null;
             this.state.zones = [];
             return;
         }
-        if (blocks.length) {
+        const blocks = this.projectBlocks;
+        if (blocks.length === 1) {
             await this.selectBlock(blocks[0]);
             return;
         }

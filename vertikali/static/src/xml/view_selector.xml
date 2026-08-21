@@ -221,7 +221,11 @@
                         </t>
                     </svg>
                     <div class="o_vk_hint">
-                        <t t-if="state.drawing">
+                        <t t-if="!projectBlocks.length">
+                            No blocks yet — press <b>+ add</b> on the right, then
+                            click the corners of a tower on the render.
+                        </t>
+                        <t t-elif="state.drawing">
                             Drawing <b>Block <t t-esc="state.editingBlock.code"/></b> —
                             <t t-esc="state.draft.length"/> points. Close on the first point to finish.
                             <button class="o_vk_link ms-2" t-on-click="undoPoint">undo</button>
