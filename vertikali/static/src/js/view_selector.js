@@ -26,7 +26,6 @@ export class VertikaliSelector extends Component {
         this.orm = useService("orm");
         this.action = useService("action");
         this.notification = useService("notification");
-        this.imgRef = useRef("img");
         this.frameRef = useRef("frame");
         this.stageRef = useRef("stage");
 
@@ -55,11 +54,7 @@ export class VertikaliSelector extends Component {
             drawing: false,
             draft: [],
             dirty: new Set(),
-            // rendered image box within the stage, in CSS pixels
-            box: { left: 0, top: 0, width: 0, height: 0 },
         });
-
-        this.onResize = () => this.measure();
 
         // Delete removes the selected zone while editing; Escape cancels a
         // draw. Bound on the document so it works wherever focus sits.
@@ -81,7 +76,6 @@ export class VertikaliSelector extends Component {
         document.addEventListener("keydown", this.onKeydown);
         onWillUnmount(() => {
             document.removeEventListener("keydown", this.onKeydown);
-            this._observer?.disconnect();
         });
 
         onWillStart(async () => {
@@ -168,7 +162,6 @@ export class VertikaliSelector extends Component {
         this.state.editingBlock = block;
         this.state.drawing = true;
         this.state.draft = [];
-        this.measure();
     }
 
     /**
@@ -664,76 +657,32 @@ export class VertikaliSelector extends Component {
     // ------------------------------------------------------------ geometry
 
     /**
-     * Compute where the image actually lands inside the stage. object-fit:
-     * contain letterboxes it, so the drawn box is usually smaller than the
-     * container -- the overlay has to match the box, not the container.
+     * The overlay is aligned by CSS -- the image and the SVG share one grid
+     * cell -- so nothing needs measuring. Kept as a no-op hook because the
+     * image still reports when it has loaded.
      */
-    measure() {
-        const img = this.imgRef.el;
-        const stage = this.stageRef.el;
-        if (!img || !stage || !img.naturalWidth) {
-            return;
-        }
-        const sr = stage.getBoundingClientRect();
-        const ir = img.getBoundingClientRect();
+    onImageLoad() {}
 
-        // Where the pixels actually are: the <img> is laid out by flexbox and
-        // object-fit: contain letterboxes the picture inside it. toNorm() runs
-        // this same derivation on the same rect, so the overlay and the
-        // pointer cannot drift apart.
-        const scale = Math.min(ir.width / img.naturalWidth, ir.height / img.naturalHeight);
-        const w = img.naturalWidth * scale;
-        const h = img.naturalHeight * scale;
-
-        this.state.box = {
-            left: (ir.left - sr.left) + (ir.width - w) / 2,
-            top: (ir.top - sr.top) + (ir.height - h) / 2,
-            width: w,
-            height: h,
-        };
-    }
-
-    onImageLoad() {
-        this.measure();
-        // Keep the overlay glued to the image as the layout changes.
-        if (!this._observer && this.stageRef.el && window.ResizeObserver) {
-            this._observer = new ResizeObserver(() => this.measure());
-            this._observer.observe(this.stageRef.el);
-        }
-    }
-
-    /** Pointer position as a 0..1 coordinate on the image. */
+    /**
+     * Pointer position as a 0..1 coordinate on the image.
+     *
+     * The frame is exactly the picture -- the image sizes it and the SVG fills
+     * it -- so one rect serves both the click and the drawing, with no
+     * letterbox to back out and nothing to fall out of sync.
+     */
     toNorm(ev) {
-        // Measure lazily: the box is only refreshed on image load and when
-        // toggling zone edit, neither of which happens before drawing a block
-        // on the masterplan. A stale (zero-width) box collapsed every point
-        // into the same spot.
-        if (!this.state.box.width || !this.state.box.height) {
-            this.measure();
-        }
-        const { left, top, width, height } = this.state.box;
-        if (!width || !height) {
+        const frame = this.frameRef.el;
+        if (!frame) {
             return [0, 0];
         }
-        // The frame is exactly the picture -- the image sizes it and the SVG
-        // fills it -- so one rect serves both the click and the drawing. No
-        // letterbox to back out, and nothing to fall out of sync.
-        const frame = this.frameRef.el;
-        if (frame) {
-            const r = frame.getBoundingClientRect();
-            if (r.width && r.height) {
-                return [
-                    Math.min(1, Math.max(0, Math.round(((ev.clientX - r.left) / r.width) * 10000) / 10000)),
-                    Math.min(1, Math.max(0, Math.round(((ev.clientY - r.top) / r.height) * 10000) / 10000)),
-                ];
-            }
+        const r = frame.getBoundingClientRect();
+        if (!r.width || !r.height) {
+            return [0, 0];
         }
-        const sr = this.stageRef.el.getBoundingClientRect();
-        const x = (ev.clientX - sr.left - left) / width;
-        const y = (ev.clientY - sr.top - top) / height;
+        const clamp = (v) => Math.min(1, Math.max(0, Math.round(v * 10000) / 10000));
         return [
-            Math.min(1, Math.max(0, Math.round(x * 10000) / 10000)),
-            Math.min(1, Math.max(0, Math.round(y * 10000) / 10000)),
+            clamp((ev.clientX - r.left) / r.width),
+            clamp((ev.clientY - r.top) / r.height),
         ];
     }
 
@@ -798,10 +747,6 @@ export class VertikaliSelector extends Component {
         this.state.editing = !this.state.editing;
         this.state.drawing = false;
         this.state.draft = [];
-        // Entering edit mode inserts the hint bar, which changes the stage
-        // height. Measuring now would use the pre-render layout, so wait for
-        // the browser to lay the new frame out first.
-        requestAnimationFrame(() => this.measure());
     }
 
     startDraw() {

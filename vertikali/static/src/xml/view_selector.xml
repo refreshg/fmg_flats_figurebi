@@ -194,7 +194,7 @@
                          without any measured geometry. -->
                     <div t-else="" class="o_vk_frame" t-ref="frame">
                     <img t-att-src="coverSrc(state.project)"
-                         t-ref="img" class="o_vk_img" alt="" t-on-load="onImageLoad"/>
+                         class="o_vk_img" alt=""/>
                     <svg class="o_vk_svg" viewBox="0 0 1 1" preserveAspectRatio="none">
                         <!-- Existing outlines fade while a new one is traced,
                              so they cannot be mistaken for what is being drawn. -->
@@ -566,9 +566,9 @@
                     <!-- Image and overlay share one grid cell, so the zones
                          always cover exactly the picture. -->
                     <div t-else="" class="o_vk_frame" t-ref="frame">
-                    <img t-att-src="imageSrc" t-ref="img"
+                    <img t-att-src="imageSrc"
                          class="o_vk_img" alt="View background"
-                         t-on-load="onImageLoad"/>
+                        />
                     <svg class="o_vk_svg" viewBox="0 0 1 1"
                          preserveAspectRatio="none">
 
