@@ -168,6 +168,70 @@ export class VertikaliSelector extends Component {
         this.state.editingBlock = block;
         this.state.drawing = true;
         this.state.draft = [];
+        this.measure();
+    }
+
+    /**
+     * Draw a shape for a new block. The number of towers is whatever has been
+     * drawn, so a development can have one block or six without configuring a
+     * fixed list first.
+     */
+    async startNewBlock() {
+        const code = window.prompt("Block letter or number?", this.nextBlockCode());
+        if (!code) {
+            return;
+        }
+        try {
+            const ids = await this.orm.create("vertikali.block", [{
+                name: `Block ${code}`,
+                code: code.trim(),
+                project_id: this.state.project.id,
+                sequence: (this.projectBlocks.length + 1) * 10,
+                color: this.nextBlockColor(),
+            }]);
+            const [rec] = await this.orm.read(
+                "vertikali.block", ids,
+                ["name", "code", "project_id", "color", "floors", "points",
+                 "facade_view_id", "unit_count", "available_count"]
+            );
+            this.state.blocks.push(rec);
+            this.startBlockDraw(rec);
+        } catch (e) {
+            this.notification.add(e.message || String(e), { type: "danger" });
+        }
+    }
+
+    nextBlockCode() {
+        const used = new Set(this.projectBlocks.map((b) => b.code));
+        for (const c of "ABCDEFGHIJKLMNOP") {
+            if (!used.has(c)) {
+                return c;
+            }
+        }
+        return String(this.projectBlocks.length + 1);
+    }
+
+    nextBlockColor() {
+        const palette = ["#1aa179", "#e8a33d", "#3d7fc1", "#b0559b", "#c1543d", "#5aa832"];
+        return palette[this.projectBlocks.length % palette.length];
+    }
+
+    async deleteBlock(block) {
+        if (!window.confirm(`Delete block ${block.code} and its shape?`)) {
+            return;
+        }
+        try {
+            await this.orm.unlink("vertikali.block", [block.id]);
+            this.state.blocks = this.state.blocks.filter((b) => b.id !== block.id);
+            if (this.state.editingBlock?.id === block.id) {
+                this.state.editingBlock = null;
+            }
+            if (this.state.block?.id === block.id) {
+                this.state.block = null;
+            }
+        } catch (e) {
+            this.notification.add(e.message || String(e), { type: "danger" });
+        }
     }
 
     async finishBlockDraw() {
@@ -631,7 +695,17 @@ export class VertikaliSelector extends Component {
 
     /** Pointer position as a 0..1 coordinate on the image. */
     toNorm(ev) {
+        // Measure lazily: the box is only refreshed on image load and when
+        // toggling zone edit, neither of which happens before drawing a block
+        // on the masterplan. A stale (zero-width) box collapsed every point
+        // into the same spot.
+        if (!this.state.box.width || !this.state.box.height) {
+            this.measure();
+        }
         const { left, top, width, height } = this.state.box;
+        if (!width || !height) {
+            return [0, 0];
+        }
         const sr = this.stageRef.el.getBoundingClientRect();
         const x = (ev.clientX - sr.left - left) / width;
         const y = (ev.clientY - sr.top - top) / height;

@@ -384,6 +384,11 @@ class VertikaliPolygon(models.Model):
     # a single unit. Exactly one target, enforced below.
     target_view_id = fields.Many2one(
         'vertikali.view', string="Opens View", ondelete='set null')
+
+    # A masterplan zone can stand for a whole block instead of a view, so the
+    # number of towers is whatever has been drawn -- no fixed A/B list.
+    block_id = fields.Many2one(
+        'vertikali.block', string="Block", ondelete='cascade', index=True)
     product_tmpl_id = fields.Many2one(
         'product.template', string="Unit", ondelete='cascade', index=True,
         domain="[('vk_is_unit', '=', True)]")

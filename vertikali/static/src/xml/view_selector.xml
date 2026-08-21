@@ -232,7 +232,10 @@
                     </div>
                 </div>
                 <div class="o_vk_side">
-                    <div class="o_vk_side_h">Blocks</div>
+                    <div class="o_vk_side_h d-flex align-items-center">
+                        <span class="flex-grow-1">Blocks</span>
+                        <button class="o_vk_link" t-on-click="startNewBlock">+ add</button>
+                    </div>
                     <div class="o_vk_list">
                         <t t-foreach="projectBlocks" t-as="b" t-key="b.id">
                             <div class="o_vk_row"
@@ -259,14 +262,16 @@
                                     </button>
                                     <button t-if="b.points" class="o_vk_link"
                                             t-on-click.stop="() => (state.editingBlock = b)">adjust</button>
-                                    <button t-if="b.points" class="o_vk_link o_vk_link_d"
-                                            t-on-click.stop="() => this.clearBlockShape(b)">delete shape</button>
+                                    <button t-if="b.points" class="o_vk_link"
+                                            t-on-click.stop="() => this.clearBlockShape(b)">clear shape</button>
+                                    <button class="o_vk_link o_vk_link_d"
+                                            t-on-click.stop="() => this.deleteBlock(b)">delete block</button>
                                 </div>
                             </div>
                         </t>
                         <div t-if="!projectBlocks.length" class="o_vk_row_m p-3">
-                            No blocks on this project. Add them under
-                            Configuration → Projects.
+                            No blocks yet. Press <b>+ add</b> above, then click
+                            the corners of the tower on the render.
                         </div>
                     </div>
                 </div>
