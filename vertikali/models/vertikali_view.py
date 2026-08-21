@@ -24,13 +24,61 @@ class VertikaliProject(models.Model):
     sequence = fields.Integer(default=10)
     active = fields.Boolean(default=True)
 
+    # Shown on the project chooser, before any building is picked.
+    image = fields.Image(
+        string="Cover",
+        help="Hero render of the development.")
+    tagline = fields.Char(
+        help="One line under the title, e.g. Tbilisi, Saburtalo.")
+    description = fields.Text(
+        help="Short description shown on the project card.")
+    handover = fields.Char(
+        string="Handover",
+        help="Free text, e.g. Q4 2027.")
+
     categ_id = fields.Many2one(
         'product.category',
         string="Product Category",
         help="Category holding this project's units.",
     )
     building = fields.Char(
-        help="Building label used on the units, e.g. A.")
+        help="Building label used on the units, e.g. A. "
+             "Leave empty when the project has several blocks.")
+
+    block_ids = fields.One2many(
+        'vertikali.block', 'project_id', string="Blocks")
+
+    unit_count = fields.Integer(compute='_compute_unit_stats')
+    available_count = fields.Integer(compute='_compute_unit_stats')
+    price_from = fields.Monetary(
+        compute='_compute_unit_stats', currency_field='currency_id')
+    currency_id = fields.Many2one(
+        'res.currency', compute='_compute_currency')
+
+    def _compute_currency(self):
+        for project in self:
+            project.currency_id = self.env.company.currency_id
+
+    def _compute_unit_stats(self):
+        for project in self:
+            units = project._units()
+            available = units.filtered(lambda u: u.vk_state == 'available')
+            prices = available.mapped('list_price') or units.mapped('list_price')
+            project.unit_count = len(units)
+            project.available_count = len(available)
+            project.price_from = min(prices) if prices else 0.0
+
+    def _units(self):
+        """Units belonging to this project, by category or building label."""
+        self.ensure_one()
+        domain = [('vk_is_unit', '=', True)]
+        if self.categ_id:
+            domain.append(('categ_id', 'child_of', self.categ_id.id))
+        elif self.building:
+            domain.append(('vk_building', '=', self.building))
+        else:
+            return self.env['product.template']
+        return self.env['product.template'].search(domain)
 
     # Navigation steps. A project needs at least one entry point; the
     # constraint below enforces that.
@@ -161,6 +209,85 @@ class VertikaliProject(models.Model):
         return count
 
 
+class VertikaliBlock(models.Model):
+    """One tower within a project.
+
+    A development is usually several blocks (A, B, ...) sharing a masterplan.
+    The masterplan highlights each block in turn; picking one enters its
+    facade. Units are matched by vk_building.
+    """
+
+    _name = 'vertikali.block'
+    _description = "Block"
+    _order = 'sequence, code, id'
+
+    name = fields.Char(required=True)
+    code = fields.Char(
+        required=True,
+        help="Label shown on the switcher, e.g. A.")
+    sequence = fields.Integer(default=10)
+    active = fields.Boolean(default=True)
+
+    project_id = fields.Many2one(
+        'vertikali.project', required=True, ondelete='cascade', index=True)
+
+    # Highlight on the project's masterplan, normalized 0..1 like every other
+    # polygon in this module.
+    points = fields.Text(
+        string="Masterplan Shape",
+        help="Normalized polygon over the project cover, as JSON.")
+
+    color = fields.Char(
+        default="#1aa179",
+        help="Swatch colour on the block switcher.")
+
+    facade_view_id = fields.Many2one(
+        'vertikali.view', string="Facade",
+        domain="[('view_type', '=', 'facade')]")
+
+    floors = fields.Integer(help="Storeys in this block.")
+
+    unit_count = fields.Integer(compute='_compute_unit_stats')
+    available_count = fields.Integer(compute='_compute_unit_stats')
+
+    def _compute_unit_stats(self):
+        for block in self:
+            units = self.env['product.template'].search([
+                ('vk_is_unit', '=', True),
+                ('vk_building', '=', block.code),
+            ])
+            block.unit_count = len(units)
+            block.available_count = len(
+                units.filtered(lambda u: u.vk_state == 'available'))
+
+    @api.constrains('points')
+    def _check_points(self):
+        for block in self:
+            if not block.points:
+                continue
+            _validate_normalized_points(block.points)
+
+
+def _validate_normalized_points(raw):
+    """Shared by blocks and polygons: points must be a 0..1 JSON ring."""
+    try:
+        pts = json.loads(raw or '')
+    except ValueError:
+        raise ValidationError(_("Points must be valid JSON."))
+    if not isinstance(pts, list) or len(pts) < 3:
+        raise ValidationError(_("A shape needs at least 3 points."))
+    for pt in pts:
+        if (not isinstance(pt, (list, tuple)) or len(pt) != 2
+                or not all(isinstance(c, (int, float)) for c in pt)):
+            raise ValidationError(
+                _("Each point must be a [x, y] pair of numbers."))
+        if not all(0 <= c <= 1 for c in pt):
+            raise ValidationError(_(
+                "Points must be normalized between 0 and 1 so the shape "
+                "scales with the image. Got: [%(x)s, %(y)s]",
+                x=pt[0], y=pt[1]))
+
+
 class VertikaliView(models.Model):
     """A clickable image: masterplan, building facade or floor plan.
 
@@ -267,23 +394,7 @@ class VertikaliPolygon(models.Model):
     @api.constrains('points')
     def _check_points(self):
         for poly in self:
-            try:
-                pts = json.loads(poly.points or '')
-            except ValueError:
-                raise ValidationError(_("Points must be valid JSON."))
-            if not isinstance(pts, list) or len(pts) < 3:
-                raise ValidationError(
-                    _("A zone needs at least 3 points."))
-            for pt in pts:
-                if (not isinstance(pt, (list, tuple)) or len(pt) != 2
-                        or not all(isinstance(c, (int, float)) for c in pt)):
-                    raise ValidationError(
-                        _("Each point must be a [x, y] pair of numbers."))
-                if not all(0 <= c <= 1 for c in pt):
-                    raise ValidationError(_(
-                        "Points must be normalized between 0 and 1 so the "
-                        "zone scales with the image. Got: [%(x)s, %(y)s]",
-                        x=pt[0], y=pt[1]))
+            _validate_normalized_points(poly.points)
 
     @api.constrains('target_view_id', 'product_tmpl_id')
     def _check_target(self):

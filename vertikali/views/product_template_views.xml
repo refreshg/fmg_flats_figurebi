@@ -34,8 +34,13 @@
                         <group string="Commercial" name="vk_commercial">
                             <field name="vk_state"/>
                             <field name="vk_price_sqm"/>
+                            <field name="vk_condition"/>
                             <field name="vk_handover"/>
                         </group>
+                    </group>
+                    <group string="Room Areas" name="vk_rooms_group">
+                        <field name="vk_rooms_detail" nolabel="1"
+                               placeholder="One room per line, e.g.&#10;Living 20.0&#10;Bedroom 11.0&#10;Bathroom 4.2"/>
                     </group>
                 </page>
             </xpath>

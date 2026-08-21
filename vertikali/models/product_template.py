@@ -94,6 +94,42 @@ class ProductTemplate(models.Model):
         help="Planned handover date for this unit.",
     )
 
+    # Room-by-room areas for the unit card. Free text rather than a child
+    # model: it is display-only, never aggregated or searched, and typing
+    # "Bedroom 12.4" beats maintaining a table of one-line records.
+    vk_rooms_detail = fields.Text(
+        string="Room Areas",
+        help="One room per line, e.g. 'Living 20.0'. Shown on the unit card.",
+    )
+
+    vk_condition = fields.Selection(
+        selection=[
+            ('frame', "Frame"),
+            ('white', "White frame"),
+            ('green', "Green frame"),
+            ('renovated', "Renovated"),
+        ],
+        string="Condition",
+    )
+
+    def vk_room_lines(self):
+        """Parse vk_rooms_detail into [(label, area)] for display."""
+        self.ensure_one()
+        out = []
+        for line in (self.vk_rooms_detail or '').splitlines():
+            line = line.strip()
+            if not line:
+                continue
+            parts = line.rsplit(None, 1)
+            if len(parts) == 2:
+                try:
+                    out.append((parts[0], float(parts[1])))
+                    continue
+                except ValueError:
+                    pass
+            out.append((line, None))
+        return out
+
     # Derived from the sales pipeline rather than typed by hand, so the grid
     # can never disagree with the orders. Stored because the shakhmatka sorts,
     # groups and filters on it -- the standard qty_available and sales_count

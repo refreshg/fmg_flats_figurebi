@@ -1,6 +1,8 @@
 id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
 access_vertikali_project_salesman,vertikali.project salesman,model_vertikali_project,sales_team.group_sale_salesman,1,0,0,0
 access_vertikali_project_manager,vertikali.project manager,model_vertikali_project,sales_team.group_sale_manager,1,1,1,1
+access_vertikali_block_salesman,vertikali.block salesman,model_vertikali_block,sales_team.group_sale_salesman,1,0,0,0
+access_vertikali_block_manager,vertikali.block manager,model_vertikali_block,sales_team.group_sale_manager,1,1,1,1
 access_vertikali_view_salesman,vertikali.view salesman,model_vertikali_view,sales_team.group_sale_salesman,1,0,0,0
 access_vertikali_view_manager,vertikali.view manager,model_vertikali_view,sales_team.group_sale_manager,1,1,1,1
 access_vertikali_polygon_salesman,vertikali.polygon salesman,model_vertikali_polygon,sales_team.group_sale_salesman,1,0,0,0
