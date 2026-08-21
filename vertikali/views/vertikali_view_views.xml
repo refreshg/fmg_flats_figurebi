@@ -1,0 +1,99 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <record id="view_vertikali_view_list" model="ir.ui.view">
+        <field name="name">vertikali.view.list</field>
+        <field name="model">vertikali.view</field>
+        <field name="arch" type="xml">
+            <list string="Visual Views">
+                <field name="sequence" widget="handle"/>
+                <field name="name"/>
+                <field name="view_type"/>
+                <field name="building"/>
+                <field name="floor"/>
+                <field name="categ_id"/>
+                <field name="polygon_count" string="Zones"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_vertikali_view_form" model="ir.ui.view">
+        <field name="name">vertikali.view.form</field>
+        <field name="model">vertikali.view</field>
+        <field name="arch" type="xml">
+            <form string="Visual View">
+                <sheet>
+                    <field name="image" widget="image" class="oe_avatar"/>
+                    <div class="oe_title">
+                        <label for="name"/>
+                        <h1><field name="name" placeholder="e.g. Building A - facade"/></h1>
+                    </div>
+                    <group>
+                        <group>
+                            <field name="view_type"/>
+                            <field name="building"
+                                   invisible="view_type == 'masterplan'"/>
+                            <field name="floor"
+                                   invisible="view_type != 'floor'"/>
+                        </group>
+                        <group>
+                            <field name="categ_id"/>
+                            <field name="sequence"/>
+                            <field name="active" widget="boolean_toggle"/>
+                        </group>
+                    </group>
+                    <notebook>
+                        <page string="Zones" name="zones">
+                            <field name="polygon_ids">
+                                <list editable="bottom">
+                                    <field name="sequence" widget="handle"/>
+                                    <field name="name"/>
+                                    <field name="floor"/>
+                                    <field name="target_view_id"/>
+                                    <field name="product_tmpl_id"/>
+                                    <field name="points" optional="hide"/>
+                                </list>
+                            </field>
+                        </page>
+                    </notebook>
+                </sheet>
+                <chatter/>
+            </form>
+        </field>
+    </record>
+
+    <record id="view_vertikali_view_search" model="ir.ui.view">
+        <field name="name">vertikali.view.search</field>
+        <field name="model">vertikali.view</field>
+        <field name="arch" type="xml">
+            <search string="Visual Views">
+                <field name="name"/>
+                <field name="building"/>
+                <filter name="f_masterplan" string="Masterplans"
+                        domain="[('view_type', '=', 'masterplan')]"/>
+                <filter name="f_facade" string="Facades"
+                        domain="[('view_type', '=', 'facade')]"/>
+                <filter name="f_floor" string="Floor Plans"
+                        domain="[('view_type', '=', 'floor')]"/>
+                <group expand="0" string="Group By">
+                    <filter name="g_type" string="Type"
+                            context="{'group_by': 'view_type'}"/>
+                    <filter name="g_building" string="Building"
+                            context="{'group_by': 'building'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <record id="action_vertikali_views" model="ir.actions.act_window">
+        <field name="name">Visual Views</field>
+        <field name="res_model">vertikali.view</field>
+        <field name="view_mode">list,form</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">Add a visual view</p>
+            <p>Upload a masterplan, facade or floor plan, then draw the
+               clickable zones on top of it.</p>
+        </field>
+    </record>
+
+</odoo>

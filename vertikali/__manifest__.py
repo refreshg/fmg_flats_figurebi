@@ -32,7 +32,13 @@ apartment-specific fields and the visual selector are custom.
     'data': [
         'security/ir.model.access.csv',
         'views/product_template_views.xml',
+        'views/vertikali_view_views.xml',
         'views/menus.xml',
+        # Sample building. Loaded as ordinary data because this database runs
+        # without demo data (base.demo is False), and it is marked noupdate so
+        # edits to the sample survive later upgrades. Remove this line once
+        # real inventory replaces it.
+        'data/demo_building_a.xml',
     ],
 
     'installable': True,

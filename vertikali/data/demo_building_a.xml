@@ -1,0 +1,2567 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Demo project: one 22-storey building, 126 units.
+     Figures match prototype/*.html so the mockups and the backend agree. -->
+<odoo noupdate="1">
+
+    <!-- ============ project / building categories ============ -->
+    <record id="categ_green_quarter" model="product.category">
+        <field name="name">Green Quarter</field>
+    </record>
+    <record id="categ_building_a" model="product.category">
+        <field name="name">Building A</field>
+        <field name="parent_id" ref="categ_green_quarter"/>
+    </record>
+
+    <!-- ============ visual views ============ -->
+    <record id="view_facade_a" model="vertikali.view">
+        <field name="name">Building A - Facade</field>
+        <field name="view_type">facade</field>
+        <field name="building">A</field>
+        <field name="categ_id" ref="categ_building_a"/>
+    </record>
+    <record id="poly_facade_a_f22" model="vertikali.polygon">
+        <field name="name">Floor 22</field>
+        <field name="sequence">0</field>
+        <field name="view_id" ref="view_facade_a"/>
+        <field name="floor">22</field>
+        <field name="points">[[0.25,0.08],[0.76,0.08],[0.76,0.12],[0.25,0.12]]</field>
+    </record>
+    <record id="poly_facade_a_f21" model="vertikali.polygon">
+        <field name="name">Floor 21</field>
+        <field name="sequence">10</field>
+        <field name="view_id" ref="view_facade_a"/>
+        <field name="floor">21</field>
+        <field name="points">[[0.25,0.12],[0.76,0.12],[0.76,0.16],[0.25,0.16]]</field>
+    </record>
+    <record id="poly_facade_a_f20" model="vertikali.polygon">
+        <field name="name">Floor 20</field>
+        <field name="sequence">20</field>
+        <field name="view_id" ref="view_facade_a"/>
+        <field name="floor">20</field>
+        <field name="points">[[0.25,0.16],[0.76,0.16],[0.76,0.2],[0.25,0.2]]</field>
+    </record>
+    <record id="poly_facade_a_f19" model="vertikali.polygon">
+        <field name="name">Floor 19</field>
+        <field name="sequence">30</field>
+        <field name="view_id" ref="view_facade_a"/>
+        <field name="floor">19</field>
+        <field name="points">[[0.25,0.2],[0.76,0.2],[0.76,0.24],[0.25,0.24]]</field>
+    </record>
+    <record id="poly_facade_a_f18" model="vertikali.polygon">
+        <field name="name">Floor 18</field>
+        <field name="sequence">40</field>
+        <field name="view_id" ref="view_facade_a"/>
+        <field name="floor">18</field>
+        <field name="points">[[0.25,0.24],[0.76,0.24],[0.76,0.28],[0.25,0.28]]</field>
+    </record>
+    <record id="poly_facade_a_f17" model="vertikali.polygon">
+        <field name="name">Floor 17</field>
+        <field name="sequence">50</field>
+        <field name="view_id" ref="view_facade_a"/>
+        <field name="floor">17</field>
+        <field name="points">[[0.25,0.28],[0.76,0.28],[0.76,0.32],[0.25,0.32]]</field>
+    </record>
+    <record id="poly_facade_a_f16" model="vertikali.polygon">
+        <field name="name">Floor 16</field>
+        <field name="sequence">60</field>
+        <field name="view_id" ref="view_facade_a"/>
+        <field name="floor">16</field>
+        <field name="points">[[0.25,0.32],[0.76,0.32],[0.76,0.36],[0.25,0.36]]</field>
+    </record>
+    <record id="poly_facade_a_f15" model="vertikali.polygon">
+        <field name="name">Floor 15</field>
+        <field name="sequence">70</field>
+        <field name="view_id" ref="view_facade_a"/>
+        <field name="floor">15</field>
+        <field name="points">[[0.25,0.36],[0.76,0.36],[0.76,0.4],[0.25,0.4]]</field>
+    </record>
+    <record id="poly_facade_a_f14" model="vertikali.polygon">
+        <field name="name">Floor 14</field>
+        <field name="sequence">80</field>
+        <field name="view_id" ref="view_facade_a"/>
+        <field name="floor">14</field>
+        <field name="points">[[0.25,0.4],[0.76,0.4],[0.76,0.44],[0.25,0.44]]</field>
+    </record>
+    <record id="poly_facade_a_f13" model="vertikali.polygon">
+        <field name="name">Floor 13</field>
+        <field name="sequence">90</field>
+        <field name="view_id" ref="view_facade_a"/>
+        <field name="floor">13</field>
+        <field name="points">[[0.25,0.44],[0.76,0.44],[0.76,0.48],[0.25,0.48]]</field>
+    </record>
+    <record id="poly_facade_a_f12" model="vertikali.polygon">
+        <field name="name">Floor 12</field>
+        <field name="sequence">100</field>
+        <field name="view_id" ref="view_facade_a"/>
+        <field name="floor">12</field>
+        <field name="points">[[0.25,0.48],[0.76,0.48],[0.76,0.52],[0.25,0.52]]</field>
+    </record>
+    <record id="poly_facade_a_f11" model="vertikali.polygon">
+        <field name="name">Floor 11</field>
+        <field name="sequence">110</field>
+        <field name="view_id" ref="view_facade_a"/>
+        <field name="floor">11</field>
+        <field name="points">[[0.25,0.52],[0.76,0.52],[0.76,0.56],[0.25,0.56]]</field>
+    </record>
+    <record id="poly_facade_a_f10" model="vertikali.polygon">
+        <field name="name">Floor 10</field>
+        <field name="sequence">120</field>
+        <field name="view_id" ref="view_facade_a"/>
+        <field name="floor">10</field>
+        <field name="points">[[0.25,0.56],[0.76,0.56],[0.76,0.6],[0.25,0.6]]</field>
+    </record>
+    <record id="poly_facade_a_f9" model="vertikali.polygon">
+        <field name="name">Floor 9</field>
+        <field name="sequence">130</field>
+        <field name="view_id" ref="view_facade_a"/>
+        <field name="floor">9</field>
+        <field name="points">[[0.25,0.6],[0.76,0.6],[0.76,0.64],[0.25,0.64]]</field>
+    </record>
+    <record id="poly_facade_a_f8" model="vertikali.polygon">
+        <field name="name">Floor 8</field>
+        <field name="sequence">140</field>
+        <field name="view_id" ref="view_facade_a"/>
+        <field name="floor">8</field>
+        <field name="points">[[0.25,0.64],[0.76,0.64],[0.76,0.68],[0.25,0.68]]</field>
+    </record>
+    <record id="poly_facade_a_f7" model="vertikali.polygon">
+        <field name="name">Floor 7</field>
+        <field name="sequence">150</field>
+        <field name="view_id" ref="view_facade_a"/>
+        <field name="floor">7</field>
+        <field name="points">[[0.25,0.68],[0.76,0.68],[0.76,0.72],[0.25,0.72]]</field>
+    </record>
+    <record id="poly_facade_a_f6" model="vertikali.polygon">
+        <field name="name">Floor 6</field>
+        <field name="sequence">160</field>
+        <field name="view_id" ref="view_facade_a"/>
+        <field name="floor">6</field>
+        <field name="points">[[0.25,0.72],[0.76,0.72],[0.76,0.76],[0.25,0.76]]</field>
+    </record>
+    <record id="poly_facade_a_f5" model="vertikali.polygon">
+        <field name="name">Floor 5</field>
+        <field name="sequence">170</field>
+        <field name="view_id" ref="view_facade_a"/>
+        <field name="floor">5</field>
+        <field name="points">[[0.25,0.76],[0.76,0.76],[0.76,0.8],[0.25,0.8]]</field>
+    </record>
+    <record id="poly_facade_a_f4" model="vertikali.polygon">
+        <field name="name">Floor 4</field>
+        <field name="sequence">180</field>
+        <field name="view_id" ref="view_facade_a"/>
+        <field name="floor">4</field>
+        <field name="points">[[0.25,0.8],[0.76,0.8],[0.76,0.84],[0.25,0.84]]</field>
+    </record>
+    <record id="poly_facade_a_f3" model="vertikali.polygon">
+        <field name="name">Floor 3</field>
+        <field name="sequence">190</field>
+        <field name="view_id" ref="view_facade_a"/>
+        <field name="floor">3</field>
+        <field name="points">[[0.25,0.84],[0.76,0.84],[0.76,0.88],[0.25,0.88]]</field>
+    </record>
+    <record id="poly_facade_a_f2" model="vertikali.polygon">
+        <field name="name">Floor 2</field>
+        <field name="sequence">200</field>
+        <field name="view_id" ref="view_facade_a"/>
+        <field name="floor">2</field>
+        <field name="points">[[0.25,0.88],[0.76,0.88],[0.76,0.92],[0.25,0.92]]</field>
+    </record>
+
+    <!-- ============ units ============
+         Each apartment is a standard product flagged as a unit. -->
+    <record id="unit_a_2201" model="product.template">
+        <field name="name">Apartment A-2201</field>
+        <field name="default_code">A-2201</field>
+        <field name="type">consu</field>
+        <field name="is_storable" eval="True"/>
+        <field name="sale_ok" eval="True"/>
+        <field name="purchase_ok" eval="False"/>
+        <field name="categ_id" ref="categ_building_a"/>
+        <field name="list_price">201600</field>
+        <field name="vk_is_unit" eval="True"/>
+        <field name="vk_building">A</field>
+        <field name="vk_floor">22</field>
+        <field name="vk_rooms">2+1</field>
+        <field name="vk_orientation">se</field>
+        <field name="vk_area_total">64.2</field>
+        <field name="vk_area_living">52.1</field>
+        <field name="vk_area_balcony">5.4</field>
+        <field name="vk_handover">2027-12-31</field>
+    </record>
+    <record id="unit_a_2202" model="product.template">
+        <field name="name">Apartment A-2202</field>
+        <field name="default_code">A-2202</field>
+        <field name="type">consu</field>
+        <field name="is_storable" eval="True"/>
+        <field name="sale_ok" eval="True"/>
+        <field name="purchase_ok" eval="False"/>
+        <field name="categ_id" ref="categ_building_a"/>
+        <field name="list_price">272200</field>
+        <field name="vk_is_unit" eval="True"/>
+        <field name="vk_building">A</field>
+        <field name="vk_floor">22</field>
+        <field name="vk_rooms">3+1</field>
+        <field name="vk_orientation">s</field>
+        <field name="vk_area_total">86.4</field>
+        <field name="vk_area_living">71.6</field>
+        <field name="vk_area_balcony">8.1</field>
+        <field name="vk_handover">2027-12-31</field>
+    </record>
+    <record id="unit_a_2203" model="product.template">
+        <field name="name">Apartment A-2203</field>
+        <field name="default_code">A-2203</field>
+        <field name="type">consu</field>
+        <field name="is_storable" eval="True"/>
+        <field name="sale_ok" eval="True"/>
+        <field name="purchase_ok" eval="False"/>
+        <field name="categ_id" ref="categ_building_a"/>
+        <field name="list_price">139100</field>
+        <field name="vk_is_unit" eval="True"/>
+        <field name="vk_building">A</field>
+        <field name="vk_floor">22</field>
+        <field name="vk_rooms">1+1</field>
+        <field name="vk_orientation">sw</field>
+        <field name="vk_area_total">45</field>
+        <field name="vk_area_living">36.4</field>
+        <field name="vk_area_balcony">3.2</field>
+        <field name="vk_handover">2027-12-31</field>
+    </record>
+    <record id="unit_a_2204" model="product.template">
+        <field name="name">Apartment A-2204</field>
+        <field name="default_code">A-2204</field>
+        <field name="type">consu</field>
+        <field name="is_storable" eval="True"/>
+        <field name="sale_ok" eval="True"/>
+        <field name="purchase_ok" eval="False"/>
+        <field name="categ_id" ref="categ_building_a"/>
+        <field name="list_price">218800</field>
+        <field name="vk_is_unit" eval="True"/>
+        <field name="vk_building">A</field>
+        <field name="vk_floor">22</field>
+        <field name="vk_rooms">2+1</field>
+        <field name="vk_orientation">e</field>
+        <field name="vk_area_total">68.8</field>
+        <field name="vk_area_living">58.4</field>
+        <field name="vk_area_balcony">6.2</field>
+        <field name="vk_handover">2027-12-31</field>
+    </record>
+    <record id="unit_a_2205" model="product.template">
+        <field name="name">Apartment A-2205</field>
+        <field name="default_code">A-2205</field>
+        <field name="type">consu</field>
+        <field name="is_storable" eval="True"/>
+        <field name="sale_ok" eval="True"/>
+        <field name="purchase_ok" eval="False"/>
+        <field name="categ_id" ref="categ_building_a"/>
+        <field name="list_price">184200</field>
+        <field name="vk_is_unit" eval="True"/>
+        <field name="vk_building">A</field>
+        <field name="vk_floor">22</field>
+        <field name="vk_rooms">2+1</field>
+        <field name="vk_orientation">ne</field>
+        <field name="vk_area_total">58.3</field>
+        <field name="vk_area_living">47.2</field>
+        <field name="vk_area_balcony">4.8</field>
+        <field name="vk_handover">2027-12-31</field>
+    </record>
+    <record id="unit_a_2206" model="product.template">
+        <field name="name">Apartment A-2206</field>
+        <field name="default_code">A-2206</field>
+        <field name="type">consu</field>
+        <field name="is_storable" eval="True"/>
+        <field name="sale_ok" eval="True"/>
+        <field name="purchase_ok" eval="False"/>
+        <field name="categ_id" ref="categ_building_a"/>
+        <field name="list_price">136400</field>
+        <field name="vk_is_unit" eval="True"/>
+        <field name="vk_building">A</field>
+        <field name="vk_floor">22</field>
+        <field name="vk_rooms">1+1</field>
+        <field name="vk_orientation">n</field>
+        <field name="vk_area_total">42.1</field>
+        <field name="vk_area_living">33.8</field>
+        <field name="vk_area_balcony">3</field>
+        <field name="vk_handover">2027-12-31</field>
+    </record>
+    <record id="unit_a_2101" model="product.template">
+        <field name="name">Apartment A-2101</field>
+        <field name="default_code">A-2101</field>
+        <field name="type">consu</field>
+        <field name="is_storable" eval="True"/>
+        <field name="sale_ok" eval="True"/>
+        <field name="purchase_ok" eval="False"/>
+        <field name="categ_id" ref="categ_building_a"/>
+        <field name="list_price">201600</field>
+        <field name="vk_is_unit" eval="True"/>
+        <field name="vk_building">A</field>
+        <field name="vk_floor">21</field>
+        <field name="vk_rooms">2+1</field>
+        <field name="vk_orientation">se</field>
+        <field name="vk_area_total">64.2</field>
+        <field name="vk_area_living">52.1</field>
+        <field name="vk_area_balcony">5.4</field>
+        <field name="vk_handover">2027-12-31</field>
+    </record>
+    <record id="unit_a_2102" model="product.template">
+        <field name="name">Apartment A-2102</field>
+        <field name="default_code">A-2102</field>
+        <field name="type">consu</field>
+        <field name="is_storable" eval="True"/>
+        <field name="sale_ok" eval="True"/>
+        <field name="purchase_ok" eval="False"/>
+        <field name="categ_id" ref="categ_building_a"/>
+        <field name="list_price">272200</field>
+        <field name="vk_is_unit" eval="True"/>
+        <field name="vk_building">A</field>
+        <field name="vk_floor">21</field>
+        <field name="vk_rooms">3+1</field>
+        <field name="vk_orientation">s</field>
+        <field name="vk_area_total">86.4</field>
+        <field name="vk_area_living">71.6</field>
+        <field name="vk_area_balcony">8.1</field>
+        <field name="vk_handover">2027-12-31</field>
+    </record>
+    <record id="unit_a_2103" model="product.template">
+        <field name="name">Apartment A-2103</field>
+        <field name="default_code">A-2103</field>
+        <field name="type">consu</field>
+        <field name="is_storable" eval="True"/>
+        <field name="sale_ok" eval="True"/>
+        <field name="purchase_ok" eval="False"/>
+        <field name="categ_id" ref="categ_building_a"/>
+        <field name="list_price">139100</field>
+        <field name="vk_is_unit" eval="True"/>
+        <field name="vk_building">A</field>
+        <field name="vk_floor">21</field>
+        <field name="vk_rooms">1+1</field>
+        <field name="vk_orientation">sw</field>
+        <field name="vk_area_total">45</field>
+        <field name="vk_area_living">36.4</field>
+        <field name="vk_area_balcony">3.2</field>
+        <field name="vk_handover">2027-12-31</field>
+    </record>
+    <record id="unit_a_2104" model="product.template">
+        <field name="name">Apartment A-2104</field>
+        <field name="default_code">A-2104</field>
+        <field name="type">consu</field>
+        <field name="is_storable" eval="True"/>
+        <field name="sale_ok" eval="True"/>
+        <field name="purchase_ok" eval="False"/>
+        <field name="categ_id" ref="categ_building_a"/>
+        <field name="list_price">218800</field>
+        <field name="vk_is_unit" eval="True"/>
+        <field name="vk_building">A</field>
+        <field name="vk_floor">21</field>
+        <field name="vk_rooms">2+1</field>
+        <field name="vk_orientation">e</field>
+        <field name="vk_area_total">68.8</field>
+        <field name="vk_area_living">58.4</field>
+        <field name="vk_area_balcony">6.2</field>
+        <field name="vk_handover">2027-12-31</field>
+    </record>
+    <record id="unit_a_2105" model="product.template">
+        <field name="name">Apartment A-2105</field>
+        <field name="default_code">A-2105</field>
+        <field name="type">consu</field>
+        <field name="is_storable" eval="True"/>
+        <field name="sale_ok" eval="True"/>
+        <field name="purchase_ok" eval="False"/>
+        <field name="categ_id" ref="categ_building_a"/>
+        <field name="list_price">184200</field>
+        <field name="vk_is_unit" eval="True"/>
+        <field name="vk_building">A</field>
+        <field name="vk_floor">21</field>
+        <field name="vk_rooms">2+1</field>
+        <field name="vk_orientation">ne</field>
+        <field name="vk_area_total">58.3</field>
+        <field name="vk_area_living">47.2</field>
+        <field name="vk_area_balcony">4.8</field>
+        <field name="vk_handover">2027-12-31</field>
+    </record>
+    <record id="unit_a_2106" model="product.template">
+        <field name="name">Apartment A-2106</field>
+        <field name="default_code">A-2106</field>
+        <field name="type">consu</field>
+        <field name="is_storable" eval="True"/>
+        <field name="sale_ok" eval="True"/>
+        <field name="purchase_ok" eval="False"/>
+        <field name="categ_id" ref="categ_building_a"/>
+        <field name="list_price">136400</field>
+        <field name="vk_is_unit" eval="True"/>
+        <field name="vk_building">A</field>
+        <field name="vk_floor">21</field>
+        <field name="vk_rooms">1+1</field>
+        <field name="vk_orientation">n</field>
+        <field name="vk_area_total">42.1</field>
+        <field name="vk_area_living">33.8</field>
+        <field name="vk_area_balcony">3</field>
+        <field name="vk_handover">2027-12-31</field>
+    </record>
+    <record id="unit_a_2001" model="product.template">
+        <field name="name">Apartment A-2001</field>
+        <field name="default_code">A-2001</field>
+        <field name="type">consu</field>
+        <field name="is_storable" eval="True"/>
+        <field name="sale_ok" eval="True"/>
+        <field name="purchase_ok" eval="False"/>
+        <field name="categ_id" ref="categ_building_a"/>
+        <field name="list_price">201600</field>
+        <field name="vk_is_unit" eval="True"/>
+        <field name="vk_building">A</field>
+        <field name="vk_floor">20</field>
+        <field name="vk_rooms">2+1</field>
+        <field name="vk_orientation">se</field>
+        <field name="vk_area_total">64.2</field>
+        <field name="vk_area_living">52.1</field>
+        <field name="vk_area_balcony">5.4</field>
+        <field name="vk_handover">2027-12-31</field>
+    </record>
+    <record id="unit_a_2002" model="product.template">
+        <field name="name">Apartment A-2002</field>
+        <field name="default_code">A-2002</field>
+        <field name="type">consu</field>
+        <field name="is_storable" eval="True"/>
+        <field name="sale_ok" eval="True"/>
+        <field name="purchase_ok" eval="False"/>
+        <field name="categ_id" ref="categ_building_a"/>
+        <field name="list_price">272200</field>
+        <field name="vk_is_unit" eval="True"/>
+        <field name="vk_building">A</field>
+        <field name="vk_floor">20</field>
+        <field name="vk_rooms">3+1</field>
+        <field name="vk_orientation">s</field>
+        <field name="vk_area_total">86.4</field>
+        <field name="vk_area_living">71.6</field>
+        <field name="vk_area_balcony">8.1</field>
+        <field name="vk_handover">2027-12-31</field>
+    </record>
+    <record id="unit_a_2003" model="product.template">
+        <field name="name">Apartment A-2003</field>
+        <field name="default_code">A-2003</field>
+        <field name="type">consu</field>
+        <field name="is_storable" eval="True"/>
+        <field name="sale_ok" eval="True"/>
+        <field name="purchase_ok" eval="False"/>
+        <field name="categ_id" ref="categ_building_a"/>
+        <field name="list_price">139100</field>
+        <field name="vk_is_unit" eval="True"/>
+        <field name="vk_building">A</field>
+        <field name="vk_floor">20</field>
+        <field name="vk_rooms">1+1</field>
+        <field name="vk_orientation">sw</field>
+        <field name="vk_area_total">45</field>
+        <field name="vk_area_living">36.4</field>
+        <field name="vk_area_balcony">3.2</field>
+        <field name="vk_handover">2027-12-31</field>
+    </record>
+    <record id="unit_a_2004" model="product.template">
+        <field name="name">Apartment A-2004</field>
+        <field name="default_code">A-2004</field>
+        <field name="type">consu</field>
+        <field name="is_storable" eval="True"/>
+        <field name="sale_ok" eval="True"/>
+        <field name="purchase_ok" eval="False"/>
+        <field name="categ_id" ref="categ_building_a"/>
+        <field name="list_price">218800</field>
+        <field name="vk_is_unit" eval="True"/>
+        <field name="vk_building">A</field>
+        <field name="vk_floor">20</field>
+        <field name="vk_rooms">2+1</field>
+        <field name="vk_orientation">e</field>
+        <field name="vk_area_total">68.8</field>
+        <field name="vk_area_living">58.4</field>
+        <field name="vk_area_balcony">6.2</field>
+        <field name="vk_handover">2027-12-31</field>
+    </record>
+    <record id="unit_a_2005" model="product.template">
+        <field name="name">Apartment A-2005</field>
+        <field name="default_code">A-2005</field>
+        <field name="type">consu</field>
+        <field name="is_storable" eval="True"/>
+        <field name="sale_ok" eval="True"/>
+        <field name="purchase_ok" eval="False"/>
+        <field name="categ_id" ref="categ_building_a"/>
+        <field name="list_price">184200</field>
+        <field name="vk_is_unit" eval="True"/>
+        <field name="vk_building">A</field>
+        <field name="vk_floor">20</field>
+        <field name="vk_rooms">2+1</field>
+        <field name="vk_orientation">ne</field>
+        <field name="vk_area_total">58.3</field>
+        <field name="vk_area_living">47.2</field>
+        <field name="vk_area_balcony">4.8</field>
+        <field name="vk_handover">2027-12-31</field>
+    </record>
+    <record id="unit_a_2006" model="product.template">
+        <field name="name">Apartment A-2006</field>
+        <field name="default_code">A-2006</field>
+        <field name="type">consu</field>
+        <field name="is_storable" eval="True"/>
+        <field name="sale_ok" eval="True"/>
+        <field name="purchase_ok" eval="False"/>
+        <field name="categ_id" ref="categ_building_a"/>
+        <field name="list_price">136400</field>
+        <field name="vk_is_unit" eval="True"/>
+        <field name="vk_building">A</field>
+        <field name="vk_floor">20</field>
+        <field name="vk_rooms">1+1</field>
+        <field name="vk_orientation">n</field>
+        <field name="vk_area_total">42.1</field>
+        <field name="vk_area_living">33.8</field>
+        <field name="vk_area_balcony">3</field>
+        <field name="vk_handover">2027-12-31</field>
+    </record>
+    <record id="unit_a_1901" model="product.template">
+        <field name="name">Apartment A-1901</field>
+        <field name="default_code">A-1901</field>
+        <field name="type">consu</field>
+        <field name="is_storable" eval="True"/>
+        <field name="sale_ok" eval="True"/>
+        <field name="purchase_ok" eval="False"/>
+        <field name="categ_id" ref="categ_building_a"/>
+        <field name="list_price">201600</field>
+        <field name="vk_is_unit" eval="True"/>
+        <field name="vk_building">A</field>
+        <field name="vk_floor">19</field>
+        <field name="vk_rooms">2+1</field>
+        <field name="vk_orientation">se</field>
+        <field name="vk_area_total">64.2</field>
+        <field name="vk_area_living">52.1</field>
+        <field name="vk_area_balcony">5.4</field>
+        <field name="vk_handover">2027-12-31</field>
+    </record>
+    <record id="unit_a_1902" model="product.template">
+        <field name="name">Apartment A-1902</field>
+        <field name="default_code">A-1902</field>
+        <field name="type">consu</field>
+        <field name="is_storable" eval="True"/>
+        <field name="sale_ok" eval="True"/>
+        <field name="purchase_ok" eval="False"/>
+        <field name="categ_id" ref="categ_building_a"/>
+        <field name="list_price">272200</field>
+        <field name="vk_is_unit" eval="True"/>
+        <field name="vk_building">A</field>
+        <field name="vk_floor">19</field>
+        <field name="vk_rooms">3+1</field>
+        <field name="vk_orientation">s</field>
+        <field name="vk_area_total">86.4</field>
+        <field name="vk_area_living">71.6</field>
+        <field name="vk_area_balcony">8.1</field>
+        <field name="vk_handover">2027-12-31</field>
+    </record>
+    <record id="unit_a_1903" model="product.template">
+        <field name="name">Apartment A-1903</field>
+        <field name="default_code">A-1903</field>
+        <field name="type">consu</field>
+        <field name="is_storable" eval="True"/>
+        <field name="sale_ok" eval="True"/>
+        <field name="purchase_ok" eval="False"/>
+        <field name="categ_id" ref="categ_building_a"/>
+        <field name="list_price">139100</field>
+        <field name="vk_is_unit" eval="True"/>
+        <field name="vk_building">A</field>
+        <field name="vk_floor">19</field>
+        <field name="vk_rooms">1+1</field>
+        <field name="vk_orientation">sw</field>
+        <field name="vk_area_total">45</field>
+        <field name="vk_area_living">36.4</field>
+        <field name="vk_area_balcony">3.2</field>
+        <field name="vk_handover">2027-12-31</field>
+    </record>
+    <record id="unit_a_1904" model="product.template">
+        <field name="name">Apartment A-1904</field>
+        <field name="default_code">A-1904</field>
+        <field name="type">consu</field>
+        <field name="is_storable" eval="True"/>
+        <field name="sale_ok" eval="True"/>
+        <field name="purchase_ok" eval="False"/>
+        <field name="categ_id" ref="categ_building_a"/>
+        <field name="list_price">218800</field>
+        <field name="vk_is_unit" eval="True"/>
+        <field name="vk_building">A</field>
+        <field name="vk_floor">19</field>
+        <field name="vk_rooms">2+1</field>
+        <field name="vk_orientation">e</field>
+        <field name="vk_area_total">68.8</field>
+        <field name="vk_area_living">58.4</field>
+        <field name="vk_area_balcony">6.2</field>
+        <field name="vk_handover">2027-12-31</field>
+    </record>
+    <record id="unit_a_1905" model="product.template">
+        <field name="name">Apartment A-1905</field>
+        <field name="default_code">A-1905</field>
+        <field name="type">consu</field>
+        <field name="is_storable" eval="True"/>
+        <field name="sale_ok" eval="True"/>
+        <field name="purchase_ok" eval="False"/>
+        <field name="categ_id" ref="categ_building_a"/>
+        <field name="list_price">184200</field>
+        <field name="vk_is_unit" eval="True"/>
+        <field name="vk_building">A</field>
+        <field name="vk_floor">19</field>
+        <field name="vk_rooms">2+1</field>
+        <field name="vk_orientation">ne</field>
+        <field name="vk_area_total">58.3</field>
+        <field name="vk_area_living">47.2</field>
+        <field name="vk_area_balcony">4.8</field>
+        <field name="vk_handover">2027-12-31</field>
+    </record>
+    <record id="unit_a_1906" model="product.template">
+        <field name="name">Apartment A-1906</field>
+        <field name="default_code">A-1906</field>
+        <field name="type">consu</field>
+        <field name="is_storable" eval="True"/>
+        <field name="sale_ok" eval="True"/>
+        <field name="purchase_ok" eval="False"/>
+        <field name="categ_id" ref="categ_building_a"/>
+        <field name="list_price">136400</field>
+        <field name="vk_is_unit" eval="True"/>
+        <field name="vk_building">A</field>
+        <field name="vk_floor">19</field>
+        <field name="vk_rooms">1+1</field>
+        <field name="vk_orientation">n</field>
+        <field name="vk_area_total">42.1</field>
+        <field name="vk_area_living">33.8</field>
+        <field name="vk_area_balcony">3</field>
+        <field name="vk_handover">2027-12-31</field>
+    </record>
+    <record id="unit_a_1801" model="product.template">
+        <field name="name">Apartment A-1801</field>
+        <field name="default_code">A-1801</field>
+        <field name="type">consu</field>
+        <field name="is_storable" eval="True"/>
+        <field name="sale_ok" eval="True"/>
+        <field name="purchase_ok" eval="False"/>
+        <field name="categ_id" ref="categ_building_a"/>
+        <field name="list_price">201600</field>
+        <field name="vk_is_unit" eval="True"/>
+        <field name="vk_building">A</field>
+        <field name="vk_floor">18</field>
+        <field name="vk_rooms">2+1</field>
+        <field name="vk_orientation">se</field>
+        <field name="vk_area_total">64.2</field>
+        <field name="vk_area_living">52.1</field>
+        <field name="vk_area_balcony">5.4</field>
+        <field name="vk_handover">2027-12-31</field>
+    </record>
+    <record id="unit_a_1802" model="product.template">
+        <field name="name">Apartment A-1802</field>
+        <field name="default_code">A-1802</field>
+        <field name="type">consu</field>
+        <field name="is_storable" eval="True"/>
+        <field name="sale_ok" eval="True"/>
+        <field name="purchase_ok" eval="False"/>
+        <field name="categ_id" ref="categ_building_a"/>
+        <field name="list_price">272200</field>
+        <field name="vk_is_unit" eval="True"/>
+        <field name="vk_building">A</field>
+        <field name="vk_floor">18</field>
+        <field name="vk_rooms">3+1</field>
+        <field name="vk_orientation">s</field>
+        <field name="vk_area_total">86.4</field>
+        <field name="vk_area_living">71.6</field>
+        <field name="vk_area_balcony">8.1</field>
+        <field name="vk_handover">2027-12-31</field>
+    </record>
+    <record id="unit_a_1803" model="product.template">
+        <field name="name">Apartment A-1803</field>
+        <field name="default_code">A-1803</field>
+        <field name="type">consu</field>
+        <field name="is_storable" eval="True"/>
+        <field name="sale_ok" eval="True"/>
+        <field name="purchase_ok" eval="False"/>
+        <field name="categ_id" ref="categ_building_a"/>
+        <field name="list_price">139100</field>
+        <field name="vk_is_unit" eval="True"/>
+        <field name="vk_building">A</field>
+        <field name="vk_floor">18</field>
+        <field name="vk_rooms">1+1</field>
+        <field name="vk_orientation">sw</field>
+        <field name="vk_area_total">45</field>
+        <field name="vk_area_living">36.4</field>
+        <field name="vk_area_balcony">3.2</field>
+        <field name="vk_handover">2027-12-31</field>
+    </record>
+    <record id="unit_a_1804" model="product.template">
+        <field name="name">Apartment A-1804</field>
+        <field name="default_code">A-1804</field>
+        <field name="type">consu</field>
+        <field name="is_storable" eval="True"/>
+        <field name="sale_ok" eval="True"/>
+        <field name="purchase_ok" eval="False"/>
+        <field name="categ_id" ref="categ_building_a"/>
+        <field name="list_price">218800</field>
+        <field name="vk_is_unit" eval="True"/>
+        <field name="vk_building">A</field>
+        <field name="vk_floor">18</field>
+        <field name="vk_rooms">2+1</field>
+        <field name="vk_orientation">e</field>
+        <field name="vk_area_total">68.8</field>
+        <field name="vk_area_living">58.4</field>
+        <field name="vk_area_balcony">6.2</field>
+        <field name="vk_handover">2027-12-31</field>
+    </record>
+    <record id="unit_a_1805" model="product.template">
+        <field name="name">Apartment A-1805</field>
+        <field name="default_code">A-1805</field>
+        <field name="type">consu</field>
+        <field name="is_storable" eval="True"/>
+        <field name="sale_ok" eval="True"/>
+        <field name="purchase_ok" eval="False"/>
+        <field name="categ_id" ref="categ_building_a"/>
+        <field name="list_price">184200</field>
+        <field name="vk_is_unit" eval="True"/>
+        <field name="vk_building">A</field>
+        <field name="vk_floor">18</field>
+        <field name="vk_rooms">2+1</field>
+        <field name="vk_orientation">ne</field>
+        <field name="vk_area_total">58.3</field>
+        <field name="vk_area_living">47.2</field>
+        <field name="vk_area_balcony">4.8</field>
+        <field name="vk_handover">2027-12-31</field>
+    </record>
+    <record id="unit_a_1806" model="product.template">
+        <field name="name">Apartment A-1806</field>
+        <field name="default_code">A-1806</field>
+        <field name="type">consu</field>
+        <field name="is_storable" eval="True"/>
+        <field name="sale_ok" eval="True"/>
+        <field name="purchase_ok" eval="False"/>
+        <field name="categ_id" ref="categ_building_a"/>
+        <field name="list_price">136400</field>
+        <field name="vk_is_unit" eval="True"/>
+        <field name="vk_building">A</field>
+        <field name="vk_floor">18</field>
+        <field name="vk_rooms">1+1</field>
+        <field name="vk_orientation">n</field>
+        <field name="vk_area_total">42.1</field>
+        <field name="vk_area_living">33.8</field>
+        <field name="vk_area_balcony">3</field>
+        <field name="vk_handover">2027-12-31</field>
+    </record>
+    <record id="unit_a_1701" model="product.template">
+        <field name="name">Apartment A-1701</field>
+        <field name="default_code">A-1701</field>
+        <field name="type">consu</field>
+        <field name="is_storable" eval="True"/>
+        <field name="sale_ok" eval="True"/>
+        <field name="purchase_ok" eval="False"/>
+        <field name="categ_id" ref="categ_building_a"/>
+        <field name="list_price">201600</field>
+        <field name="vk_is_unit" eval="True"/>
+        <field name="vk_building">A</field>
+        <field name="vk_floor">17</field>
+        <field name="vk_rooms">2+1</field>
+        <field name="vk_orientation">se</field>
+        <field name="vk_area_total">64.2</field>
+        <field name="vk_area_living">52.1</field>
+        <field name="vk_area_balcony">5.4</field>
+        <field name="vk_handover">2027-12-31</field>
+    </record>
+    <record id="unit_a_1702" model="product.template">
+        <field name="name">Apartment A-1702</field>
+        <field name="default_code">A-1702</field>
+        <field name="type">consu</field>
+        <field name="is_storable" eval="True"/>
+        <field name="sale_ok" eval="True"/>
+        <field name="purchase_ok" eval="False"/>
+        <field name="categ_id" ref="categ_building_a"/>
+        <field name="list_price">272200</field>
+        <field name="vk_is_unit" eval="True"/>
+        <field name="vk_building">A</field>
+        <field name="vk_floor">17</field>
+        <field name="vk_rooms">3+1</field>
+        <field name="vk_orientation">s</field>
+        <field name="vk_area_total">86.4</field>
+        <field name="vk_area_living">71.6</field>
+        <field name="vk_area_balcony">8.1</field>
+        <field name="vk_handover">2027-12-31</field>
+    </record>
+    <record id="unit_a_1703" model="product.template">
+        <field name="name">Apartment A-1703</field>
+        <field name="default_code">A-1703</field>
+        <field name="type">consu</field>
+        <field name="is_storable" eval="True"/>
+        <field name="sale_ok" eval="True"/>
+        <field name="purchase_ok" eval="False"/>
+        <field name="categ_id" ref="categ_building_a"/>
+        <field name="list_price">139100</field>
+        <field name="vk_is_unit" eval="True"/>
+        <field name="vk_building">A</field>
+        <field name="vk_floor">17</field>
+        <field name="vk_rooms">1+1</field>
+        <field name="vk_orientation">sw</field>
+        <field name="vk_area_total">45</field>
+        <field name="vk_area_living">36.4</field>
+        <field name="vk_area_balcony">3.2</field>
+        <field name="vk_handover">2027-12-31</field>
+    </record>
+    <record id="unit_a_1704" model="product.template">
+        <field name="name">Apartment A-1704</field>
+        <field name="default_code">A-1704</field>
+        <field name="type">consu</field>
+        <field name="is_storable" eval="True"/>
+        <field name="sale_ok" eval="True"/>
+        <field name="purchase_ok" eval="False"/>
+        <field name="categ_id" ref="categ_building_a"/>
+        <field name="list_price">218800</field>
+        <field name="vk_is_unit" eval="True"/>
+        <field name="vk_building">A</field>
+        <field name="vk_floor">17</field>
+        <field name="vk_rooms">2+1</field>
+        <field name="vk_orientation">e</field>
+        <field name="vk_area_total">68.8</field>
+        <field name="vk_area_living">58.4</field>
+        <field name="vk_area_balcony">6.2</field>
+        <field name="vk_handover">2027-12-31</field>
+    </record>
+    <record id="unit_a_1705" model="product.template">
+        <field name="name">Apartment A-1705</field>
+        <field name="default_code">A-1705</field>
+        <field name="type">consu</field>
+        <field name="is_storable" eval="True"/>
+        <field name="sale_ok" eval="True"/>
+        <field name="purchase_ok" eval="False"/>
+        <field name="categ_id" ref="categ_building_a"/>
+        <field name="list_price">184200</field>
+        <field name="vk_is_unit" eval="True"/>
+        <field name="vk_building">A</field>
+        <field name="vk_floor">17</field>
+        <field name="vk_rooms">2+1</field>
+        <field name="vk_orientation">ne</field>
+        <field name="vk_area_total">58.3</field>
+        <field name="vk_area_living">47.2</field>
+        <field name="vk_area_balcony">4.8</field>
+        <field name="vk_handover">2027-12-31</field>
+    </record>
+    <record id="unit_a_1706" model="product.template">
+        <field name="name">Apartment A-1706</field>
+        <field name="default_code">A-1706</field>
+        <field name="type">consu</field>
+        <field name="is_storable" eval="True"/>
+        <field name="sale_ok" eval="True"/>
+        <field name="purchase_ok" eval="False"/>
+        <field name="categ_id" ref="categ_building_a"/>
+        <field name="list_price">136400</field>
+        <field name="vk_is_unit" eval="True"/>
+        <field name="vk_building">A</field>
+        <field name="vk_floor">17</field>
+        <field name="vk_rooms">1+1</field>
+        <field name="vk_orientation">n</field>
+        <field name="vk_area_total">42.1</field>
+        <field name="vk_area_living">33.8</field>
+        <field name="vk_area_balcony">3</field>
+        <field name="vk_handover">2027-12-31</field>
+    </record>
+    <record id="unit_a_1601" model="product.template">
+        <field name="name">Apartment A-1601</field>
+        <field name="default_code">A-1601</field>
+        <field name="type">consu</field>
+        <field name="is_storable" eval="True"/>
+        <field name="sale_ok" eval="True"/>
+        <field name="purchase_ok" eval="False"/>
+        <field name="categ_id" ref="categ_building_a"/>
+        <field name="list_price">201600</field>
+        <field name="vk_is_unit" eval="True"/>
+        <field name="vk_building">A</field>
+        <field name="vk_floor">16</field>
+        <field name="vk_rooms">2+1</field>
+        <field name="vk_orientation">se</field>
+        <field name="vk_area_total">64.2</field>
+        <field name="vk_area_living">52.1</field>
+        <field name="vk_area_balcony">5.4</field>
+        <field name="vk_handover">2027-12-31</field>
+    </record>
+    <record id="unit_a_1602" model="product.template">
+        <field name="name">Apartment A-1602</field>
+        <field name="default_code">A-1602</field>
+        <field name="type">consu</field>
+        <field name="is_storable" eval="True"/>
+        <field name="sale_ok" eval="True"/>
+        <field name="purchase_ok" eval="False"/>
+        <field name="categ_id" ref="categ_building_a"/>
+        <field name="list_price">272200</field>
+        <field name="vk_is_unit" eval="True"/>
+        <field name="vk_building">A</field>
+        <field name="vk_floor">16</field>
+        <field name="vk_rooms">3+1</field>
+        <field name="vk_orientation">s</field>
+        <field name="vk_area_total">86.4</field>
+        <field name="vk_area_living">71.6</field>
+        <field name="vk_area_balcony">8.1</field>
+        <field name="vk_handover">2027-12-31</field>
+    </record>
+    <record id="unit_a_1603" model="product.template">
+        <field name="name">Apartment A-1603</field>
+        <field name="default_code">A-1603</field>
+        <field name="type">consu</field>
+        <field name="is_storable" eval="True"/>
+        <field name="sale_ok" eval="True"/>
+        <field name="purchase_ok" eval="False"/>
+        <field name="categ_id" ref="categ_building_a"/>
+        <field name="list_price">139100</field>
+        <field name="vk_is_unit" eval="True"/>
+        <field name="vk_building">A</field>
+        <field name="vk_floor">16</field>
+        <field name="vk_rooms">1+1</field>
+        <field name="vk_orientation">sw</field>
+        <field name="vk_area_total">45</field>
+        <field name="vk_area_living">36.4</field>
+        <field name="vk_area_balcony">3.2</field>
+        <field name="vk_handover">2027-12-31</field>
+    </record>
+    <record id="unit_a_1604" model="product.template">
+        <field name="name">Apartment A-1604</field>
+        <field name="default_code">A-1604</field>
+        <field name="type">consu</field>
+        <field name="is_storable" eval="True"/>
+        <field name="sale_ok" eval="True"/>
+        <field name="purchase_ok" eval="False"/>
+        <field name="categ_id" ref="categ_building_a"/>
+        <field name="list_price">218800</field>
+        <field name="vk_is_unit" eval="True"/>
+        <field name="vk_building">A</field>
+        <field name="vk_floor">16</field>
+        <field name="vk_rooms">2+1</field>
+        <field name="vk_orientation">e</field>
+        <field name="vk_area_total">68.8</field>
+        <field name="vk_area_living">58.4</field>
+        <field name="vk_area_balcony">6.2</field>
+        <field name="vk_handover">2027-12-31</field>
+    </record>
+    <record id="unit_a_1605" model="product.template">
+        <field name="name">Apartment A-1605</field>
+        <field name="default_code">A-1605</field>
+        <field name="type">consu</field>
+        <field name="is_storable" eval="True"/>
+        <field name="sale_ok" eval="True"/>
+        <field name="purchase_ok" eval="False"/>
+        <field name="categ_id" ref="categ_building_a"/>
+        <field name="list_price">184200</field>
+        <field name="vk_is_unit" eval="True"/>
+        <field name="vk_building">A</field>
+        <field name="vk_floor">16</field>
+        <field name="vk_rooms">2+1</field>
+        <field name="vk_orientation">ne</field>
+        <field name="vk_area_total">58.3</field>
+        <field name="vk_area_living">47.2</field>
+        <field name="vk_area_balcony">4.8</field>
+        <field name="vk_handover">2027-12-31</field>
+    </record>
+    <record id="unit_a_1606" model="product.template">
+        <field name="name">Apartment A-1606</field>
+        <field name="default_code">A-1606</field>
+        <field name="type">consu</field>
+        <field name="is_storable" eval="True"/>
+        <field name="sale_ok" eval="True"/>
+        <field name="purchase_ok" eval="False"/>
+        <field name="categ_id" ref="categ_building_a"/>
+        <field name="list_price">136400</field>
+        <field name="vk_is_unit" eval="True"/>
+        <field name="vk_building">A</field>
+        <field name="vk_floor">16</field>
+        <field name="vk_rooms">1+1</field>
+        <field name="vk_orientation">n</field>
+        <field name="vk_area_total">42.1</field>
+        <field name="vk_area_living">33.8</field>
+        <field name="vk_area_balcony">3</field>
+        <field name="vk_handover">2027-12-31</field>
+    </record>
+    <record id="unit_a_1501" model="product.template">
+        <field name="name">Apartment A-1501</field>
+        <field name="default_code">A-1501</field>
+        <field name="type">consu</field>
+        <field name="is_storable" eval="True"/>
+        <field name="sale_ok" eval="True"/>
+        <field name="purchase_ok" eval="False"/>
+        <field name="categ_id" ref="categ_building_a"/>
+        <field name="list_price">201600</field>
+        <field name="vk_is_unit" eval="True"/>
+        <field name="vk_building">A</field>
+        <field name="vk_floor">15</field>
+        <field name="vk_rooms">2+1</field>
+        <field name="vk_orientation">se</field>
+        <field name="vk_area_total">64.2</field>
+        <field name="vk_area_living">52.1</field>
+        <field name="vk_area_balcony">5.4</field>
+        <field name="vk_handover">2027-12-31</field>
+    </record>
+    <record id="unit_a_1502" model="product.template">
+        <field name="name">Apartment A-1502</field>
+        <field name="default_code">A-1502</field>
+        <field name="type">consu</field>
+        <field name="is_storable" eval="True"/>
+        <field name="sale_ok" eval="True"/>
+        <field name="purchase_ok" eval="False"/>
+        <field name="categ_id" ref="categ_building_a"/>
+        <field name="list_price">272200</field>
+        <field name="vk_is_unit" eval="True"/>
+        <field name="vk_building">A</field>
+        <field name="vk_floor">15</field>
+        <field name="vk_rooms">3+1</field>
+        <field name="vk_orientation">s</field>
+        <field name="vk_area_total">86.4</field>
+        <field name="vk_area_living">71.6</field>
+        <field name="vk_area_balcony">8.1</field>
+        <field name="vk_handover">2027-12-31</field>
+    </record>
+    <record id="unit_a_1503" model="product.template">
+        <field name="name">Apartment A-1503</field>
+        <field name="default_code">A-1503</field>
+        <field name="type">consu</field>
+        <field name="is_storable" eval="True"/>
+        <field name="sale_ok" eval="True"/>
+        <field name="purchase_ok" eval="False"/>
+        <field name="categ_id" ref="categ_building_a"/>
+        <field name="list_price">139100</field>
+        <field name="vk_is_unit" eval="True"/>
+        <field name="vk_building">A</field>
+        <field name="vk_floor">15</field>
+        <field name="vk_rooms">1+1</field>
+        <field name="vk_orientation">sw</field>
+        <field name="vk_area_total">45</field>
+        <field name="vk_area_living">36.4</field>
+        <field name="vk_area_balcony">3.2</field>
+        <field name="vk_handover">2027-12-31</field>
+    </record>
+    <record id="unit_a_1504" model="product.template">
+        <field name="name">Apartment A-1504</field>
+        <field name="default_code">A-1504</field>
+        <field name="type">consu</field>
+        <field name="is_storable" eval="True"/>
+        <field name="sale_ok" eval="True"/>
+        <field name="purchase_ok" eval="False"/>
+        <field name="categ_id" ref="categ_building_a"/>
+        <field name="list_price">218800</field>
+        <field name="vk_is_unit" eval="True"/>
+        <field name="vk_building">A</field>
+        <field name="vk_floor">15</field>
+        <field name="vk_rooms">2+1</field>
+        <field name="vk_orientation">e</field>
+        <field name="vk_area_total">68.8</field>
+        <field name="vk_area_living">58.4</field>
+        <field name="vk_area_balcony">6.2</field>
+        <field name="vk_handover">2027-12-31</field>
+    </record>
+    <record id="unit_a_1505" model="product.template">
+        <field name="name">Apartment A-1505</field>
+        <field name="default_code">A-1505</field>
+        <field name="type">consu</field>
+        <field name="is_storable" eval="True"/>
+        <field name="sale_ok" eval="True"/>
+        <field name="purchase_ok" eval="False"/>
+        <field name="categ_id" ref="categ_building_a"/>
+        <field name="list_price">184200</field>
+        <field name="vk_is_unit" eval="True"/>
+        <field name="vk_building">A</field>
+        <field name="vk_floor">15</field>
+        <field name="vk_rooms">2+1</field>
+        <field name="vk_orientation">ne</field>
+        <field name="vk_area_total">58.3</field>
+        <field name="vk_area_living">47.2</field>
+        <field name="vk_area_balcony">4.8</field>
+        <field name="vk_handover">2027-12-31</field>
+    </record>
+    <record id="unit_a_1506" model="product.template">
+        <field name="name">Apartment A-1506</field>
+        <field name="default_code">A-1506</field>
+        <field name="type">consu</field>
+        <field name="is_storable" eval="True"/>
+        <field name="sale_ok" eval="True"/>
+        <field name="purchase_ok" eval="False"/>
+        <field name="categ_id" ref="categ_building_a"/>
+        <field name="list_price">136400</field>
+        <field name="vk_is_unit" eval="True"/>
+        <field name="vk_building">A</field>
+        <field name="vk_floor">15</field>
+        <field name="vk_rooms">1+1</field>
+        <field name="vk_orientation">n</field>
+        <field name="vk_area_total">42.1</field>
+        <field name="vk_area_living">33.8</field>
+        <field name="vk_area_balcony">3</field>
+        <field name="vk_handover">2027-12-31</field>
+    </record>
+    <record id="unit_a_1401" model="product.template">
+        <field name="name">Apartment A-1401</field>
+        <field name="default_code">A-1401</field>
+        <field name="type">consu</field>
+        <field name="is_storable" eval="True"/>
+        <field name="sale_ok" eval="True"/>
+        <field name="purchase_ok" eval="False"/>
+        <field name="categ_id" ref="categ_building_a"/>
+        <field name="list_price">201600</field>
+        <field name="vk_is_unit" eval="True"/>
+        <field name="vk_building">A</field>
+        <field name="vk_floor">14</field>
+        <field name="vk_rooms">2+1</field>
+        <field name="vk_orientation">se</field>
+        <field name="vk_area_total">64.2</field>
+        <field name="vk_area_living">52.1</field>
+        <field name="vk_area_balcony">5.4</field>
+        <field name="vk_handover">2027-12-31</field>
+    </record>
+    <record id="unit_a_1402" model="product.template">
+        <field name="name">Apartment A-1402</field>
+        <field name="default_code">A-1402</field>
+        <field name="type">consu</field>
+        <field name="is_storable" eval="True"/>
+        <field name="sale_ok" eval="True"/>
+        <field name="purchase_ok" eval="False"/>
+        <field name="categ_id" ref="categ_building_a"/>
+        <field name="list_price">272200</field>
+        <field name="vk_is_unit" eval="True"/>
+        <field name="vk_building">A</field>
+        <field name="vk_floor">14</field>
+        <field name="vk_rooms">3+1</field>
+        <field name="vk_orientation">s</field>
+        <field name="vk_area_total">86.4</field>
+        <field name="vk_area_living">71.6</field>
+        <field name="vk_area_balcony">8.1</field>
+        <field name="vk_handover">2027-12-31</field>
+    </record>
+    <record id="unit_a_1403" model="product.template">
+        <field name="name">Apartment A-1403</field>
+        <field name="default_code">A-1403</field>
+        <field name="type">consu</field>
+        <field name="is_storable" eval="True"/>
+        <field name="sale_ok" eval="True"/>
+        <field name="purchase_ok" eval="False"/>
+        <field name="categ_id" ref="categ_building_a"/>
+        <field name="list_price">139100</field>
+        <field name="vk_is_unit" eval="True"/>
+        <field name="vk_building">A</field>
+        <field name="vk_floor">14</field>
+        <field name="vk_rooms">1+1</field>
+        <field name="vk_orientation">sw</field>
+        <field name="vk_area_total">45</field>
+        <field name="vk_area_living">36.4</field>
+        <field name="vk_area_balcony">3.2</field>
+        <field name="vk_handover">2027-12-31</field>
+    </record>
+    <record id="unit_a_1404" model="product.template">
+        <field name="name">Apartment A-1404</field>
+        <field name="default_code">A-1404</field>
+        <field name="type">consu</field>
+        <field name="is_storable" eval="True"/>
+        <field name="sale_ok" eval="True"/>
+        <field name="purchase_ok" eval="False"/>
+        <field name="categ_id" ref="categ_building_a"/>
+        <field name="list_price">218800</field>
+        <field name="vk_is_unit" eval="True"/>
+        <field name="vk_building">A</field>
+        <field name="vk_floor">14</field>
+        <field name="vk_rooms">2+1</field>
+        <field name="vk_orientation">e</field>
+        <field name="vk_area_total">68.8</field>
+        <field name="vk_area_living">58.4</field>
+        <field name="vk_area_balcony">6.2</field>
+        <field name="vk_handover">2027-12-31</field>
+    </record>
+    <record id="unit_a_1405" model="product.template">
+        <field name="name">Apartment A-1405</field>
+        <field name="default_code">A-1405</field>
+        <field name="type">consu</field>
+        <field name="is_storable" eval="True"/>
+        <field name="sale_ok" eval="True"/>
+        <field name="purchase_ok" eval="False"/>
+        <field name="categ_id" ref="categ_building_a"/>
+        <field name="list_price">184200</field>
+        <field name="vk_is_unit" eval="True"/>
+        <field name="vk_building">A</field>
+        <field name="vk_floor">14</field>
+        <field name="vk_rooms">2+1</field>
+        <field name="vk_orientation">ne</field>
+        <field name="vk_area_total">58.3</field>
+        <field name="vk_area_living">47.2</field>
+        <field name="vk_area_balcony">4.8</field>
+        <field name="vk_handover">2027-12-31</field>
+    </record>
+    <record id="unit_a_1406" model="product.template">
+        <field name="name">Apartment A-1406</field>
+        <field name="default_code">A-1406</field>
+        <field name="type">consu</field>
+        <field name="is_storable" eval="True"/>
+        <field name="sale_ok" eval="True"/>
+        <field name="purchase_ok" eval="False"/>
+        <field name="categ_id" ref="categ_building_a"/>
+        <field name="list_price">136400</field>
+        <field name="vk_is_unit" eval="True"/>
+        <field name="vk_building">A</field>
+        <field name="vk_floor">14</field>
+        <field name="vk_rooms">1+1</field>
+        <field name="vk_orientation">n</field>
+        <field name="vk_area_total">42.1</field>
+        <field name="vk_area_living">33.8</field>
+        <field name="vk_area_balcony">3</field>
+        <field name="vk_handover">2027-12-31</field>
+    </record>
+    <record id="unit_a_1301" model="product.template">
+        <field name="name">Apartment A-1301</field>
+        <field name="default_code">A-1301</field>
+        <field name="type">consu</field>
+        <field name="is_storable" eval="True"/>
+        <field name="sale_ok" eval="True"/>
+        <field name="purchase_ok" eval="False"/>
+        <field name="categ_id" ref="categ_building_a"/>
+        <field name="list_price">201600</field>
+        <field name="vk_is_unit" eval="True"/>
+        <field name="vk_building">A</field>
+        <field name="vk_floor">13</field>
+        <field name="vk_rooms">2+1</field>
+        <field name="vk_orientation">se</field>
+        <field name="vk_area_total">64.2</field>
+        <field name="vk_area_living">52.1</field>
+        <field name="vk_area_balcony">5.4</field>
+        <field name="vk_handover">2027-12-31</field>
+    </record>
+    <record id="unit_a_1302" model="product.template">
+        <field name="name">Apartment A-1302</field>
+        <field name="default_code">A-1302</field>
+        <field name="type">consu</field>
+        <field name="is_storable" eval="True"/>
+        <field name="sale_ok" eval="True"/>
+        <field name="purchase_ok" eval="False"/>
+        <field name="categ_id" ref="categ_building_a"/>
+        <field name="list_price">272200</field>
+        <field name="vk_is_unit" eval="True"/>
+        <field name="vk_building">A</field>
+        <field name="vk_floor">13</field>
+        <field name="vk_rooms">3+1</field>
+        <field name="vk_orientation">s</field>
+        <field name="vk_area_total">86.4</field>
+        <field name="vk_area_living">71.6</field>
+        <field name="vk_area_balcony">8.1</field>
+        <field name="vk_handover">2027-12-31</field>
+    </record>
+    <record id="unit_a_1303" model="product.template">
+        <field name="name">Apartment A-1303</field>
+        <field name="default_code">A-1303</field>
+        <field name="type">consu</field>
+        <field name="is_storable" eval="True"/>
+        <field name="sale_ok" eval="True"/>
+        <field name="purchase_ok" eval="False"/>
+        <field name="categ_id" ref="categ_building_a"/>
+        <field name="list_price">139100</field>
+        <field name="vk_is_unit" eval="True"/>
+        <field name="vk_building">A</field>
+        <field name="vk_floor">13</field>
+        <field name="vk_rooms">1+1</field>
+        <field name="vk_orientation">sw</field>
+        <field name="vk_area_total">45</field>
+        <field name="vk_area_living">36.4</field>
+        <field name="vk_area_balcony">3.2</field>
+        <field name="vk_handover">2027-12-31</field>
+    </record>
+    <record id="unit_a_1304" model="product.template">
+        <field name="name">Apartment A-1304</field>
+        <field name="default_code">A-1304</field>
+        <field name="type">consu</field>
+        <field name="is_storable" eval="True"/>
+        <field name="sale_ok" eval="True"/>
+        <field name="purchase_ok" eval="False"/>
+        <field name="categ_id" ref="categ_building_a"/>
+        <field name="list_price">218800</field>
+        <field name="vk_is_unit" eval="True"/>
+        <field name="vk_building">A</field>
+        <field name="vk_floor">13</field>
+        <field name="vk_rooms">2+1</field>
+        <field name="vk_orientation">e</field>
+        <field name="vk_area_total">68.8</field>
+        <field name="vk_area_living">58.4</field>
+        <field name="vk_area_balcony">6.2</field>
+        <field name="vk_handover">2027-12-31</field>
+    </record>
+    <record id="unit_a_1305" model="product.template">
+        <field name="name">Apartment A-1305</field>
+        <field name="default_code">A-1305</field>
+        <field name="type">consu</field>
+        <field name="is_storable" eval="True"/>
+        <field name="sale_ok" eval="True"/>
+        <field name="purchase_ok" eval="False"/>
+        <field name="categ_id" ref="categ_building_a"/>
+        <field name="list_price">184200</field>
+        <field name="vk_is_unit" eval="True"/>
+        <field name="vk_building">A</field>
+        <field name="vk_floor">13</field>
+        <field name="vk_rooms">2+1</field>
+        <field name="vk_orientation">ne</field>
+        <field name="vk_area_total">58.3</field>
+        <field name="vk_area_living">47.2</field>
+        <field name="vk_area_balcony">4.8</field>
+        <field name="vk_handover">2027-12-31</field>
+    </record>
+    <record id="unit_a_1306" model="product.template">
+        <field name="name">Apartment A-1306</field>
+        <field name="default_code">A-1306</field>
+        <field name="type">consu</field>
+        <field name="is_storable" eval="True"/>
+        <field name="sale_ok" eval="True"/>
+        <field name="purchase_ok" eval="False"/>
+        <field name="categ_id" ref="categ_building_a"/>
+        <field name="list_price">136400</field>
+        <field name="vk_is_unit" eval="True"/>
+        <field name="vk_building">A</field>
+        <field name="vk_floor">13</field>
+        <field name="vk_rooms">1+1</field>
+        <field name="vk_orientation">n</field>
+        <field name="vk_area_total">42.1</field>
+        <field name="vk_area_living">33.8</field>
+        <field name="vk_area_balcony">3</field>
+        <field name="vk_handover">2027-12-31</field>
+    </record>
+    <record id="unit_a_1201" model="product.template">
+        <field name="name">Apartment A-1201</field>
+        <field name="default_code">A-1201</field>
+        <field name="type">consu</field>
+        <field name="is_storable" eval="True"/>
+        <field name="sale_ok" eval="True"/>
+        <field name="purchase_ok" eval="False"/>
+        <field name="categ_id" ref="categ_building_a"/>
+        <field name="list_price">201600</field>
+        <field name="vk_is_unit" eval="True"/>
+        <field name="vk_building">A</field>
+        <field name="vk_floor">12</field>
+        <field name="vk_rooms">2+1</field>
+        <field name="vk_orientation">se</field>
+        <field name="vk_area_total">64.2</field>
+        <field name="vk_area_living">52.1</field>
+        <field name="vk_area_balcony">5.4</field>
+        <field name="vk_handover">2027-12-31</field>
+    </record>
+    <record id="unit_a_1202" model="product.template">
+        <field name="name">Apartment A-1202</field>
+        <field name="default_code">A-1202</field>
+        <field name="type">consu</field>
+        <field name="is_storable" eval="True"/>
+        <field name="sale_ok" eval="True"/>
+        <field name="purchase_ok" eval="False"/>
+        <field name="categ_id" ref="categ_building_a"/>
+        <field name="list_price">272200</field>
+        <field name="vk_is_unit" eval="True"/>
+        <field name="vk_building">A</field>
+        <field name="vk_floor">12</field>
+        <field name="vk_rooms">3+1</field>
+        <field name="vk_orientation">s</field>
+        <field name="vk_area_total">86.4</field>
+        <field name="vk_area_living">71.6</field>
+        <field name="vk_area_balcony">8.1</field>
+        <field name="vk_handover">2027-12-31</field>
+    </record>
+    <record id="unit_a_1203" model="product.template">
+        <field name="name">Apartment A-1203</field>
+        <field name="default_code">A-1203</field>
+        <field name="type">consu</field>
+        <field name="is_storable" eval="True"/>
+        <field name="sale_ok" eval="True"/>
+        <field name="purchase_ok" eval="False"/>
+        <field name="categ_id" ref="categ_building_a"/>
+        <field name="list_price">139100</field>
+        <field name="vk_is_unit" eval="True"/>
+        <field name="vk_building">A</field>
+        <field name="vk_floor">12</field>
+        <field name="vk_rooms">1+1</field>
+        <field name="vk_orientation">sw</field>
+        <field name="vk_area_total">45</field>
+        <field name="vk_area_living">36.4</field>
+        <field name="vk_area_balcony">3.2</field>
+        <field name="vk_handover">2027-12-31</field>
+    </record>
+    <record id="unit_a_1204" model="product.template">
+        <field name="name">Apartment A-1204</field>
+        <field name="default_code">A-1204</field>
+        <field name="type">consu</field>
+        <field name="is_storable" eval="True"/>
+        <field name="sale_ok" eval="True"/>
+        <field name="purchase_ok" eval="False"/>
+        <field name="categ_id" ref="categ_building_a"/>
+        <field name="list_price">218800</field>
+        <field name="vk_is_unit" eval="True"/>
+        <field name="vk_building">A</field>
+        <field name="vk_floor">12</field>
+        <field name="vk_rooms">2+1</field>
+        <field name="vk_orientation">e</field>
+        <field name="vk_area_total">68.8</field>
+        <field name="vk_area_living">58.4</field>
+        <field name="vk_area_balcony">6.2</field>
+        <field name="vk_handover">2027-12-31</field>
+    </record>
+    <record id="unit_a_1205" model="product.template">
+        <field name="name">Apartment A-1205</field>
+        <field name="default_code">A-1205</field>
+        <field name="type">consu</field>
+        <field name="is_storable" eval="True"/>
+        <field name="sale_ok" eval="True"/>
+        <field name="purchase_ok" eval="False"/>
+        <field name="categ_id" ref="categ_building_a"/>
+        <field name="list_price">184200</field>
+        <field name="vk_is_unit" eval="True"/>
+        <field name="vk_building">A</field>
+        <field name="vk_floor">12</field>
+        <field name="vk_rooms">2+1</field>
+        <field name="vk_orientation">ne</field>
+        <field name="vk_area_total">58.3</field>
+        <field name="vk_area_living">47.2</field>
+        <field name="vk_area_balcony">4.8</field>
+        <field name="vk_handover">2027-12-31</field>
+    </record>
+    <record id="unit_a_1206" model="product.template">
+        <field name="name">Apartment A-1206</field>
+        <field name="default_code">A-1206</field>
+        <field name="type">consu</field>
+        <field name="is_storable" eval="True"/>
+        <field name="sale_ok" eval="True"/>
+        <field name="purchase_ok" eval="False"/>
+        <field name="categ_id" ref="categ_building_a"/>
+        <field name="list_price">136400</field>
+        <field name="vk_is_unit" eval="True"/>
+        <field name="vk_building">A</field>
+        <field name="vk_floor">12</field>
+        <field name="vk_rooms">1+1</field>
+        <field name="vk_orientation">n</field>
+        <field name="vk_area_total">42.1</field>
+        <field name="vk_area_living">33.8</field>
+        <field name="vk_area_balcony">3</field>
+        <field name="vk_handover">2027-12-31</field>
+    </record>
+    <record id="unit_a_1101" model="product.template">
+        <field name="name">Apartment A-1101</field>
+        <field name="default_code">A-1101</field>
+        <field name="type">consu</field>
+        <field name="is_storable" eval="True"/>
+        <field name="sale_ok" eval="True"/>
+        <field name="purchase_ok" eval="False"/>
+        <field name="categ_id" ref="categ_building_a"/>
+        <field name="list_price">201600</field>
+        <field name="vk_is_unit" eval="True"/>
+        <field name="vk_building">A</field>
+        <field name="vk_floor">11</field>
+        <field name="vk_rooms">2+1</field>
+        <field name="vk_orientation">se</field>
+        <field name="vk_area_total">64.2</field>
+        <field name="vk_area_living">52.1</field>
+        <field name="vk_area_balcony">5.4</field>
+        <field name="vk_handover">2027-12-31</field>
+    </record>
+    <record id="unit_a_1102" model="product.template">
+        <field name="name">Apartment A-1102</field>
+        <field name="default_code">A-1102</field>
+        <field name="type">consu</field>
+        <field name="is_storable" eval="True"/>
+        <field name="sale_ok" eval="True"/>
+        <field name="purchase_ok" eval="False"/>
+        <field name="categ_id" ref="categ_building_a"/>
+        <field name="list_price">272200</field>
+        <field name="vk_is_unit" eval="True"/>
+        <field name="vk_building">A</field>
+        <field name="vk_floor">11</field>
+        <field name="vk_rooms">3+1</field>
+        <field name="vk_orientation">s</field>
+        <field name="vk_area_total">86.4</field>
+        <field name="vk_area_living">71.6</field>
+        <field name="vk_area_balcony">8.1</field>
+        <field name="vk_handover">2027-12-31</field>
+    </record>
+    <record id="unit_a_1103" model="product.template">
+        <field name="name">Apartment A-1103</field>
+        <field name="default_code">A-1103</field>
+        <field name="type">consu</field>
+        <field name="is_storable" eval="True"/>
+        <field name="sale_ok" eval="True"/>
+        <field name="purchase_ok" eval="False"/>
+        <field name="categ_id" ref="categ_building_a"/>
+        <field name="list_price">139100</field>
+        <field name="vk_is_unit" eval="True"/>
+        <field name="vk_building">A</field>
+        <field name="vk_floor">11</field>
+        <field name="vk_rooms">1+1</field>
+        <field name="vk_orientation">sw</field>
+        <field name="vk_area_total">45</field>
+        <field name="vk_area_living">36.4</field>
+        <field name="vk_area_balcony">3.2</field>
+        <field name="vk_handover">2027-12-31</field>
+    </record>
+    <record id="unit_a_1104" model="product.template">
+        <field name="name">Apartment A-1104</field>
+        <field name="default_code">A-1104</field>
+        <field name="type">consu</field>
+        <field name="is_storable" eval="True"/>
+        <field name="sale_ok" eval="True"/>
+        <field name="purchase_ok" eval="False"/>
+        <field name="categ_id" ref="categ_building_a"/>
+        <field name="list_price">218800</field>
+        <field name="vk_is_unit" eval="True"/>
+        <field name="vk_building">A</field>
+        <field name="vk_floor">11</field>
+        <field name="vk_rooms">2+1</field>
+        <field name="vk_orientation">e</field>
+        <field name="vk_area_total">68.8</field>
+        <field name="vk_area_living">58.4</field>
+        <field name="vk_area_balcony">6.2</field>
+        <field name="vk_handover">2027-12-31</field>
+    </record>
+    <record id="unit_a_1105" model="product.template">
+        <field name="name">Apartment A-1105</field>
+        <field name="default_code">A-1105</field>
+        <field name="type">consu</field>
+        <field name="is_storable" eval="True"/>
+        <field name="sale_ok" eval="True"/>
+        <field name="purchase_ok" eval="False"/>
+        <field name="categ_id" ref="categ_building_a"/>
+        <field name="list_price">184200</field>
+        <field name="vk_is_unit" eval="True"/>
+        <field name="vk_building">A</field>
+        <field name="vk_floor">11</field>
+        <field name="vk_rooms">2+1</field>
+        <field name="vk_orientation">ne</field>
+        <field name="vk_area_total">58.3</field>
+        <field name="vk_area_living">47.2</field>
+        <field name="vk_area_balcony">4.8</field>
+        <field name="vk_handover">2027-12-31</field>
+    </record>
+    <record id="unit_a_1106" model="product.template">
+        <field name="name">Apartment A-1106</field>
+        <field name="default_code">A-1106</field>
+        <field name="type">consu</field>
+        <field name="is_storable" eval="True"/>
+        <field name="sale_ok" eval="True"/>
+        <field name="purchase_ok" eval="False"/>
+        <field name="categ_id" ref="categ_building_a"/>
+        <field name="list_price">136400</field>
+        <field name="vk_is_unit" eval="True"/>
+        <field name="vk_building">A</field>
+        <field name="vk_floor">11</field>
+        <field name="vk_rooms">1+1</field>
+        <field name="vk_orientation">n</field>
+        <field name="vk_area_total">42.1</field>
+        <field name="vk_area_living">33.8</field>
+        <field name="vk_area_balcony">3</field>
+        <field name="vk_handover">2027-12-31</field>
+    </record>
+    <record id="unit_a_1001" model="product.template">
+        <field name="name">Apartment A-1001</field>
+        <field name="default_code">A-1001</field>
+        <field name="type">consu</field>
+        <field name="is_storable" eval="True"/>
+        <field name="sale_ok" eval="True"/>
+        <field name="purchase_ok" eval="False"/>
+        <field name="categ_id" ref="categ_building_a"/>
+        <field name="list_price">201600</field>
+        <field name="vk_is_unit" eval="True"/>
+        <field name="vk_building">A</field>
+        <field name="vk_floor">10</field>
+        <field name="vk_rooms">2+1</field>
+        <field name="vk_orientation">se</field>
+        <field name="vk_area_total">64.2</field>
+        <field name="vk_area_living">52.1</field>
+        <field name="vk_area_balcony">5.4</field>
+        <field name="vk_handover">2027-12-31</field>
+    </record>
+    <record id="unit_a_1002" model="product.template">
+        <field name="name">Apartment A-1002</field>
+        <field name="default_code">A-1002</field>
+        <field name="type">consu</field>
+        <field name="is_storable" eval="True"/>
+        <field name="sale_ok" eval="True"/>
+        <field name="purchase_ok" eval="False"/>
+        <field name="categ_id" ref="categ_building_a"/>
+        <field name="list_price">272200</field>
+        <field name="vk_is_unit" eval="True"/>
+        <field name="vk_building">A</field>
+        <field name="vk_floor">10</field>
+        <field name="vk_rooms">3+1</field>
+        <field name="vk_orientation">s</field>
+        <field name="vk_area_total">86.4</field>
+        <field name="vk_area_living">71.6</field>
+        <field name="vk_area_balcony">8.1</field>
+        <field name="vk_handover">2027-12-31</field>
+    </record>
+    <record id="unit_a_1003" model="product.template">
+        <field name="name">Apartment A-1003</field>
+        <field name="default_code">A-1003</field>
+        <field name="type">consu</field>
+        <field name="is_storable" eval="True"/>
+        <field name="sale_ok" eval="True"/>
+        <field name="purchase_ok" eval="False"/>
+        <field name="categ_id" ref="categ_building_a"/>
+        <field name="list_price">139100</field>
+        <field name="vk_is_unit" eval="True"/>
+        <field name="vk_building">A</field>
+        <field name="vk_floor">10</field>
+        <field name="vk_rooms">1+1</field>
+        <field name="vk_orientation">sw</field>
+        <field name="vk_area_total">45</field>
+        <field name="vk_area_living">36.4</field>
+        <field name="vk_area_balcony">3.2</field>
+        <field name="vk_handover">2027-12-31</field>
+    </record>
+    <record id="unit_a_1004" model="product.template">
+        <field name="name">Apartment A-1004</field>
+        <field name="default_code">A-1004</field>
+        <field name="type">consu</field>
+        <field name="is_storable" eval="True"/>
+        <field name="sale_ok" eval="True"/>
+        <field name="purchase_ok" eval="False"/>
+        <field name="categ_id" ref="categ_building_a"/>
+        <field name="list_price">218800</field>
+        <field name="vk_is_unit" eval="True"/>
+        <field name="vk_building">A</field>
+        <field name="vk_floor">10</field>
+        <field name="vk_rooms">2+1</field>
+        <field name="vk_orientation">e</field>
+        <field name="vk_area_total">68.8</field>
+        <field name="vk_area_living">58.4</field>
+        <field name="vk_area_balcony">6.2</field>
+        <field name="vk_handover">2027-12-31</field>
+    </record>
+    <record id="unit_a_1005" model="product.template">
+        <field name="name">Apartment A-1005</field>
+        <field name="default_code">A-1005</field>
+        <field name="type">consu</field>
+        <field name="is_storable" eval="True"/>
+        <field name="sale_ok" eval="True"/>
+        <field name="purchase_ok" eval="False"/>
+        <field name="categ_id" ref="categ_building_a"/>
+        <field name="list_price">184200</field>
+        <field name="vk_is_unit" eval="True"/>
+        <field name="vk_building">A</field>
+        <field name="vk_floor">10</field>
+        <field name="vk_rooms">2+1</field>
+        <field name="vk_orientation">ne</field>
+        <field name="vk_area_total">58.3</field>
+        <field name="vk_area_living">47.2</field>
+        <field name="vk_area_balcony">4.8</field>
+        <field name="vk_handover">2027-12-31</field>
+    </record>
+    <record id="unit_a_1006" model="product.template">
+        <field name="name">Apartment A-1006</field>
+        <field name="default_code">A-1006</field>
+        <field name="type">consu</field>
+        <field name="is_storable" eval="True"/>
+        <field name="sale_ok" eval="True"/>
+        <field name="purchase_ok" eval="False"/>
+        <field name="categ_id" ref="categ_building_a"/>
+        <field name="list_price">136400</field>
+        <field name="vk_is_unit" eval="True"/>
+        <field name="vk_building">A</field>
+        <field name="vk_floor">10</field>
+        <field name="vk_rooms">1+1</field>
+        <field name="vk_orientation">n</field>
+        <field name="vk_area_total">42.1</field>
+        <field name="vk_area_living">33.8</field>
+        <field name="vk_area_balcony">3</field>
+        <field name="vk_handover">2027-12-31</field>
+    </record>
+    <record id="unit_a_0901" model="product.template">
+        <field name="name">Apartment A-0901</field>
+        <field name="default_code">A-0901</field>
+        <field name="type">consu</field>
+        <field name="is_storable" eval="True"/>
+        <field name="sale_ok" eval="True"/>
+        <field name="purchase_ok" eval="False"/>
+        <field name="categ_id" ref="categ_building_a"/>
+        <field name="list_price">201600</field>
+        <field name="vk_is_unit" eval="True"/>
+        <field name="vk_building">A</field>
+        <field name="vk_floor">9</field>
+        <field name="vk_rooms">2+1</field>
+        <field name="vk_orientation">se</field>
+        <field name="vk_area_total">64.2</field>
+        <field name="vk_area_living">52.1</field>
+        <field name="vk_area_balcony">5.4</field>
+        <field name="vk_handover">2027-12-31</field>
+    </record>
+    <record id="unit_a_0902" model="product.template">
+        <field name="name">Apartment A-0902</field>
+        <field name="default_code">A-0902</field>
+        <field name="type">consu</field>
+        <field name="is_storable" eval="True"/>
+        <field name="sale_ok" eval="True"/>
+        <field name="purchase_ok" eval="False"/>
+        <field name="categ_id" ref="categ_building_a"/>
+        <field name="list_price">272200</field>
+        <field name="vk_is_unit" eval="True"/>
+        <field name="vk_building">A</field>
+        <field name="vk_floor">9</field>
+        <field name="vk_rooms">3+1</field>
+        <field name="vk_orientation">s</field>
+        <field name="vk_area_total">86.4</field>
+        <field name="vk_area_living">71.6</field>
+        <field name="vk_area_balcony">8.1</field>
+        <field name="vk_handover">2027-12-31</field>
+    </record>
+    <record id="unit_a_0903" model="product.template">
+        <field name="name">Apartment A-0903</field>
+        <field name="default_code">A-0903</field>
+        <field name="type">consu</field>
+        <field name="is_storable" eval="True"/>
+        <field name="sale_ok" eval="True"/>
+        <field name="purchase_ok" eval="False"/>
+        <field name="categ_id" ref="categ_building_a"/>
+        <field name="list_price">139100</field>
+        <field name="vk_is_unit" eval="True"/>
+        <field name="vk_building">A</field>
+        <field name="vk_floor">9</field>
+        <field name="vk_rooms">1+1</field>
+        <field name="vk_orientation">sw</field>
+        <field name="vk_area_total">45</field>
+        <field name="vk_area_living">36.4</field>
+        <field name="vk_area_balcony">3.2</field>
+        <field name="vk_handover">2027-12-31</field>
+    </record>
+    <record id="unit_a_0904" model="product.template">
+        <field name="name">Apartment A-0904</field>
+        <field name="default_code">A-0904</field>
+        <field name="type">consu</field>
+        <field name="is_storable" eval="True"/>
+        <field name="sale_ok" eval="True"/>
+        <field name="purchase_ok" eval="False"/>
+        <field name="categ_id" ref="categ_building_a"/>
+        <field name="list_price">218800</field>
+        <field name="vk_is_unit" eval="True"/>
+        <field name="vk_building">A</field>
+        <field name="vk_floor">9</field>
+        <field name="vk_rooms">2+1</field>
+        <field name="vk_orientation">e</field>
+        <field name="vk_area_total">68.8</field>
+        <field name="vk_area_living">58.4</field>
+        <field name="vk_area_balcony">6.2</field>
+        <field name="vk_handover">2027-12-31</field>
+    </record>
+    <record id="unit_a_0905" model="product.template">
+        <field name="name">Apartment A-0905</field>
+        <field name="default_code">A-0905</field>
+        <field name="type">consu</field>
+        <field name="is_storable" eval="True"/>
+        <field name="sale_ok" eval="True"/>
+        <field name="purchase_ok" eval="False"/>
+        <field name="categ_id" ref="categ_building_a"/>
+        <field name="list_price">184200</field>
+        <field name="vk_is_unit" eval="True"/>
+        <field name="vk_building">A</field>
+        <field name="vk_floor">9</field>
+        <field name="vk_rooms">2+1</field>
+        <field name="vk_orientation">ne</field>
+        <field name="vk_area_total">58.3</field>
+        <field name="vk_area_living">47.2</field>
+        <field name="vk_area_balcony">4.8</field>
+        <field name="vk_handover">2027-12-31</field>
+    </record>
+    <record id="unit_a_0906" model="product.template">
+        <field name="name">Apartment A-0906</field>
+        <field name="default_code">A-0906</field>
+        <field name="type">consu</field>
+        <field name="is_storable" eval="True"/>
+        <field name="sale_ok" eval="True"/>
+        <field name="purchase_ok" eval="False"/>
+        <field name="categ_id" ref="categ_building_a"/>
+        <field name="list_price">136400</field>
+        <field name="vk_is_unit" eval="True"/>
+        <field name="vk_building">A</field>
+        <field name="vk_floor">9</field>
+        <field name="vk_rooms">1+1</field>
+        <field name="vk_orientation">n</field>
+        <field name="vk_area_total">42.1</field>
+        <field name="vk_area_living">33.8</field>
+        <field name="vk_area_balcony">3</field>
+        <field name="vk_handover">2027-12-31</field>
+    </record>
+    <record id="unit_a_0801" model="product.template">
+        <field name="name">Apartment A-0801</field>
+        <field name="default_code">A-0801</field>
+        <field name="type">consu</field>
+        <field name="is_storable" eval="True"/>
+        <field name="sale_ok" eval="True"/>
+        <field name="purchase_ok" eval="False"/>
+        <field name="categ_id" ref="categ_building_a"/>
+        <field name="list_price">201600</field>
+        <field name="vk_is_unit" eval="True"/>
+        <field name="vk_building">A</field>
+        <field name="vk_floor">8</field>
+        <field name="vk_rooms">2+1</field>
+        <field name="vk_orientation">se</field>
+        <field name="vk_area_total">64.2</field>
+        <field name="vk_area_living">52.1</field>
+        <field name="vk_area_balcony">5.4</field>
+        <field name="vk_handover">2027-12-31</field>
+    </record>
+    <record id="unit_a_0802" model="product.template">
+        <field name="name">Apartment A-0802</field>
+        <field name="default_code">A-0802</field>
+        <field name="type">consu</field>
+        <field name="is_storable" eval="True"/>
+        <field name="sale_ok" eval="True"/>
+        <field name="purchase_ok" eval="False"/>
+        <field name="categ_id" ref="categ_building_a"/>
+        <field name="list_price">272200</field>
+        <field name="vk_is_unit" eval="True"/>
+        <field name="vk_building">A</field>
+        <field name="vk_floor">8</field>
+        <field name="vk_rooms">3+1</field>
+        <field name="vk_orientation">s</field>
+        <field name="vk_area_total">86.4</field>
+        <field name="vk_area_living">71.6</field>
+        <field name="vk_area_balcony">8.1</field>
+        <field name="vk_handover">2027-12-31</field>
+    </record>
+    <record id="unit_a_0803" model="product.template">
+        <field name="name">Apartment A-0803</field>
+        <field name="default_code">A-0803</field>
+        <field name="type">consu</field>
+        <field name="is_storable" eval="True"/>
+        <field name="sale_ok" eval="True"/>
+        <field name="purchase_ok" eval="False"/>
+        <field name="categ_id" ref="categ_building_a"/>
+        <field name="list_price">139100</field>
+        <field name="vk_is_unit" eval="True"/>
+        <field name="vk_building">A</field>
+        <field name="vk_floor">8</field>
+        <field name="vk_rooms">1+1</field>
+        <field name="vk_orientation">sw</field>
+        <field name="vk_area_total">45</field>
+        <field name="vk_area_living">36.4</field>
+        <field name="vk_area_balcony">3.2</field>
+        <field name="vk_handover">2027-12-31</field>
+    </record>
+    <record id="unit_a_0804" model="product.template">
+        <field name="name">Apartment A-0804</field>
+        <field name="default_code">A-0804</field>
+        <field name="type">consu</field>
+        <field name="is_storable" eval="True"/>
+        <field name="sale_ok" eval="True"/>
+        <field name="purchase_ok" eval="False"/>
+        <field name="categ_id" ref="categ_building_a"/>
+        <field name="list_price">218800</field>
+        <field name="vk_is_unit" eval="True"/>
+        <field name="vk_building">A</field>
+        <field name="vk_floor">8</field>
+        <field name="vk_rooms">2+1</field>
+        <field name="vk_orientation">e</field>
+        <field name="vk_area_total">68.8</field>
+        <field name="vk_area_living">58.4</field>
+        <field name="vk_area_balcony">6.2</field>
+        <field name="vk_handover">2027-12-31</field>
+    </record>
+    <record id="unit_a_0805" model="product.template">
+        <field name="name">Apartment A-0805</field>
+        <field name="default_code">A-0805</field>
+        <field name="type">consu</field>
+        <field name="is_storable" eval="True"/>
+        <field name="sale_ok" eval="True"/>
+        <field name="purchase_ok" eval="False"/>
+        <field name="categ_id" ref="categ_building_a"/>
+        <field name="list_price">184200</field>
+        <field name="vk_is_unit" eval="True"/>
+        <field name="vk_building">A</field>
+        <field name="vk_floor">8</field>
+        <field name="vk_rooms">2+1</field>
+        <field name="vk_orientation">ne</field>
+        <field name="vk_area_total">58.3</field>
+        <field name="vk_area_living">47.2</field>
+        <field name="vk_area_balcony">4.8</field>
+        <field name="vk_handover">2027-12-31</field>
+    </record>
+    <record id="unit_a_0806" model="product.template">
+        <field name="name">Apartment A-0806</field>
+        <field name="default_code">A-0806</field>
+        <field name="type">consu</field>
+        <field name="is_storable" eval="True"/>
+        <field name="sale_ok" eval="True"/>
+        <field name="purchase_ok" eval="False"/>
+        <field name="categ_id" ref="categ_building_a"/>
+        <field name="list_price">136400</field>
+        <field name="vk_is_unit" eval="True"/>
+        <field name="vk_building">A</field>
+        <field name="vk_floor">8</field>
+        <field name="vk_rooms">1+1</field>
+        <field name="vk_orientation">n</field>
+        <field name="vk_area_total">42.1</field>
+        <field name="vk_area_living">33.8</field>
+        <field name="vk_area_balcony">3</field>
+        <field name="vk_handover">2027-12-31</field>
+    </record>
+    <record id="unit_a_0701" model="product.template">
+        <field name="name">Apartment A-0701</field>
+        <field name="default_code">A-0701</field>
+        <field name="type">consu</field>
+        <field name="is_storable" eval="True"/>
+        <field name="sale_ok" eval="True"/>
+        <field name="purchase_ok" eval="False"/>
+        <field name="categ_id" ref="categ_building_a"/>
+        <field name="list_price">201600</field>
+        <field name="vk_is_unit" eval="True"/>
+        <field name="vk_building">A</field>
+        <field name="vk_floor">7</field>
+        <field name="vk_rooms">2+1</field>
+        <field name="vk_orientation">se</field>
+        <field name="vk_area_total">64.2</field>
+        <field name="vk_area_living">52.1</field>
+        <field name="vk_area_balcony">5.4</field>
+        <field name="vk_handover">2027-12-31</field>
+    </record>
+    <record id="unit_a_0702" model="product.template">
+        <field name="name">Apartment A-0702</field>
+        <field name="default_code">A-0702</field>
+        <field name="type">consu</field>
+        <field name="is_storable" eval="True"/>
+        <field name="sale_ok" eval="True"/>
+        <field name="purchase_ok" eval="False"/>
+        <field name="categ_id" ref="categ_building_a"/>
+        <field name="list_price">272200</field>
+        <field name="vk_is_unit" eval="True"/>
+        <field name="vk_building">A</field>
+        <field name="vk_floor">7</field>
+        <field name="vk_rooms">3+1</field>
+        <field name="vk_orientation">s</field>
+        <field name="vk_area_total">86.4</field>
+        <field name="vk_area_living">71.6</field>
+        <field name="vk_area_balcony">8.1</field>
+        <field name="vk_handover">2027-12-31</field>
+    </record>
+    <record id="unit_a_0703" model="product.template">
+        <field name="name">Apartment A-0703</field>
+        <field name="default_code">A-0703</field>
+        <field name="type">consu</field>
+        <field name="is_storable" eval="True"/>
+        <field name="sale_ok" eval="True"/>
+        <field name="purchase_ok" eval="False"/>
+        <field name="categ_id" ref="categ_building_a"/>
+        <field name="list_price">139100</field>
+        <field name="vk_is_unit" eval="True"/>
+        <field name="vk_building">A</field>
+        <field name="vk_floor">7</field>
+        <field name="vk_rooms">1+1</field>
+        <field name="vk_orientation">sw</field>
+        <field name="vk_area_total">45</field>
+        <field name="vk_area_living">36.4</field>
+        <field name="vk_area_balcony">3.2</field>
+        <field name="vk_handover">2027-12-31</field>
+    </record>
+    <record id="unit_a_0704" model="product.template">
+        <field name="name">Apartment A-0704</field>
+        <field name="default_code">A-0704</field>
+        <field name="type">consu</field>
+        <field name="is_storable" eval="True"/>
+        <field name="sale_ok" eval="True"/>
+        <field name="purchase_ok" eval="False"/>
+        <field name="categ_id" ref="categ_building_a"/>
+        <field name="list_price">218800</field>
+        <field name="vk_is_unit" eval="True"/>
+        <field name="vk_building">A</field>
+        <field name="vk_floor">7</field>
+        <field name="vk_rooms">2+1</field>
+        <field name="vk_orientation">e</field>
+        <field name="vk_area_total">68.8</field>
+        <field name="vk_area_living">58.4</field>
+        <field name="vk_area_balcony">6.2</field>
+        <field name="vk_handover">2027-12-31</field>
+    </record>
+    <record id="unit_a_0705" model="product.template">
+        <field name="name">Apartment A-0705</field>
+        <field name="default_code">A-0705</field>
+        <field name="type">consu</field>
+        <field name="is_storable" eval="True"/>
+        <field name="sale_ok" eval="True"/>
+        <field name="purchase_ok" eval="False"/>
+        <field name="categ_id" ref="categ_building_a"/>
+        <field name="list_price">184200</field>
+        <field name="vk_is_unit" eval="True"/>
+        <field name="vk_building">A</field>
+        <field name="vk_floor">7</field>
+        <field name="vk_rooms">2+1</field>
+        <field name="vk_orientation">ne</field>
+        <field name="vk_area_total">58.3</field>
+        <field name="vk_area_living">47.2</field>
+        <field name="vk_area_balcony">4.8</field>
+        <field name="vk_handover">2027-12-31</field>
+    </record>
+    <record id="unit_a_0706" model="product.template">
+        <field name="name">Apartment A-0706</field>
+        <field name="default_code">A-0706</field>
+        <field name="type">consu</field>
+        <field name="is_storable" eval="True"/>
+        <field name="sale_ok" eval="True"/>
+        <field name="purchase_ok" eval="False"/>
+        <field name="categ_id" ref="categ_building_a"/>
+        <field name="list_price">136400</field>
+        <field name="vk_is_unit" eval="True"/>
+        <field name="vk_building">A</field>
+        <field name="vk_floor">7</field>
+        <field name="vk_rooms">1+1</field>
+        <field name="vk_orientation">n</field>
+        <field name="vk_area_total">42.1</field>
+        <field name="vk_area_living">33.8</field>
+        <field name="vk_area_balcony">3</field>
+        <field name="vk_handover">2027-12-31</field>
+    </record>
+    <record id="unit_a_0601" model="product.template">
+        <field name="name">Apartment A-0601</field>
+        <field name="default_code">A-0601</field>
+        <field name="type">consu</field>
+        <field name="is_storable" eval="True"/>
+        <field name="sale_ok" eval="True"/>
+        <field name="purchase_ok" eval="False"/>
+        <field name="categ_id" ref="categ_building_a"/>
+        <field name="list_price">201600</field>
+        <field name="vk_is_unit" eval="True"/>
+        <field name="vk_building">A</field>
+        <field name="vk_floor">6</field>
+        <field name="vk_rooms">2+1</field>
+        <field name="vk_orientation">se</field>
+        <field name="vk_area_total">64.2</field>
+        <field name="vk_area_living">52.1</field>
+        <field name="vk_area_balcony">5.4</field>
+        <field name="vk_handover">2027-12-31</field>
+    </record>
+    <record id="unit_a_0602" model="product.template">
+        <field name="name">Apartment A-0602</field>
+        <field name="default_code">A-0602</field>
+        <field name="type">consu</field>
+        <field name="is_storable" eval="True"/>
+        <field name="sale_ok" eval="True"/>
+        <field name="purchase_ok" eval="False"/>
+        <field name="categ_id" ref="categ_building_a"/>
+        <field name="list_price">272200</field>
+        <field name="vk_is_unit" eval="True"/>
+        <field name="vk_building">A</field>
+        <field name="vk_floor">6</field>
+        <field name="vk_rooms">3+1</field>
+        <field name="vk_orientation">s</field>
+        <field name="vk_area_total">86.4</field>
+        <field name="vk_area_living">71.6</field>
+        <field name="vk_area_balcony">8.1</field>
+        <field name="vk_handover">2027-12-31</field>
+    </record>
+    <record id="unit_a_0603" model="product.template">
+        <field name="name">Apartment A-0603</field>
+        <field name="default_code">A-0603</field>
+        <field name="type">consu</field>
+        <field name="is_storable" eval="True"/>
+        <field name="sale_ok" eval="True"/>
+        <field name="purchase_ok" eval="False"/>
+        <field name="categ_id" ref="categ_building_a"/>
+        <field name="list_price">139100</field>
+        <field name="vk_is_unit" eval="True"/>
+        <field name="vk_building">A</field>
+        <field name="vk_floor">6</field>
+        <field name="vk_rooms">1+1</field>
+        <field name="vk_orientation">sw</field>
+        <field name="vk_area_total">45</field>
+        <field name="vk_area_living">36.4</field>
+        <field name="vk_area_balcony">3.2</field>
+        <field name="vk_handover">2027-12-31</field>
+    </record>
+    <record id="unit_a_0604" model="product.template">
+        <field name="name">Apartment A-0604</field>
+        <field name="default_code">A-0604</field>
+        <field name="type">consu</field>
+        <field name="is_storable" eval="True"/>
+        <field name="sale_ok" eval="True"/>
+        <field name="purchase_ok" eval="False"/>
+        <field name="categ_id" ref="categ_building_a"/>
+        <field name="list_price">218800</field>
+        <field name="vk_is_unit" eval="True"/>
+        <field name="vk_building">A</field>
+        <field name="vk_floor">6</field>
+        <field name="vk_rooms">2+1</field>
+        <field name="vk_orientation">e</field>
+        <field name="vk_area_total">68.8</field>
+        <field name="vk_area_living">58.4</field>
+        <field name="vk_area_balcony">6.2</field>
+        <field name="vk_handover">2027-12-31</field>
+    </record>
+    <record id="unit_a_0605" model="product.template">
+        <field name="name">Apartment A-0605</field>
+        <field name="default_code">A-0605</field>
+        <field name="type">consu</field>
+        <field name="is_storable" eval="True"/>
+        <field name="sale_ok" eval="True"/>
+        <field name="purchase_ok" eval="False"/>
+        <field name="categ_id" ref="categ_building_a"/>
+        <field name="list_price">184200</field>
+        <field name="vk_is_unit" eval="True"/>
+        <field name="vk_building">A</field>
+        <field name="vk_floor">6</field>
+        <field name="vk_rooms">2+1</field>
+        <field name="vk_orientation">ne</field>
+        <field name="vk_area_total">58.3</field>
+        <field name="vk_area_living">47.2</field>
+        <field name="vk_area_balcony">4.8</field>
+        <field name="vk_handover">2027-12-31</field>
+    </record>
+    <record id="unit_a_0606" model="product.template">
+        <field name="name">Apartment A-0606</field>
+        <field name="default_code">A-0606</field>
+        <field name="type">consu</field>
+        <field name="is_storable" eval="True"/>
+        <field name="sale_ok" eval="True"/>
+        <field name="purchase_ok" eval="False"/>
+        <field name="categ_id" ref="categ_building_a"/>
+        <field name="list_price">136400</field>
+        <field name="vk_is_unit" eval="True"/>
+        <field name="vk_building">A</field>
+        <field name="vk_floor">6</field>
+        <field name="vk_rooms">1+1</field>
+        <field name="vk_orientation">n</field>
+        <field name="vk_area_total">42.1</field>
+        <field name="vk_area_living">33.8</field>
+        <field name="vk_area_balcony">3</field>
+        <field name="vk_handover">2027-12-31</field>
+    </record>
+    <record id="unit_a_0501" model="product.template">
+        <field name="name">Apartment A-0501</field>
+        <field name="default_code">A-0501</field>
+        <field name="type">consu</field>
+        <field name="is_storable" eval="True"/>
+        <field name="sale_ok" eval="True"/>
+        <field name="purchase_ok" eval="False"/>
+        <field name="categ_id" ref="categ_building_a"/>
+        <field name="list_price">201600</field>
+        <field name="vk_is_unit" eval="True"/>
+        <field name="vk_building">A</field>
+        <field name="vk_floor">5</field>
+        <field name="vk_rooms">2+1</field>
+        <field name="vk_orientation">se</field>
+        <field name="vk_area_total">64.2</field>
+        <field name="vk_area_living">52.1</field>
+        <field name="vk_area_balcony">5.4</field>
+        <field name="vk_handover">2027-12-31</field>
+    </record>
+    <record id="unit_a_0502" model="product.template">
+        <field name="name">Apartment A-0502</field>
+        <field name="default_code">A-0502</field>
+        <field name="type">consu</field>
+        <field name="is_storable" eval="True"/>
+        <field name="sale_ok" eval="True"/>
+        <field name="purchase_ok" eval="False"/>
+        <field name="categ_id" ref="categ_building_a"/>
+        <field name="list_price">272200</field>
+        <field name="vk_is_unit" eval="True"/>
+        <field name="vk_building">A</field>
+        <field name="vk_floor">5</field>
+        <field name="vk_rooms">3+1</field>
+        <field name="vk_orientation">s</field>
+        <field name="vk_area_total">86.4</field>
+        <field name="vk_area_living">71.6</field>
+        <field name="vk_area_balcony">8.1</field>
+        <field name="vk_handover">2027-12-31</field>
+    </record>
+    <record id="unit_a_0503" model="product.template">
+        <field name="name">Apartment A-0503</field>
+        <field name="default_code">A-0503</field>
+        <field name="type">consu</field>
+        <field name="is_storable" eval="True"/>
+        <field name="sale_ok" eval="True"/>
+        <field name="purchase_ok" eval="False"/>
+        <field name="categ_id" ref="categ_building_a"/>
+        <field name="list_price">139100</field>
+        <field name="vk_is_unit" eval="True"/>
+        <field name="vk_building">A</field>
+        <field name="vk_floor">5</field>
+        <field name="vk_rooms">1+1</field>
+        <field name="vk_orientation">sw</field>
+        <field name="vk_area_total">45</field>
+        <field name="vk_area_living">36.4</field>
+        <field name="vk_area_balcony">3.2</field>
+        <field name="vk_handover">2027-12-31</field>
+    </record>
+    <record id="unit_a_0504" model="product.template">
+        <field name="name">Apartment A-0504</field>
+        <field name="default_code">A-0504</field>
+        <field name="type">consu</field>
+        <field name="is_storable" eval="True"/>
+        <field name="sale_ok" eval="True"/>
+        <field name="purchase_ok" eval="False"/>
+        <field name="categ_id" ref="categ_building_a"/>
+        <field name="list_price">218800</field>
+        <field name="vk_is_unit" eval="True"/>
+        <field name="vk_building">A</field>
+        <field name="vk_floor">5</field>
+        <field name="vk_rooms">2+1</field>
+        <field name="vk_orientation">e</field>
+        <field name="vk_area_total">68.8</field>
+        <field name="vk_area_living">58.4</field>
+        <field name="vk_area_balcony">6.2</field>
+        <field name="vk_handover">2027-12-31</field>
+    </record>
+    <record id="unit_a_0505" model="product.template">
+        <field name="name">Apartment A-0505</field>
+        <field name="default_code">A-0505</field>
+        <field name="type">consu</field>
+        <field name="is_storable" eval="True"/>
+        <field name="sale_ok" eval="True"/>
+        <field name="purchase_ok" eval="False"/>
+        <field name="categ_id" ref="categ_building_a"/>
+        <field name="list_price">184200</field>
+        <field name="vk_is_unit" eval="True"/>
+        <field name="vk_building">A</field>
+        <field name="vk_floor">5</field>
+        <field name="vk_rooms">2+1</field>
+        <field name="vk_orientation">ne</field>
+        <field name="vk_area_total">58.3</field>
+        <field name="vk_area_living">47.2</field>
+        <field name="vk_area_balcony">4.8</field>
+        <field name="vk_handover">2027-12-31</field>
+    </record>
+    <record id="unit_a_0506" model="product.template">
+        <field name="name">Apartment A-0506</field>
+        <field name="default_code">A-0506</field>
+        <field name="type">consu</field>
+        <field name="is_storable" eval="True"/>
+        <field name="sale_ok" eval="True"/>
+        <field name="purchase_ok" eval="False"/>
+        <field name="categ_id" ref="categ_building_a"/>
+        <field name="list_price">136400</field>
+        <field name="vk_is_unit" eval="True"/>
+        <field name="vk_building">A</field>
+        <field name="vk_floor">5</field>
+        <field name="vk_rooms">1+1</field>
+        <field name="vk_orientation">n</field>
+        <field name="vk_area_total">42.1</field>
+        <field name="vk_area_living">33.8</field>
+        <field name="vk_area_balcony">3</field>
+        <field name="vk_handover">2027-12-31</field>
+    </record>
+    <record id="unit_a_0401" model="product.template">
+        <field name="name">Apartment A-0401</field>
+        <field name="default_code">A-0401</field>
+        <field name="type">consu</field>
+        <field name="is_storable" eval="True"/>
+        <field name="sale_ok" eval="True"/>
+        <field name="purchase_ok" eval="False"/>
+        <field name="categ_id" ref="categ_building_a"/>
+        <field name="list_price">201600</field>
+        <field name="vk_is_unit" eval="True"/>
+        <field name="vk_building">A</field>
+        <field name="vk_floor">4</field>
+        <field name="vk_rooms">2+1</field>
+        <field name="vk_orientation">se</field>
+        <field name="vk_area_total">64.2</field>
+        <field name="vk_area_living">52.1</field>
+        <field name="vk_area_balcony">5.4</field>
+        <field name="vk_handover">2027-12-31</field>
+    </record>
+    <record id="unit_a_0402" model="product.template">
+        <field name="name">Apartment A-0402</field>
+        <field name="default_code">A-0402</field>
+        <field name="type">consu</field>
+        <field name="is_storable" eval="True"/>
+        <field name="sale_ok" eval="True"/>
+        <field name="purchase_ok" eval="False"/>
+        <field name="categ_id" ref="categ_building_a"/>
+        <field name="list_price">272200</field>
+        <field name="vk_is_unit" eval="True"/>
+        <field name="vk_building">A</field>
+        <field name="vk_floor">4</field>
+        <field name="vk_rooms">3+1</field>
+        <field name="vk_orientation">s</field>
+        <field name="vk_area_total">86.4</field>
+        <field name="vk_area_living">71.6</field>
+        <field name="vk_area_balcony">8.1</field>
+        <field name="vk_handover">2027-12-31</field>
+    </record>
+    <record id="unit_a_0403" model="product.template">
+        <field name="name">Apartment A-0403</field>
+        <field name="default_code">A-0403</field>
+        <field name="type">consu</field>
+        <field name="is_storable" eval="True"/>
+        <field name="sale_ok" eval="True"/>
+        <field name="purchase_ok" eval="False"/>
+        <field name="categ_id" ref="categ_building_a"/>
+        <field name="list_price">139100</field>
+        <field name="vk_is_unit" eval="True"/>
+        <field name="vk_building">A</field>
+        <field name="vk_floor">4</field>
+        <field name="vk_rooms">1+1</field>
+        <field name="vk_orientation">sw</field>
+        <field name="vk_area_total">45</field>
+        <field name="vk_area_living">36.4</field>
+        <field name="vk_area_balcony">3.2</field>
+        <field name="vk_handover">2027-12-31</field>
+    </record>
+    <record id="unit_a_0404" model="product.template">
+        <field name="name">Apartment A-0404</field>
+        <field name="default_code">A-0404</field>
+        <field name="type">consu</field>
+        <field name="is_storable" eval="True"/>
+        <field name="sale_ok" eval="True"/>
+        <field name="purchase_ok" eval="False"/>
+        <field name="categ_id" ref="categ_building_a"/>
+        <field name="list_price">218800</field>
+        <field name="vk_is_unit" eval="True"/>
+        <field name="vk_building">A</field>
+        <field name="vk_floor">4</field>
+        <field name="vk_rooms">2+1</field>
+        <field name="vk_orientation">e</field>
+        <field name="vk_area_total">68.8</field>
+        <field name="vk_area_living">58.4</field>
+        <field name="vk_area_balcony">6.2</field>
+        <field name="vk_handover">2027-12-31</field>
+    </record>
+    <record id="unit_a_0405" model="product.template">
+        <field name="name">Apartment A-0405</field>
+        <field name="default_code">A-0405</field>
+        <field name="type">consu</field>
+        <field name="is_storable" eval="True"/>
+        <field name="sale_ok" eval="True"/>
+        <field name="purchase_ok" eval="False"/>
+        <field name="categ_id" ref="categ_building_a"/>
+        <field name="list_price">184200</field>
+        <field name="vk_is_unit" eval="True"/>
+        <field name="vk_building">A</field>
+        <field name="vk_floor">4</field>
+        <field name="vk_rooms">2+1</field>
+        <field name="vk_orientation">ne</field>
+        <field name="vk_area_total">58.3</field>
+        <field name="vk_area_living">47.2</field>
+        <field name="vk_area_balcony">4.8</field>
+        <field name="vk_handover">2027-12-31</field>
+    </record>
+    <record id="unit_a_0406" model="product.template">
+        <field name="name">Apartment A-0406</field>
+        <field name="default_code">A-0406</field>
+        <field name="type">consu</field>
+        <field name="is_storable" eval="True"/>
+        <field name="sale_ok" eval="True"/>
+        <field name="purchase_ok" eval="False"/>
+        <field name="categ_id" ref="categ_building_a"/>
+        <field name="list_price">136400</field>
+        <field name="vk_is_unit" eval="True"/>
+        <field name="vk_building">A</field>
+        <field name="vk_floor">4</field>
+        <field name="vk_rooms">1+1</field>
+        <field name="vk_orientation">n</field>
+        <field name="vk_area_total">42.1</field>
+        <field name="vk_area_living">33.8</field>
+        <field name="vk_area_balcony">3</field>
+        <field name="vk_handover">2027-12-31</field>
+    </record>
+    <record id="unit_a_0301" model="product.template">
+        <field name="name">Apartment A-0301</field>
+        <field name="default_code">A-0301</field>
+        <field name="type">consu</field>
+        <field name="is_storable" eval="True"/>
+        <field name="sale_ok" eval="True"/>
+        <field name="purchase_ok" eval="False"/>
+        <field name="categ_id" ref="categ_building_a"/>
+        <field name="list_price">201600</field>
+        <field name="vk_is_unit" eval="True"/>
+        <field name="vk_building">A</field>
+        <field name="vk_floor">3</field>
+        <field name="vk_rooms">2+1</field>
+        <field name="vk_orientation">se</field>
+        <field name="vk_area_total">64.2</field>
+        <field name="vk_area_living">52.1</field>
+        <field name="vk_area_balcony">5.4</field>
+        <field name="vk_handover">2027-12-31</field>
+    </record>
+    <record id="unit_a_0302" model="product.template">
+        <field name="name">Apartment A-0302</field>
+        <field name="default_code">A-0302</field>
+        <field name="type">consu</field>
+        <field name="is_storable" eval="True"/>
+        <field name="sale_ok" eval="True"/>
+        <field name="purchase_ok" eval="False"/>
+        <field name="categ_id" ref="categ_building_a"/>
+        <field name="list_price">272200</field>
+        <field name="vk_is_unit" eval="True"/>
+        <field name="vk_building">A</field>
+        <field name="vk_floor">3</field>
+        <field name="vk_rooms">3+1</field>
+        <field name="vk_orientation">s</field>
+        <field name="vk_area_total">86.4</field>
+        <field name="vk_area_living">71.6</field>
+        <field name="vk_area_balcony">8.1</field>
+        <field name="vk_handover">2027-12-31</field>
+    </record>
+    <record id="unit_a_0303" model="product.template">
+        <field name="name">Apartment A-0303</field>
+        <field name="default_code">A-0303</field>
+        <field name="type">consu</field>
+        <field name="is_storable" eval="True"/>
+        <field name="sale_ok" eval="True"/>
+        <field name="purchase_ok" eval="False"/>
+        <field name="categ_id" ref="categ_building_a"/>
+        <field name="list_price">139100</field>
+        <field name="vk_is_unit" eval="True"/>
+        <field name="vk_building">A</field>
+        <field name="vk_floor">3</field>
+        <field name="vk_rooms">1+1</field>
+        <field name="vk_orientation">sw</field>
+        <field name="vk_area_total">45</field>
+        <field name="vk_area_living">36.4</field>
+        <field name="vk_area_balcony">3.2</field>
+        <field name="vk_handover">2027-12-31</field>
+    </record>
+    <record id="unit_a_0304" model="product.template">
+        <field name="name">Apartment A-0304</field>
+        <field name="default_code">A-0304</field>
+        <field name="type">consu</field>
+        <field name="is_storable" eval="True"/>
+        <field name="sale_ok" eval="True"/>
+        <field name="purchase_ok" eval="False"/>
+        <field name="categ_id" ref="categ_building_a"/>
+        <field name="list_price">218800</field>
+        <field name="vk_is_unit" eval="True"/>
+        <field name="vk_building">A</field>
+        <field name="vk_floor">3</field>
+        <field name="vk_rooms">2+1</field>
+        <field name="vk_orientation">e</field>
+        <field name="vk_area_total">68.8</field>
+        <field name="vk_area_living">58.4</field>
+        <field name="vk_area_balcony">6.2</field>
+        <field name="vk_handover">2027-12-31</field>
+    </record>
+    <record id="unit_a_0305" model="product.template">
+        <field name="name">Apartment A-0305</field>
+        <field name="default_code">A-0305</field>
+        <field name="type">consu</field>
+        <field name="is_storable" eval="True"/>
+        <field name="sale_ok" eval="True"/>
+        <field name="purchase_ok" eval="False"/>
+        <field name="categ_id" ref="categ_building_a"/>
+        <field name="list_price">184200</field>
+        <field name="vk_is_unit" eval="True"/>
+        <field name="vk_building">A</field>
+        <field name="vk_floor">3</field>
+        <field name="vk_rooms">2+1</field>
+        <field name="vk_orientation">ne</field>
+        <field name="vk_area_total">58.3</field>
+        <field name="vk_area_living">47.2</field>
+        <field name="vk_area_balcony">4.8</field>
+        <field name="vk_handover">2027-12-31</field>
+    </record>
+    <record id="unit_a_0306" model="product.template">
+        <field name="name">Apartment A-0306</field>
+        <field name="default_code">A-0306</field>
+        <field name="type">consu</field>
+        <field name="is_storable" eval="True"/>
+        <field name="sale_ok" eval="True"/>
+        <field name="purchase_ok" eval="False"/>
+        <field name="categ_id" ref="categ_building_a"/>
+        <field name="list_price">136400</field>
+        <field name="vk_is_unit" eval="True"/>
+        <field name="vk_building">A</field>
+        <field name="vk_floor">3</field>
+        <field name="vk_rooms">1+1</field>
+        <field name="vk_orientation">n</field>
+        <field name="vk_area_total">42.1</field>
+        <field name="vk_area_living">33.8</field>
+        <field name="vk_area_balcony">3</field>
+        <field name="vk_handover">2027-12-31</field>
+    </record>
+    <record id="unit_a_0201" model="product.template">
+        <field name="name">Apartment A-0201</field>
+        <field name="default_code">A-0201</field>
+        <field name="type">consu</field>
+        <field name="is_storable" eval="True"/>
+        <field name="sale_ok" eval="True"/>
+        <field name="purchase_ok" eval="False"/>
+        <field name="categ_id" ref="categ_building_a"/>
+        <field name="list_price">201600</field>
+        <field name="vk_is_unit" eval="True"/>
+        <field name="vk_building">A</field>
+        <field name="vk_floor">2</field>
+        <field name="vk_rooms">2+1</field>
+        <field name="vk_orientation">se</field>
+        <field name="vk_area_total">64.2</field>
+        <field name="vk_area_living">52.1</field>
+        <field name="vk_area_balcony">5.4</field>
+        <field name="vk_handover">2027-12-31</field>
+    </record>
+    <record id="unit_a_0202" model="product.template">
+        <field name="name">Apartment A-0202</field>
+        <field name="default_code">A-0202</field>
+        <field name="type">consu</field>
+        <field name="is_storable" eval="True"/>
+        <field name="sale_ok" eval="True"/>
+        <field name="purchase_ok" eval="False"/>
+        <field name="categ_id" ref="categ_building_a"/>
+        <field name="list_price">272200</field>
+        <field name="vk_is_unit" eval="True"/>
+        <field name="vk_building">A</field>
+        <field name="vk_floor">2</field>
+        <field name="vk_rooms">3+1</field>
+        <field name="vk_orientation">s</field>
+        <field name="vk_area_total">86.4</field>
+        <field name="vk_area_living">71.6</field>
+        <field name="vk_area_balcony">8.1</field>
+        <field name="vk_handover">2027-12-31</field>
+    </record>
+    <record id="unit_a_0203" model="product.template">
+        <field name="name">Apartment A-0203</field>
+        <field name="default_code">A-0203</field>
+        <field name="type">consu</field>
+        <field name="is_storable" eval="True"/>
+        <field name="sale_ok" eval="True"/>
+        <field name="purchase_ok" eval="False"/>
+        <field name="categ_id" ref="categ_building_a"/>
+        <field name="list_price">139100</field>
+        <field name="vk_is_unit" eval="True"/>
+        <field name="vk_building">A</field>
+        <field name="vk_floor">2</field>
+        <field name="vk_rooms">1+1</field>
+        <field name="vk_orientation">sw</field>
+        <field name="vk_area_total">45</field>
+        <field name="vk_area_living">36.4</field>
+        <field name="vk_area_balcony">3.2</field>
+        <field name="vk_handover">2027-12-31</field>
+    </record>
+    <record id="unit_a_0204" model="product.template">
+        <field name="name">Apartment A-0204</field>
+        <field name="default_code">A-0204</field>
+        <field name="type">consu</field>
+        <field name="is_storable" eval="True"/>
+        <field name="sale_ok" eval="True"/>
+        <field name="purchase_ok" eval="False"/>
+        <field name="categ_id" ref="categ_building_a"/>
+        <field name="list_price">218800</field>
+        <field name="vk_is_unit" eval="True"/>
+        <field name="vk_building">A</field>
+        <field name="vk_floor">2</field>
+        <field name="vk_rooms">2+1</field>
+        <field name="vk_orientation">e</field>
+        <field name="vk_area_total">68.8</field>
+        <field name="vk_area_living">58.4</field>
+        <field name="vk_area_balcony">6.2</field>
+        <field name="vk_handover">2027-12-31</field>
+    </record>
+    <record id="unit_a_0205" model="product.template">
+        <field name="name">Apartment A-0205</field>
+        <field name="default_code">A-0205</field>
+        <field name="type">consu</field>
+        <field name="is_storable" eval="True"/>
+        <field name="sale_ok" eval="True"/>
+        <field name="purchase_ok" eval="False"/>
+        <field name="categ_id" ref="categ_building_a"/>
+        <field name="list_price">184200</field>
+        <field name="vk_is_unit" eval="True"/>
+        <field name="vk_building">A</field>
+        <field name="vk_floor">2</field>
+        <field name="vk_rooms">2+1</field>
+        <field name="vk_orientation">ne</field>
+        <field name="vk_area_total">58.3</field>
+        <field name="vk_area_living">47.2</field>
+        <field name="vk_area_balcony">4.8</field>
+        <field name="vk_handover">2027-12-31</field>
+    </record>
+    <record id="unit_a_0206" model="product.template">
+        <field name="name">Apartment A-0206</field>
+        <field name="default_code">A-0206</field>
+        <field name="type">consu</field>
+        <field name="is_storable" eval="True"/>
+        <field name="sale_ok" eval="True"/>
+        <field name="purchase_ok" eval="False"/>
+        <field name="categ_id" ref="categ_building_a"/>
+        <field name="list_price">136400</field>
+        <field name="vk_is_unit" eval="True"/>
+        <field name="vk_building">A</field>
+        <field name="vk_floor">2</field>
+        <field name="vk_rooms">1+1</field>
+        <field name="vk_orientation">n</field>
+        <field name="vk_area_total">42.1</field>
+        <field name="vk_area_living">33.8</field>
+        <field name="vk_area_balcony">3</field>
+        <field name="vk_handover">2027-12-31</field>
+    </record>
+
+</odoo>
