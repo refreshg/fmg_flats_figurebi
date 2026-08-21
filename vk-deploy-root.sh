@@ -37,6 +37,13 @@ case "${1:-}" in
         echo "--- odoo user can read? ---"
         "$RUNUSER" -u odoo -- test -r "$DEST/__manifest__.py" \
             && echo "readable" || echo "NOT READABLE"
+        echo "--- odoo can exec its interpreter? ---"
+        "$RUNUSER" -u odoo -- "$ODOO_PY" -c 'print("python OK")' 2>&1 | head -5
+        echo "--- odoo-bin --version ---"
+        "$RUNUSER" -u odoo -- "$ODOO_PY" "$ODOO_BIN" --version 2>&1 | head -5
+        echo "--- odoo can read its config? ---"
+        "$RUNUSER" -u odoo -- test -r "$ODOO_CONF" \
+            && echo "config readable" || echo "CONFIG NOT READABLE"
         echo "--- last deploy log ---"; tail -40 /tmp/vk-deploy-last.log 2>&1
         exit 0 ;;
     *) echo "usage: vk-deploy-root {install|upgrade|doctor}" >&2; exit 2 ;;
