@@ -1163,50 +1163,6 @@ export class VertikaliSelector extends Component {
         });
     }
 
-    /**
-     * Lay the zones out between the first and last, interpolating point by
-     * point. Placing the top and bottom floor then spreads the rest along the
-     * render's perspective instead of dragging all 21 by hand.
-     *
-     * Works with any point count as long as the two reference zones agree:
-     * a stepped roofline needs the same bend on both ends to interpolate.
-     */
-    distributeBetweenEnds() {
-        const zones = this.state.zones;
-        if (zones.length < 3) {
-            this.notification.add(
-                "Need at least 3 zones to distribute.", { type: "warning" });
-            return;
-        }
-        const first = zones[0];
-        const last = zones[zones.length - 1];
-        if (first.pts.length !== last.pts.length) {
-            this.notification.add(
-                `The first zone has ${first.pts.length} points and the last has ` +
-                `${last.pts.length}. Give both the same number of points ` +
-                `(use the small + handles on the edges), then distribute.`,
-                { type: "warning" }
-            );
-            return;
-        }
-        const n = zones.length - 1;
-        zones.forEach((z, i) => {
-            if (i === 0 || i === n) {
-                return;
-            }
-            const t = i / n;
-            z.pts = first.pts.map((p, c) => [
-                Math.round((p[0] + (last.pts[c][0] - p[0]) * t) * 10000) / 10000,
-                Math.round((p[1] + (last.pts[c][1] - p[1]) * t) * 10000) / 10000,
-            ]);
-            this.state.dirty.add(z.id);
-        });
-        this.notification.add(
-            `Distributed ${n - 1} zone(s) between the first and last.`,
-            { type: "success" });
-    }
-
-    
     
 }
 

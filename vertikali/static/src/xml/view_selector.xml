@@ -344,12 +344,6 @@
                             title="Number the zones downwards from a starting floor and link each to its plan">
                         Number floors…
                     </button>
-                    <button class="btn btn-sm btn-secondary"
-                            t-on-click="distributeBetweenEnds"
-                            t-att-disabled="state.drawing"
-                            title="Place the top and bottom zone, then spread the rest evenly between them">
-                        Distribute
-                    </button>
                     <button class="btn btn-sm btn-primary" t-on-click="saveShapes"
                             t-att-disabled="!state.dirty.size">
                         Save<t t-if="state.dirty.size"> (<t t-esc="state.dirty.size"/>)</t>
