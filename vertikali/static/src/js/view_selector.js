@@ -804,7 +804,10 @@ export class VertikaliSelector extends Component {
         this.state.editing = !this.state.editing;
         this.state.drawing = false;
         this.state.draft = [];
-        this.measure();
+        // Entering edit mode inserts the hint bar, which changes the stage
+        // height. Measuring now would use the pre-render layout, so wait for
+        // the browser to lay the new frame out first.
+        requestAnimationFrame(() => this.measure());
     }
 
     startDraw() {

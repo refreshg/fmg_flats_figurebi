@@ -288,7 +288,10 @@
                 </div>
             </div>
 
-            <div class="o_vk_bar d-flex align-items-center gap-2 p-2 flex-wrap">
+            <!-- View toolbar: only for the image-backed steps. Rendering it on
+                 the chooser or the masterplan put a stray bar above them. -->
+            <div t-if="state.project and !state.card and isZoneMode"
+                 class="o_vk_bar d-flex align-items-center gap-2 p-2 flex-wrap">
                 <select t-if="modeViews.length > 1"
                         class="form-select form-select-sm w-auto"
                         t-on-change="(ev) => this.loadView(parseInt(ev.target.value))">
@@ -374,6 +377,11 @@
                 </t>
             </div>
 
+            <!-- New chain: the toolbar and hint above are plain siblings, so
+                 a t-elif here would have no t-if to attach to and every branch
+                 below it would silently never render. -->
+            <div t-if="!state.project or state.card or state.mode === 'masterplan'"
+                 class="d-none"></div>
             <div t-elif="state.loading" class="text-muted p-4">Loading…</div>
 
             <!-- Grid: no image, the units themselves are the interface. -->
