@@ -56,30 +56,74 @@
         border: 2px dashed var(--vk-rule);
     }
 
-    // The overlay sits exactly on the stage box. With no image the zones still
-    // render, so a view can be wired up before the render is supplied.
+    // Positioned onto the measured image box by inline style, so the zones
+    // stay glued to the render rather than to the container.
     .o_vk_svg {
         position: absolute;
-        inset: 0;
-        width: 100%;
-        height: 100%;
+        overflow: visible;
     }
 
+    .o_vk_drawing { cursor: crosshair; }
+
     .o_vk_zone {
-        fill: rgba(236, 48, 19, .18);
+        fill: rgba(236, 48, 19, .16);
         stroke: var(--vk-accent);
-        stroke-width: .003;
+        stroke-width: .0025;
+        vector-effect: non-scaling-stroke;
         cursor: pointer;
         transition: fill .08s ease;
 
         &:hover {
-            fill: rgba(236, 48, 19, .38);
+            fill: rgba(236, 48, 19, .34);
         }
     }
 
     .o_vk_zone_sel {
-        fill: rgba(236, 48, 19, .45);
-        stroke-width: .006;
+        fill: rgba(236, 48, 19, .42);
+        stroke-width: .005;
+    }
+
+    .o_vk_zone_edit { cursor: move; }
+
+    .o_vk_vtx {
+        fill: #fff;
+        stroke: var(--vk-accent);
+        stroke-width: .003;
+        vector-effect: non-scaling-stroke;
+        cursor: grab;
+
+        &:hover { fill: #ffe0d9; }
+    }
+
+    .o_vk_draft {
+        fill: rgba(236, 48, 19, .14);
+        stroke: var(--vk-accent);
+        stroke-width: .003;
+        stroke-dasharray: .01 .008;
+        vector-effect: non-scaling-stroke;
+        pointer-events: none;
+    }
+
+    .o_vk_hint {
+        background: rgba(236, 48, 19, .08);
+        border-bottom: 1px solid var(--vk-rule);
+        font-size: 12px;
+        flex: 0 0 auto;
+    }
+
+    .o_vk_dot { color: var(--vk-accent); font-size: 10px; margin-right: 4px; }
+
+    .o_vk_del {
+        border: 0;
+        background: transparent;
+        color: inherit;
+        opacity: .5;
+        font-size: 16px;
+        line-height: 1;
+        padding: 0 4px;
+        cursor: pointer;
+
+        &:hover { opacity: 1; color: var(--vk-accent); }
     }
 
     // ---- side panel ----
@@ -105,11 +149,9 @@
     }
 
     .o_vk_row {
-        display: block;
         width: 100%;
         text-align: left;
         background: transparent;
-        border: 0;
         border-bottom: 1px solid rgba(32, 30, 29, .15);
         padding: 7px 12px;
         cursor: pointer;
@@ -118,11 +160,6 @@
 
         &:hover {
             background: rgba(236, 48, 19, .08);
-        }
-
-        &:focus-visible {
-            outline: 2px solid var(--vk-accent);
-            outline-offset: -2px;
         }
     }
 
