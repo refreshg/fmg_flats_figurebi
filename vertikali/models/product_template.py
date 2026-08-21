@@ -104,23 +104,34 @@ class ProductTemplate(models.Model):
         default='available',
     )
 
-    vk_sale_line_ids = fields.One2many(
-        'sale.order.line', 'product_template_id',
-        string="Sales Lines",
-        help="Quotations and orders this unit appears on.",
-    )
-
-    @api.depends('vk_sale_line_ids.state', 'vk_is_unit')
     def _compute_vk_state(self):
-        for tmpl in self:
-            if not tmpl.vk_is_unit:
-                tmpl.vk_state = 'available'
-                continue
-            states = set(tmpl.vk_sale_line_ids.mapped('state'))
-            if 'sale' in states:
+        """Derive availability from the quotations and orders on the unit.
+
+        Recomputed from an explicit search rather than a dependency chain:
+        product.product has no sale-line one2many to depend on, and
+        sale.order.line.product_template_id is a non-stored related field.
+        The sale.order.line override below re-triggers this on every change.
+        """
+        units = self.filtered('vk_is_unit')
+        (self - units).vk_state = 'available'
+        if not units:
+            return
+
+        lines = self.env['sale.order.line'].sudo().search([
+            ('product_id.product_tmpl_id', 'in', units.ids),
+            ('state', 'in', ['draft', 'sent', 'sale']),
+        ])
+        states = {}
+        for line in lines:
+            tmpl_id = line.product_id.product_tmpl_id.id
+            states.setdefault(tmpl_id, set()).add(line.state)
+
+        for tmpl in units:
+            found = states.get(tmpl.id, set())
+            if 'sale' in found:
                 # A confirmed order takes the unit off the market.
                 tmpl.vk_state = 'sold'
-            elif states & {'draft', 'sent'}:
+            elif found:
                 # Quoted but not confirmed: held, still winnable.
                 tmpl.vk_state = 'reserved'
             else:

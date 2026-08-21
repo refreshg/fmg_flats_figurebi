@@ -12,10 +12,23 @@
         <field name="parent_id" ref="categ_green_quarter"/>
     </record>
 
+
+    <!-- ============ project: which steps this building uses ============ -->
+    <record id="project_green_quarter" model="vertikali.project">
+        <field name="name">Green Quarter — Building A</field>
+        <field name="building">A</field>
+        <field name="categ_id" ref="categ_building_a"/>
+        <field name="use_masterplan" eval="False"/>
+        <field name="use_facade" eval="True"/>
+        <field name="use_floorplan" eval="False"/>
+        <field name="use_grid" eval="True"/>
+    </record>
+
     <!-- ============ visual views ============ -->
     <record id="view_facade_a" model="vertikali.view">
         <field name="name">Building A - Facade</field>
         <field name="view_type">facade</field>
+        <field name="project_id" ref="project_green_quarter"/>
         <field name="building">A</field>
         <field name="categ_id" ref="categ_building_a"/>
     </record>

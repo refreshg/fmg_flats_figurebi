@@ -37,6 +37,12 @@
               groups="sales_team.group_sale_manager"
               sequence="90"/>
 
+    <menuitem id="menu_vertikali_projects"
+              name="Projects"
+              parent="menu_vertikali_config"
+              action="action_vertikali_projects"
+              sequence="5"/>
+
     <menuitem id="menu_vertikali_views"
               name="Visual Views"
               parent="menu_vertikali_config"

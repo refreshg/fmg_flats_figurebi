@@ -4,6 +4,77 @@ from odoo import _, api, fields, models
 from odoo.exceptions import ValidationError
 
 
+class VertikaliProject(models.Model):
+    """A building or complex, and which navigation steps it actually uses.
+
+    Projects differ: some have no facade render, some no floor plans, some sell
+    from a grid alone. Rather than assume one route, each step is switched on
+    per project, and the navigation follows whatever remains:
+
+        facade -> floor plan -> unit
+        grid   -> unit
+    """
+
+    _name = 'vertikali.project'
+    _description = "Estate Project"
+    _inherit = ['mail.thread']
+    _order = 'sequence, id'
+
+    name = fields.Char(required=True)
+    sequence = fields.Integer(default=10)
+    active = fields.Boolean(default=True)
+
+    categ_id = fields.Many2one(
+        'product.category',
+        string="Product Category",
+        help="Category holding this project's units.",
+    )
+    building = fields.Char(
+        help="Building label used on the units, e.g. A.")
+
+    # Navigation steps. A project needs at least one entry point; the
+    # constraint below enforces that.
+    use_masterplan = fields.Boolean(
+        string="Masterplan", default=False,
+        help="Start from a site plan showing several buildings.")
+    use_facade = fields.Boolean(
+        string="Facade", default=True,
+        help="Pick a floor by clicking the building render.")
+    use_floorplan = fields.Boolean(
+        string="Floor Plan", default=True,
+        help="Pick a unit from the floor's top-down plan.")
+    use_grid = fields.Boolean(
+        string="Grid (shakhmatka)", default=True,
+        help="Pick a unit from the floor-by-floor table.")
+
+    view_ids = fields.One2many('vertikali.view', 'project_id', string="Views")
+
+    @api.constrains('use_masterplan', 'use_facade', 'use_floorplan', 'use_grid')
+    def _check_has_entry_point(self):
+        for project in self:
+            if not any((project.use_masterplan, project.use_facade,
+                        project.use_floorplan, project.use_grid)):
+                raise ValidationError(_(
+                    "%(name)s needs at least one navigation step: a masterplan, "
+                    "a facade, floor plans or the grid.",
+                    name=project.name,
+                ))
+
+    def _vk_steps(self):
+        """Ordered navigation steps for this project."""
+        self.ensure_one()
+        steps = []
+        if self.use_masterplan:
+            steps.append('masterplan')
+        if self.use_facade:
+            steps.append('facade')
+        if self.use_floorplan:
+            steps.append('floor')
+        if self.use_grid:
+            steps.append('grid')
+        return steps
+
+
 class VertikaliView(models.Model):
     """A clickable image: masterplan, building facade or floor plan.
 
@@ -42,9 +113,12 @@ class VertikaliView(models.Model):
     building = fields.Char(help="Building label, e.g. A.")
     floor = fields.Integer(help="Floor number, for floor plans.")
 
+    project_id = fields.Many2one(
+        'vertikali.project', string="Project", index=True, ondelete='cascade')
+
     categ_id = fields.Many2one(
         'product.category',
-        string="Project",
+        string="Category",
         help="Product category holding this project's units.",
     )
 
