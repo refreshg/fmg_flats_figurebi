@@ -62,18 +62,22 @@
         <field name="model">product.template</field>
         <field name="inherit_id" ref="product.product_template_search_view"/>
         <field name="arch" type="xml">
-            <xpath expr="//search" position="inside">
+            <!-- Anchor on existing nodes: appending loose filters/groups to
+                 <search> fails RelaxNG validation ("extra content: field"). -->
+            <xpath expr="//filter[@name='filter_to_sell']" position="after">
                 <separator/>
                 <filter name="vk_units" string="Units"
                         domain="[('vk_is_unit', '=', True)]"/>
-                <group expand="0" string="Unit Grouping">
-                    <filter name="vk_group_building" string="Building"
-                            context="{'group_by': 'vk_building'}"/>
-                    <filter name="vk_group_floor" string="Floor"
-                            context="{'group_by': 'vk_floor'}"/>
-                    <filter name="vk_group_rooms" string="Layout"
-                            context="{'group_by': 'vk_rooms'}"/>
-                </group>
+            </xpath>
+
+            <!-- Reuse the group-by box the base view already defines. -->
+            <xpath expr="//filter[@name='group_by_categ_id']" position="after">
+                <filter name="vk_group_building" string="Building"
+                        context="{'group_by': 'vk_building'}"/>
+                <filter name="vk_group_floor" string="Floor"
+                        context="{'group_by': 'vk_floor'}"/>
+                <filter name="vk_group_rooms" string="Layout"
+                        context="{'group_by': 'vk_rooms'}"/>
             </xpath>
         </field>
     </record>
