@@ -41,9 +41,11 @@ chown -R odoo:odoo "$DEST"
 echo "  stopping odoo"
 systemctl stop odoo
 
+# Already root here, so drop privileges with runuser: a nested `sudo -u odoo`
+# would re-prompt for a password and abort the unattended run.
 set +e
-sudo -u odoo "$ODOO_PY" "$ODOO_BIN" -c "$ODOO_CONF" -d "$DB" \
-     "$FLAG" "$MODULE" --stop-after-init 2>&1 | tail -25
+runuser -u odoo -- "$ODOO_PY" "$ODOO_BIN" -c "$ODOO_CONF" -d "$DB" \
+        "$FLAG" "$MODULE" --stop-after-init 2>&1 | tail -30
 RC=${PIPESTATUS[0]}
 set -e
 
