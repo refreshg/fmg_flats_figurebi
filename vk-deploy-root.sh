@@ -68,8 +68,11 @@ systemctl stop odoo
 # the fact -- piping straight to tail loses the traceback on error.
 LOG="/tmp/vk-deploy-last.log"
 set +e
+# --logfile= overrides any logfile set in odoo.conf, which would otherwise
+# swallow the whole run and leave this log empty.
 "$RUNUSER" -u odoo -- "$ODOO_PY" "$ODOO_BIN" -c "$ODOO_CONF" -d "$DB" \
-        "$FLAG" "$MODULE" --stop-after-init >"$LOG" 2>&1
+        "$FLAG" "$MODULE" --stop-after-init \
+        --logfile= --log-level=info >"$LOG" 2>&1
 RC=$?
 set -e
 chmod 644 "$LOG" 2>/dev/null || true
