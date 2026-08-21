@@ -26,19 +26,37 @@
                     <button class="btn btn-sm btn-secondary" t-on-click="startDraw"
                             t-att-disabled="state.drawing">+ Draw zone</button>
                     <button class="btn btn-sm btn-secondary"
+                            t-on-click="duplicateDown"
+                            t-att-disabled="!state.selected or state.drawing"
+                            title="Copy the selected zone one band lower">
+                        Copy down
+                    </button>
+                    <button class="btn btn-sm btn-secondary"
+                            t-on-click="repeatDown"
+                            t-att-disabled="!state.selected or state.drawing"
+                            title="Stack many copies below the selected zone">
+                        Repeat…
+                    </button>
+                    <button class="btn btn-sm btn-secondary"
                             t-on-click="applyShapeToAll"
-                            t-att-disabled="!state.selected"
+                            t-att-disabled="!state.selected or state.drawing"
                             title="Copy the selected zone's outline to every other zone, keeping each floor's height">
-                        Apply shape to all
+                        Shape → all
                     </button>
                     <button class="btn btn-sm btn-secondary"
                             t-on-click="distributeBetweenEnds"
+                            t-att-disabled="state.drawing"
                             title="Place the top and bottom zone, then spread the rest evenly between them">
                         Distribute
                     </button>
                     <button class="btn btn-sm btn-primary" t-on-click="saveShapes"
                             t-att-disabled="!state.dirty.size">
                         Save<t t-if="state.dirty.size"> (<t t-esc="state.dirty.size"/>)</t>
+                    </button>
+                    <button class="btn btn-sm btn-link text-danger"
+                            t-on-click="deleteAllZones"
+                            t-att-disabled="!state.zones.length">
+                        Clear all
                     </button>
                 </t>
 
@@ -49,17 +67,19 @@
 
             <div t-if="state.editing" class="o_vk_hint px-2 py-1">
                 <t t-if="state.drawing">
-                    Click the corners on the render. Close on the first point to finish.
+                    <b>Click as many corners as you need</b> — follow the roofline
+                    step by step. <t t-esc="state.draft.length"/> placed.
+                    Finish by clicking the first point again, or:
                     <button class="btn btn-link btn-sm p-0 ms-2" t-on-click="undoPoint">undo point</button>
                     <button class="btn btn-link btn-sm p-0 ms-2" t-on-click="finishDraw">finish</button>
                     <button class="btn btn-link btn-sm p-0 ms-2" t-on-click="cancelDraw">cancel</button>
                 </t>
                 <t t-else="">
-                    Drag a zone to move it, or drag a corner handle to reshape it.
-                    Click a small hollow handle on an edge to <b>add a bend</b>
-                    (for a stepped roofline); right-click a corner to remove it.
-                    Shape one band, then <b>Apply shape to all</b> — or place the
-                    top and bottom band and <b>Distribute</b>. Changes save on Save.
+                    Trace one band with <b>+ Draw zone</b> (any number of points),
+                    then <b>Copy down</b> for the next one or <b>Repeat…</b> to
+                    stack the whole facade. Drag a zone or its corners to adjust;
+                    click a hollow edge handle to add a bend, right-click a corner
+                    to remove it. Changes save on <b>Save</b>.
                 </t>
             </div>
 
@@ -128,13 +148,15 @@
                             </t>
                         </t>
 
-                        <!-- In-progress shape. -->
+                        <!-- In-progress shape. The first point is drawn larger:
+                             clicking it again closes the polygon. -->
                         <t t-if="state.draft.length">
                             <polygon t-if="state.draft.length > 1"
                                      class="o_vk_draft" t-att-points="attr(state.draft)"/>
                             <t t-foreach="state.draft" t-as="p" t-key="p_index">
-                                <circle class="o_vk_vtx" t-att-cx="p[0]" t-att-cy="p[1]"
-                                        t-att-r="p_index === 0 ? 0.011 : 0.007"/>
+                                <circle t-att-class="p_index === 0 ? 'o_vk_vtx o_vk_first' : 'o_vk_vtx'"
+                                        t-att-cx="p[0]" t-att-cy="p[1]"
+                                        t-att-r="p_index === 0 ? 0.012 : 0.006"/>
                             </t>
                         </t>
                     </svg>

@@ -110,6 +110,12 @@
         }
     }
 
+    // Closing target while drawing.
+    .o_vk_first {
+        fill: var(--vk-accent);
+        stroke: #fff;
+    }
+
     .o_vk_draft {
         fill: rgba(236, 48, 19, .14);
         stroke: var(--vk-accent);

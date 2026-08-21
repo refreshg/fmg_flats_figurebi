@@ -239,22 +239,51 @@ export class VertikaliSelector extends Component {
         const pts = [...this.state.draft];
         this.state.draft = [];
         this.state.drawing = false;
+        await this.createZone(pts);
+    }
+
+    /** Persist a shape and select it. Shared by drawing and duplicating. */
+    async createZone(pts, name) {
         try {
             const id = await this.orm.create("vertikali.polygon", [{
-                name: `Zone ${this.state.zones.length + 1}`,
+                name: name || `Zone ${this.state.zones.length + 1}`,
                 view_id: this.state.view.id,
                 points: JSON.stringify(pts),
             }]);
             const [rec] = await this.orm.read(
-                "vertikali.polygon", id,
+                "vertikali.polygon", Array.isArray(id) ? id : [id],
                 ["name", "floor", "points", "target_view_id", "product_tmpl_id"]
             );
             const zone = { ...rec, pts };
             this.state.zones.push(zone);
             this.state.selected = zone;
+            return zone;
         } catch (e) {
             this.notification.add(e.message || String(e), { type: "danger" });
+            return null;
         }
+    }
+
+    /**
+     * Copy the selected zone, nudged down by its own height.
+     *
+     * This is the workhorse for a stepped facade: trace one band with as many
+     * bends as the roofline needs, then duplicate it down the building. Each
+     * copy keeps the outline, so only its position needs adjusting.
+     */
+    async duplicateDown() {
+        const src = this.state.selected;
+        if (!src) {
+            this.notification.add("Select a zone to copy first.", { type: "warning" });
+            return;
+        }
+        const ys = src.pts.map((p) => p[1]);
+        const height = Math.max(...ys) - Math.min(...ys);
+        const pts = src.pts.map(([x, y]) => [
+            x,
+            Math.min(1, Math.round((y + height) * 10000) / 10000),
+        ]);
+        await this.createZone(pts);
     }
 
     cancelDraw() {
@@ -329,6 +358,26 @@ export class VertikaliSelector extends Component {
             }
             this.state.dirty = new Set();
             this.notification.add(`Saved ${ids.length} zone(s).`, { type: "success" });
+        } catch (e) {
+            this.notification.add(e.message || String(e), { type: "danger" });
+        }
+    }
+
+    /** Clear the view so a facade can be re-traced from scratch. */
+    async deleteAllZones() {
+        const ids = this.state.zones.map((z) => z.id);
+        if (!ids.length) {
+            return;
+        }
+        if (!window.confirm(`Delete all ${ids.length} zones on this view?`)) {
+            return;
+        }
+        try {
+            await this.orm.unlink("vertikali.polygon", ids);
+            this.state.zones = [];
+            this.state.selected = null;
+            this.state.dirty = new Set();
+            this.notification.add(`Deleted ${ids.length} zones.`, { type: "success" });
         } catch (e) {
             this.notification.add(e.message || String(e), { type: "danger" });
         }
@@ -420,6 +469,59 @@ export class VertikaliSelector extends Component {
         this.notification.add(
             `Distributed ${n - 1} zone(s) between the first and last.`,
             { type: "success" });
+    }
+
+    /**
+     * Stack N copies of the selected zone downwards, each offset by one band
+     * height. Traces the whole facade from a single hand-drawn band.
+     */
+    async repeatDown() {
+        const src = this.state.selected;
+        if (!src) {
+            this.notification.add("Select a zone to repeat first.", { type: "warning" });
+            return;
+        }
+        const answer = window.prompt("How many copies below this one?", "20");
+        if (!answer) {
+            return;
+        }
+        const count = Math.max(1, Math.min(60, parseInt(answer, 10) || 0));
+        const ys = src.pts.map((p) => p[1]);
+        const height = Math.max(...ys) - Math.min(...ys);
+
+        const vals = [];
+        for (let i = 1; i <= count; i++) {
+            const pts = src.pts.map(([x, y]) => [
+                x,
+                Math.min(1, Math.round((y + height * i) * 10000) / 10000),
+            ]);
+            // Stop once a copy would fall off the bottom of the image.
+            if (Math.min(...pts.map((p) => p[1])) >= 1) {
+                break;
+            }
+            vals.push({
+                name: `${src.name} +${i}`,
+                view_id: this.state.view.id,
+                points: JSON.stringify(pts),
+            });
+        }
+        if (!vals.length) {
+            this.notification.add("No room left below this zone.", { type: "warning" });
+            return;
+        }
+        try {
+            const ids = await this.orm.create("vertikali.polygon", vals);
+            const recs = await this.orm.read(
+                "vertikali.polygon", ids,
+                ["name", "floor", "points", "target_view_id", "product_tmpl_id"]
+            );
+            for (const rec of recs) {
+                this.state.zones.push({ ...rec, pts: this.parsePoints(rec.points) });
+            }
+            this.notification.add(`Added ${recs.length} copies.`, { type: "success" });
+        } catch (e) {
+            this.notification.add(e.message || String(e), { type: "danger" });
+        }
     }
 
     /**
