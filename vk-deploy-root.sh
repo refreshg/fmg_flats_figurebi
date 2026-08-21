@@ -25,7 +25,18 @@ ODOO_CONF="/etc/odoo/odoo.conf"
 case "${1:-}" in
     install) FLAG="-i" ;;
     upgrade) FLAG="-u" ;;
-    *) echo "usage: vk-deploy-root {install|upgrade}" >&2; exit 2 ;;
+    # Read-only inspection, so failures can be diagnosed without granting the
+    # deploying user broader sudo rights.
+    doctor)
+        echo "--- addons dir ---";      ls -la "$ADDONS_DIR" 2>&1 | head
+        echo "--- module files ---";    find "$DEST" -type f 2>&1 | head -20
+        echo "--- addons_path ---";     grep addons_path "$ODOO_CONF" 2>&1
+        echo "--- odoo user can read? ---"
+        runuser -u odoo -- test -r "$DEST/__manifest__.py" \
+            && echo "readable" || echo "NOT READABLE"
+        echo "--- last deploy log ---"; tail -40 /tmp/vk-deploy-last.log 2>&1
+        exit 0 ;;
+    *) echo "usage: vk-deploy-root {install|upgrade|doctor}" >&2; exit 2 ;;
 esac
 
 [ -f "$SRC_DIR/__manifest__.py" ] || {
