@@ -67,6 +67,15 @@ PYEOF
 ROOT_HELPER="/usr/local/sbin/vk-deploy-root"
 
 if [ -x "$ROOT_HELPER" ]; then
+    # The helper is root-owned, so a change to it in git needs a manual
+    # reinstall -- deliberately: a root script that re-read itself from a
+    # user-writable checkout would be a privilege-escalation hole.
+    if ! sudo -n cmp -s "$REPO_DIR/vk-deploy-root.sh" "$ROOT_HELPER" 2>/dev/null \
+       && ! cmp -s "$REPO_DIR/vk-deploy-root.sh" "$ROOT_HELPER" 2>/dev/null; then
+        echo "    NOTE: the root helper differs from git. To update it, run:" >&2
+        echo "      sudo install -o root -g root -m 755 \\" >&2
+        echo "        $REPO_DIR/vk-deploy-root.sh $ROOT_HELPER" >&2
+    fi
     echo "==> 3/5 sync + ${MODE} via root helper (service stops briefly)"
     sudo "$ROOT_HELPER" "$MODE"
     echo "==> 5/5 done"
