@@ -30,9 +30,13 @@ export class VertikaliSelector extends Component {
         this.stageRef = useRef("stage");
 
         this.state = useState({
+            projects: [],
+            project: null,
+            mode: null,          // masterplan | facade | floor | grid
             views: [],
             view: null,
             zones: [],
+            units: [],           // grid mode
             selected: null,
             loading: true,
             error: null,
@@ -72,12 +76,22 @@ export class VertikaliSelector extends Component {
 
         onWillStart(async () => {
             try {
+                this.state.projects = await this.orm.searchRead(
+                    "vertikali.project", [],
+                    ["name", "building", "use_masterplan", "use_facade",
+                     "use_floorplan", "use_grid"],
+                    { order: "sequence, id" }
+                );
                 const views = await this.orm.searchRead(
-                    "vertikali.view", [], ["name", "view_type", "building", "floor"],
+                    "vertikali.view", [],
+                    ["name", "view_type", "building", "floor", "project_id"],
                     { order: "view_type, sequence, id" }
                 );
                 this.state.views = views;
-                if (views.length) {
+
+                if (this.state.projects.length) {
+                    await this.selectProject(this.state.projects[0]);
+                } else if (views.length) {
                     await this.loadView(views[0].id);
                 }
             } catch (e) {
@@ -85,6 +99,102 @@ export class VertikaliSelector extends Component {
             } finally {
                 this.state.loading = false;
             }
+        });
+    }
+
+    // ------------------------------------------------------------- steps
+
+    /** Steps this project switched on, in navigation order. */
+    get steps() {
+        const p = this.state.project;
+        const all = [
+            { key: "masterplan", label: "Masterplan", icon: "▦", on: p?.use_masterplan },
+            { key: "facade", label: "Facade", icon: "▤", on: p?.use_facade },
+            { key: "floor", label: "Floor plans", icon: "▣", on: p?.use_floorplan },
+            { key: "grid", label: "Grid", icon: "⊞", on: p?.use_grid },
+        ];
+        return p ? all.filter((s) => s.on) : all;
+    }
+
+    /** Views belonging to the current project and mode. */
+    get modeViews() {
+        return this.state.views.filter((v) =>
+            v.view_type === this.state.mode &&
+            (!this.state.project || v.project_id?.[0] === this.state.project.id)
+        );
+    }
+
+    async selectProject(project) {
+        this.state.project = project;
+        const steps = this.steps;
+        await this.setMode(steps.length ? steps[0].key : null);
+    }
+
+    async setMode(mode) {
+        this.state.mode = mode;
+        this.state.selected = null;
+        this.state.view = null;
+        this.state.zones = [];
+        this.state.units = [];
+        if (!mode) {
+            return;
+        }
+        if (mode === "grid") {
+            await this.loadGrid();
+            return;
+        }
+        const views = this.modeViews;
+        if (views.length) {
+            await this.loadView(views[0].id);
+        }
+    }
+
+    /** Grid mode reads the units directly -- no image involved. */
+    async loadGrid() {
+        this.state.loading = true;
+        try {
+            const domain = [["vk_is_unit", "=", true]];
+            if (this.state.project?.building) {
+                domain.push(["vk_building", "=", this.state.project.building]);
+            }
+            this.state.units = await this.orm.searchRead(
+                "product.template", domain,
+                ["default_code", "vk_floor", "vk_rooms", "vk_area_total",
+                 "list_price", "vk_state"],
+                { order: "vk_floor desc, default_code" }
+            );
+        } catch (e) {
+            this.state.error = e.message || String(e);
+        } finally {
+            this.state.loading = false;
+        }
+    }
+
+    /** Units laid out floor by floor, top floor first. */
+    get gridRows() {
+        const byFloor = new Map();
+        for (const u of this.state.units) {
+            if (!byFloor.has(u.vk_floor)) {
+                byFloor.set(u.vk_floor, []);
+            }
+            byFloor.get(u.vk_floor).push(u);
+        }
+        return [...byFloor.entries()]
+            .sort((a, b) => b[0] - a[0])
+            .map(([floor, units]) => ({
+                floor,
+                units,
+                free: units.filter((u) => u.vk_state === "available").length,
+            }));
+    }
+
+    openUnitRecord(unit) {
+        this.action.doAction({
+            type: "ir.actions.act_window",
+            res_model: "product.template",
+            res_id: unit.id,
+            views: [[false, "form"]],
+            target: "current",
         });
     }
 
