@@ -37,6 +37,8 @@ export class VertikaliSelector extends Component {
             view: null,
             zones: [],
             units: [],           // grid mode
+            unit: null,          // unit shown in the detail panel
+            filters: { rooms: [], status: [], areaMin: null, areaMax: null, priceMax: null },
             selected: null,
             loading: true,
             error: null,
@@ -159,9 +161,10 @@ export class VertikaliSelector extends Component {
             }
             this.state.units = await this.orm.searchRead(
                 "product.template", domain,
-                ["default_code", "vk_floor", "vk_rooms", "vk_area_total",
-                 "list_price", "vk_state"],
-                { order: "vk_floor desc, default_code" }
+                ["default_code", "vk_floor", "vk_section", "vk_rooms",
+                 "vk_area_total", "vk_area_balcony", "vk_orientation",
+                 "list_price", "vk_price_sqm", "vk_state", "vk_handover"],
+                { order: "vk_floor desc, vk_section, default_code" }
             );
         } catch (e) {
             this.state.error = e.message || String(e);
@@ -170,22 +173,116 @@ export class VertikaliSelector extends Component {
         }
     }
 
-    /** Units laid out floor by floor, top floor first. */
+    /** Distinct layouts present, for the filter chips. */
+    get layouts() {
+        return [...new Set(this.state.units.map((u) => u.vk_rooms).filter(Boolean))].sort();
+    }
+
+    /** Sections present, in natural order. */
+    get sections() {
+        const found = [...new Set(this.state.units.map((u) => u.vk_section || ""))];
+        return found.sort((a, b) => String(a).localeCompare(String(b), undefined, { numeric: true }));
+    }
+
+    matchesFilters(u) {
+        const f = this.state.filters;
+        if (f.rooms.length && !f.rooms.includes(u.vk_rooms)) {
+            return false;
+        }
+        if (f.status.length && !f.status.includes(u.vk_state)) {
+            return false;
+        }
+        if (f.areaMin && u.vk_area_total < f.areaMin) {
+            return false;
+        }
+        if (f.areaMax && u.vk_area_total > f.areaMax) {
+            return false;
+        }
+        if (f.priceMax && u.list_price > f.priceMax) {
+            return false;
+        }
+        return true;
+    }
+
+    toggleFilter(kind, value) {
+        const list = this.state.filters[kind];
+        const i = list.indexOf(value);
+        if (i >= 0) {
+            list.splice(i, 1);
+        } else {
+            list.push(value);
+        }
+    }
+
+    clearFilters() {
+        this.state.filters.rooms = [];
+        this.state.filters.status = [];
+        this.state.filters.areaMin = null;
+        this.state.filters.areaMax = null;
+        this.state.filters.priceMax = null;
+    }
+
+    get filterActive() {
+        const f = this.state.filters;
+        return !!(f.rooms.length || f.status.length || f.areaMin || f.areaMax || f.priceMax);
+    }
+
+    get matchCount() {
+        return this.state.units.filter((u) => this.matchesFilters(u)).length;
+    }
+
+    /**
+     * Floors down the page, sections across, units within each section.
+     *
+     * Filtered-out units keep their cell rather than disappearing: a grid whose
+     * columns reflow on every filter change is unreadable, so they are dimmed
+     * in place and the layout stays put.
+     */
     get gridRows() {
+        const sections = this.sections;
         const byFloor = new Map();
         for (const u of this.state.units) {
             if (!byFloor.has(u.vk_floor)) {
-                byFloor.set(u.vk_floor, []);
+                byFloor.set(u.vk_floor, new Map());
             }
-            byFloor.get(u.vk_floor).push(u);
+            const key = u.vk_section || "";
+            const row = byFloor.get(u.vk_floor);
+            if (!row.has(key)) {
+                row.set(key, []);
+            }
+            row.get(key).push(u);
         }
         return [...byFloor.entries()]
             .sort((a, b) => b[0] - a[0])
-            .map(([floor, units]) => ({
+            .map(([floor, row]) => ({
                 floor,
-                units,
-                free: units.filter((u) => u.vk_state === "available").length,
+                free: [...row.values()].flat()
+                    .filter((u) => u.vk_state === "available").length,
+                cells: sections.map((s) => ({
+                    section: s,
+                    units: (row.get(s) || []).map((u) => ({
+                        ...u,
+                        dimmed: !this.matchesFilters(u),
+                    })),
+                })),
             }));
+    }
+
+    /** Short label inside a cell: room count reads faster than a code. */
+    cellLabel(unit) {
+        const r = unit.vk_rooms || "";
+        if (r === "studio") {
+            return "S";
+        }
+        if (r === "commercial") {
+            return "C";
+        }
+        const n = parseInt(r, 10);
+        return Number.isNaN(n) ? "·" : String(n);
+    }
+
+    selectUnit(unit) {
+        this.state.unit = unit;
     }
 
     openUnitRecord(unit) {
@@ -196,6 +293,10 @@ export class VertikaliSelector extends Component {
             views: [[false, "form"]],
             target: "current",
         });
+    }
+
+    fmtMoney(v) {
+        return (v || 0).toLocaleString(undefined, { maximumFractionDigits: 0 });
     }
 
     // ---------------------------------------------------------------- data

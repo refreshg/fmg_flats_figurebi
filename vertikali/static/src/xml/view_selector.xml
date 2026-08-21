@@ -119,35 +119,156 @@
             <div t-elif="state.loading" class="text-muted p-4">Loading…</div>
 
             <!-- Grid: no image, the units themselves are the interface. -->
-            <div t-elif="state.mode === 'grid'" class="o_vk_grid flex-grow-1 overflow-auto p-2">
-                <div t-if="!state.units.length" class="text-muted p-3">
-                    No units for this project yet.
-                </div>
-                <table t-else="" class="o_vk_gtable">
-                    <tbody>
-                        <t t-foreach="gridRows" t-as="row" t-key="row.floor">
-                            <tr>
-                                <th class="o_vk_gfloor">
-                                    <t t-esc="row.floor"/>
-                                    <small><t t-esc="row.free"/> free</small>
-                                </th>
-                                <t t-foreach="row.units" t-as="u" t-key="u.id">
-                                    <td t-attf-class="o_vk_cell o_vk_{{u.vk_state}}"
-                                        t-on-click="() => this.openUnitRecord(u)">
-                                        <span class="o_vk_cid"><t t-esc="u.default_code"/></span>
-                                        <span class="o_vk_cm">
-                                            <t t-esc="u.vk_rooms"/> · <t t-esc="u.vk_area_total"/> m²
-                                        </span>
-                                        <span class="o_vk_cp">
-                                            <t t-if="u.vk_state === 'sold'">sold</t>
-                                            <t t-else=""><t t-esc="u.list_price.toLocaleString()"/></t>
-                                        </span>
-                                    </td>
+            <div t-elif="state.mode === 'grid'" class="o_vk_body d-flex flex-grow-1 overflow-hidden">
+
+                <div class="d-flex flex-column flex-grow-1 overflow-hidden">
+
+                    <!-- filters -->
+                    <div class="o_vk_filters d-flex align-items-center gap-3 px-3 py-2 flex-wrap">
+                        <div class="d-flex align-items-center gap-1">
+                            <span class="o_vk_flabel">Layout</span>
+                            <t t-foreach="layouts" t-as="r" t-key="r">
+                                <button class="o_vk_chip"
+                                        t-att-class="{ 'o_vk_chip_on': state.filters.rooms.includes(r) }"
+                                        t-on-click="() => this.toggleFilter('rooms', r)">
+                                    <t t-esc="r"/>
+                                </button>
+                            </t>
+                        </div>
+
+                        <div class="d-flex align-items-center gap-1">
+                            <span class="o_vk_flabel">Status</span>
+                            <button class="o_vk_chip o_vk_chip_free"
+                                    t-att-class="{ 'o_vk_chip_on': state.filters.status.includes('available') }"
+                                    t-on-click="() => this.toggleFilter('status', 'available')">Free</button>
+                            <button class="o_vk_chip o_vk_chip_res"
+                                    t-att-class="{ 'o_vk_chip_on': state.filters.status.includes('reserved') }"
+                                    t-on-click="() => this.toggleFilter('status', 'reserved')">Reserved</button>
+                            <button class="o_vk_chip o_vk_chip_sold"
+                                    t-att-class="{ 'o_vk_chip_on': state.filters.status.includes('sold') }"
+                                    t-on-click="() => this.toggleFilter('status', 'sold')">Sold</button>
+                        </div>
+
+                        <div class="d-flex align-items-center gap-1">
+                            <span class="o_vk_flabel">m²</span>
+                            <input type="number" class="o_vk_num" placeholder="from"
+                                   t-att-value="state.filters.areaMin"
+                                   t-on-input="(ev) => (state.filters.areaMin = parseFloat(ev.target.value) || null)"/>
+                            <input type="number" class="o_vk_num" placeholder="to"
+                                   t-att-value="state.filters.areaMax"
+                                   t-on-input="(ev) => (state.filters.areaMax = parseFloat(ev.target.value) || null)"/>
+                        </div>
+
+                        <div class="d-flex align-items-center gap-1">
+                            <span class="o_vk_flabel">Max price</span>
+                            <input type="number" class="o_vk_num o_vk_num_w" placeholder="any"
+                                   t-att-value="state.filters.priceMax"
+                                   t-on-input="(ev) => (state.filters.priceMax = parseFloat(ev.target.value) || null)"/>
+                        </div>
+
+                        <button t-if="filterActive" class="btn btn-sm btn-link p-0"
+                                t-on-click="clearFilters">clear</button>
+
+                        <span class="o_vk_meta ms-auto">
+                            <t t-esc="matchCount"/> / <t t-esc="state.units.length"/> units
+                        </span>
+                    </div>
+
+                    <!-- legend -->
+                    <div class="o_vk_legend d-flex gap-3 px-3 py-1">
+                        <span><i class="o_vk_sw o_vk_sw_free"></i>Free</span>
+                        <span><i class="o_vk_sw o_vk_sw_res"></i>Reserved</span>
+                        <span><i class="o_vk_sw o_vk_sw_sold"></i>Sold</span>
+                    </div>
+
+                    <div class="flex-grow-1 overflow-auto p-3">
+                        <div t-if="!state.units.length" class="text-muted">
+                            No units for this project yet.
+                        </div>
+                        <table t-else="" class="o_vk_gtable">
+                            <thead>
+                                <tr>
+                                    <th class="o_vk_gcorner"></th>
+                                    <t t-foreach="sections" t-as="s" t-key="s">
+                                        <th class="o_vk_gsec">
+                                            <t t-if="s">Section <t t-esc="s"/></t>
+                                            <t t-else="">Units</t>
+                                        </th>
+                                    </t>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <t t-foreach="gridRows" t-as="row" t-key="row.floor">
+                                    <tr>
+                                        <th class="o_vk_gfloor">
+                                            <t t-esc="row.floor"/>
+                                            <small><t t-esc="row.free"/></small>
+                                        </th>
+                                        <t t-foreach="row.cells" t-as="c" t-key="c.section">
+                                            <td class="o_vk_gsecCell">
+                                                <div class="o_vk_grow">
+                                                    <t t-foreach="c.units" t-as="u" t-key="u.id">
+                                                        <button t-attf-class="o_vk_cell o_vk_{{u.vk_state}}"
+                                                                t-att-class="{
+                                                                    'o_vk_dim': u.dimmed,
+                                                                    'o_vk_cell_on': state.unit and state.unit.id === u.id }"
+                                                                t-on-click="() => this.selectUnit(u)"
+                                                                t-att-title="u.default_code + ' · ' + u.vk_area_total + ' m²'">
+                                                            <t t-esc="cellLabel(u)"/>
+                                                        </button>
+                                                    </t>
+                                                </div>
+                                            </td>
+                                        </t>
+                                    </tr>
                                 </t>
-                            </tr>
-                        </t>
-                    </tbody>
-                </table>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- detail panel -->
+                <div class="o_vk_side">
+                    <t t-if="state.unit">
+                        <div class="o_vk_upanel">
+                            <div class="d-flex align-items-start justify-content-between">
+                                <div>
+                                    <div class="o_vk_kicker">Unit</div>
+                                    <h3 class="o_vk_sel_n"><t t-esc="state.unit.default_code"/></h3>
+                                </div>
+                                <span t-attf-class="o_vk_badge o_vk_b_{{state.unit.vk_state}}">
+                                    <t t-esc="state.unit.vk_state"/>
+                                </span>
+                            </div>
+
+                            <div class="o_vk_price"><t t-esc="fmtMoney(state.unit.list_price)"/></div>
+                            <div class="o_vk_permsq">
+                                <t t-esc="fmtMoney(state.unit.vk_price_sqm)"/> / m²
+                            </div>
+
+                            <div class="o_vk_specs">
+                                <div><span>Layout</span><b><t t-esc="state.unit.vk_rooms"/></b></div>
+                                <div><span>Total</span><b><t t-esc="state.unit.vk_area_total"/> m²</b></div>
+                                <div><span>Balcony</span><b><t t-esc="state.unit.vk_area_balcony"/> m²</b></div>
+                                <div><span>Floor</span><b><t t-esc="state.unit.vk_floor"/></b></div>
+                                <div t-if="state.unit.vk_section">
+                                    <span>Section</span><b><t t-esc="state.unit.vk_section"/></b>
+                                </div>
+                                <div t-if="state.unit.vk_handover">
+                                    <span>Handover</span><b><t t-esc="state.unit.vk_handover"/></b>
+                                </div>
+                            </div>
+
+                            <button class="btn btn-primary btn-sm w-100 mt-3"
+                                    t-on-click="() => this.openUnitRecord(state.unit)">
+                                Open unit
+                            </button>
+                        </div>
+                    </t>
+                    <div t-else="" class="p-3 o_vk_row_m">
+                        Pick a unit from the grid to see its details.
+                    </div>
+                </div>
             </div>
 
             <div t-elif="!state.view" class="p-4">

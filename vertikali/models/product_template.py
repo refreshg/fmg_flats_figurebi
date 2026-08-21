@@ -32,6 +32,13 @@ class ProductTemplate(models.Model):
         index=True,
         help="Building label as shown to buyers, e.g. A, B, C.",
     )
+    # A tower is usually split into entrances/risers. The grid groups columns
+    # by section, which is what makes a wide building readable.
+    vk_section = fields.Char(
+        string="Section",
+        index=True,
+        help="Entrance or riser within the building, e.g. 1, 2, 3.",
+    )
     vk_floor = fields.Integer(
         string="Floor",
         index=True,

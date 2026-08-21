@@ -21,6 +21,7 @@
                     <group>
                         <group string="Location" name="vk_location">
                             <field name="vk_building" placeholder="e.g. A"/>
+                            <field name="vk_section" placeholder="e.g. 1"/>
                             <field name="vk_floor"/>
                             <field name="vk_rooms"/>
                             <field name="vk_orientation"/>
@@ -49,7 +50,9 @@
         <field name="arch" type="xml">
             <xpath expr="//field[@name='default_code']" position="after">
                 <field name="vk_building" optional="show"/>
+                <field name="vk_section" optional="hide"/>
                 <field name="vk_floor" optional="show"/>
+                <field name="vk_state" optional="show" widget="badge"/>
                 <field name="vk_rooms" optional="show"/>
                 <field name="vk_area_total" optional="show" sum="Total m²"/>
                 <field name="vk_price_sqm" optional="show"/>
@@ -73,8 +76,12 @@
 
             <!-- Reuse the group-by box the base view already defines. -->
             <xpath expr="//filter[@name='group_by_categ_id']" position="after">
+                <filter name="vk_group_status" string="Unit Status"
+                        context="{'group_by': 'vk_state'}"/>
                 <filter name="vk_group_building" string="Building"
                         context="{'group_by': 'vk_building'}"/>
+                <filter name="vk_group_section" string="Section"
+                        context="{'group_by': 'vk_section'}"/>
                 <filter name="vk_group_floor" string="Floor"
                         context="{'group_by': 'vk_floor'}"/>
                 <filter name="vk_group_rooms" string="Layout"
