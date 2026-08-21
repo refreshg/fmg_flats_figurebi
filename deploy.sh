@@ -32,6 +32,16 @@ else
 fi
 echo "    $(git -C "$REPO_DIR" log --oneline -1)"
 
+# bash reads this file as it executes, so a pull that changes deploy.sh would
+# otherwise keep running the pre-pull version. Re-exec once if we changed.
+if [ -z "${VK_REEXEC:-}" ] && [ -f "$REPO_DIR/deploy.sh" ]; then
+    if ! cmp -s "$0" "$REPO_DIR/deploy.sh"; then
+        echo "    deploy.sh changed -- restarting with the new version"
+        chmod +x "$REPO_DIR/deploy.sh"
+        VK_REEXEC=1 exec "$REPO_DIR/deploy.sh" "$MODE"
+    fi
+fi
+
 # Refuse to deploy a tree that would not load: catches truncated pastes and
 # bad merges before the service is stopped.
 echo "==> 2/5 validating"
