@@ -673,12 +673,21 @@ export class VertikaliSelector extends Component {
             return;
         }
         const sr = stage.getBoundingClientRect();
-        const scale = Math.min(sr.width / img.naturalWidth, sr.height / img.naturalHeight);
+        const ir = img.getBoundingClientRect();
+
+        // Where the pixels actually are. The <img> element is laid out by
+        // flexbox and may be wider than its content, while object-fit: contain
+        // letterboxes the picture inside it -- so the drawn area has to be
+        // derived from the element's real rect, not from the stage. Computing
+        // the offset from the stage assumed the image filled it, which is why
+        // shapes landed left of where they were clicked.
+        const scale = Math.min(ir.width / img.naturalWidth, ir.height / img.naturalHeight);
         const w = img.naturalWidth * scale;
         const h = img.naturalHeight * scale;
+
         this.state.box = {
-            left: (sr.width - w) / 2,
-            top: (sr.height - h) / 2,
+            left: (ir.left - sr.left) + (ir.width - w) / 2,
+            top: (ir.top - sr.top) + (ir.height - h) / 2,
             width: w,
             height: h,
         };
