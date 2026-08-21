@@ -112,7 +112,8 @@ class VertikaliPolygon(models.Model):
                 if not all(0 <= c <= 1 for c in pt):
                     raise ValidationError(_(
                         "Points must be normalized between 0 and 1 so the "
-                        "zone scales with the image. Got: %s", pt))
+                        "zone scales with the image. Got: [%(x)s, %(y)s]",
+                        x=pt[0], y=pt[1]))
 
     @api.constrains('target_view_id', 'product_tmpl_id')
     def _check_target(self):
