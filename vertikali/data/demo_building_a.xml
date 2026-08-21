@@ -24,147 +24,147 @@
         <field name="sequence">0</field>
         <field name="view_id" ref="view_facade_a"/>
         <field name="floor">22</field>
-        <field name="points">[[0.25,0.08],[0.76,0.08],[0.76,0.12],[0.25,0.12]]</field>
+        <field name="points">[[0.25,0.1737],[0.76,0.1737],[0.76,0.2068],[0.25,0.2068]]</field>
     </record>
     <record id="poly_facade_a_f21" model="vertikali.polygon">
         <field name="name">Floor 21</field>
         <field name="sequence">10</field>
         <field name="view_id" ref="view_facade_a"/>
         <field name="floor">21</field>
-        <field name="points">[[0.25,0.12],[0.76,0.12],[0.76,0.16],[0.25,0.16]]</field>
+        <field name="points">[[0.25,0.2068],[0.76,0.2068],[0.76,0.2398],[0.25,0.2398]]</field>
     </record>
     <record id="poly_facade_a_f20" model="vertikali.polygon">
         <field name="name">Floor 20</field>
         <field name="sequence">20</field>
         <field name="view_id" ref="view_facade_a"/>
         <field name="floor">20</field>
-        <field name="points">[[0.25,0.16],[0.76,0.16],[0.76,0.2],[0.25,0.2]]</field>
+        <field name="points">[[0.25,0.2398],[0.76,0.2398],[0.76,0.2729],[0.25,0.2729]]</field>
     </record>
     <record id="poly_facade_a_f19" model="vertikali.polygon">
         <field name="name">Floor 19</field>
         <field name="sequence">30</field>
         <field name="view_id" ref="view_facade_a"/>
         <field name="floor">19</field>
-        <field name="points">[[0.25,0.2],[0.76,0.2],[0.76,0.24],[0.25,0.24]]</field>
+        <field name="points">[[0.25,0.2729],[0.76,0.2729],[0.76,0.306],[0.25,0.306]]</field>
     </record>
     <record id="poly_facade_a_f18" model="vertikali.polygon">
         <field name="name">Floor 18</field>
         <field name="sequence">40</field>
         <field name="view_id" ref="view_facade_a"/>
         <field name="floor">18</field>
-        <field name="points">[[0.25,0.24],[0.76,0.24],[0.76,0.28],[0.25,0.28]]</field>
+        <field name="points">[[0.25,0.306],[0.76,0.306],[0.76,0.3391],[0.25,0.3391]]</field>
     </record>
     <record id="poly_facade_a_f17" model="vertikali.polygon">
         <field name="name">Floor 17</field>
         <field name="sequence">50</field>
         <field name="view_id" ref="view_facade_a"/>
         <field name="floor">17</field>
-        <field name="points">[[0.25,0.28],[0.76,0.28],[0.76,0.32],[0.25,0.32]]</field>
+        <field name="points">[[0.25,0.3391],[0.76,0.3391],[0.76,0.3722],[0.25,0.3722]]</field>
     </record>
     <record id="poly_facade_a_f16" model="vertikali.polygon">
         <field name="name">Floor 16</field>
         <field name="sequence">60</field>
         <field name="view_id" ref="view_facade_a"/>
         <field name="floor">16</field>
-        <field name="points">[[0.25,0.32],[0.76,0.32],[0.76,0.36],[0.25,0.36]]</field>
+        <field name="points">[[0.25,0.3722],[0.76,0.3722],[0.76,0.4053],[0.25,0.4053]]</field>
     </record>
     <record id="poly_facade_a_f15" model="vertikali.polygon">
         <field name="name">Floor 15</field>
         <field name="sequence">70</field>
         <field name="view_id" ref="view_facade_a"/>
         <field name="floor">15</field>
-        <field name="points">[[0.25,0.36],[0.76,0.36],[0.76,0.4],[0.25,0.4]]</field>
+        <field name="points">[[0.25,0.4053],[0.76,0.4053],[0.76,0.4383],[0.25,0.4383]]</field>
     </record>
     <record id="poly_facade_a_f14" model="vertikali.polygon">
         <field name="name">Floor 14</field>
         <field name="sequence">80</field>
         <field name="view_id" ref="view_facade_a"/>
         <field name="floor">14</field>
-        <field name="points">[[0.25,0.4],[0.76,0.4],[0.76,0.44],[0.25,0.44]]</field>
+        <field name="points">[[0.25,0.4383],[0.76,0.4383],[0.76,0.4714],[0.25,0.4714]]</field>
     </record>
     <record id="poly_facade_a_f13" model="vertikali.polygon">
         <field name="name">Floor 13</field>
         <field name="sequence">90</field>
         <field name="view_id" ref="view_facade_a"/>
         <field name="floor">13</field>
-        <field name="points">[[0.25,0.44],[0.76,0.44],[0.76,0.48],[0.25,0.48]]</field>
+        <field name="points">[[0.25,0.4714],[0.76,0.4714],[0.76,0.5045],[0.25,0.5045]]</field>
     </record>
     <record id="poly_facade_a_f12" model="vertikali.polygon">
         <field name="name">Floor 12</field>
         <field name="sequence">100</field>
         <field name="view_id" ref="view_facade_a"/>
         <field name="floor">12</field>
-        <field name="points">[[0.25,0.48],[0.76,0.48],[0.76,0.52],[0.25,0.52]]</field>
+        <field name="points">[[0.25,0.5045],[0.76,0.5045],[0.76,0.5376],[0.25,0.5376]]</field>
     </record>
     <record id="poly_facade_a_f11" model="vertikali.polygon">
         <field name="name">Floor 11</field>
         <field name="sequence">110</field>
         <field name="view_id" ref="view_facade_a"/>
         <field name="floor">11</field>
-        <field name="points">[[0.25,0.52],[0.76,0.52],[0.76,0.56],[0.25,0.56]]</field>
+        <field name="points">[[0.25,0.5376],[0.76,0.5376],[0.76,0.5707],[0.25,0.5707]]</field>
     </record>
     <record id="poly_facade_a_f10" model="vertikali.polygon">
         <field name="name">Floor 10</field>
         <field name="sequence">120</field>
         <field name="view_id" ref="view_facade_a"/>
         <field name="floor">10</field>
-        <field name="points">[[0.25,0.56],[0.76,0.56],[0.76,0.6],[0.25,0.6]]</field>
+        <field name="points">[[0.25,0.5707],[0.76,0.5707],[0.76,0.6038],[0.25,0.6038]]</field>
     </record>
     <record id="poly_facade_a_f9" model="vertikali.polygon">
         <field name="name">Floor 9</field>
         <field name="sequence">130</field>
         <field name="view_id" ref="view_facade_a"/>
         <field name="floor">9</field>
-        <field name="points">[[0.25,0.6],[0.76,0.6],[0.76,0.64],[0.25,0.64]]</field>
+        <field name="points">[[0.25,0.6038],[0.76,0.6038],[0.76,0.6368],[0.25,0.6368]]</field>
     </record>
     <record id="poly_facade_a_f8" model="vertikali.polygon">
         <field name="name">Floor 8</field>
         <field name="sequence">140</field>
         <field name="view_id" ref="view_facade_a"/>
         <field name="floor">8</field>
-        <field name="points">[[0.25,0.64],[0.76,0.64],[0.76,0.68],[0.25,0.68]]</field>
+        <field name="points">[[0.25,0.6368],[0.76,0.6368],[0.76,0.6699],[0.25,0.6699]]</field>
     </record>
     <record id="poly_facade_a_f7" model="vertikali.polygon">
         <field name="name">Floor 7</field>
         <field name="sequence">150</field>
         <field name="view_id" ref="view_facade_a"/>
         <field name="floor">7</field>
-        <field name="points">[[0.25,0.68],[0.76,0.68],[0.76,0.72],[0.25,0.72]]</field>
+        <field name="points">[[0.25,0.6699],[0.76,0.6699],[0.76,0.703],[0.25,0.703]]</field>
     </record>
     <record id="poly_facade_a_f6" model="vertikali.polygon">
         <field name="name">Floor 6</field>
         <field name="sequence">160</field>
         <field name="view_id" ref="view_facade_a"/>
         <field name="floor">6</field>
-        <field name="points">[[0.25,0.72],[0.76,0.72],[0.76,0.76],[0.25,0.76]]</field>
+        <field name="points">[[0.25,0.703],[0.76,0.703],[0.76,0.7361],[0.25,0.7361]]</field>
     </record>
     <record id="poly_facade_a_f5" model="vertikali.polygon">
         <field name="name">Floor 5</field>
         <field name="sequence">170</field>
         <field name="view_id" ref="view_facade_a"/>
         <field name="floor">5</field>
-        <field name="points">[[0.25,0.76],[0.76,0.76],[0.76,0.8],[0.25,0.8]]</field>
+        <field name="points">[[0.25,0.7361],[0.76,0.7361],[0.76,0.7692],[0.25,0.7692]]</field>
     </record>
     <record id="poly_facade_a_f4" model="vertikali.polygon">
         <field name="name">Floor 4</field>
         <field name="sequence">180</field>
         <field name="view_id" ref="view_facade_a"/>
         <field name="floor">4</field>
-        <field name="points">[[0.25,0.8],[0.76,0.8],[0.76,0.84],[0.25,0.84]]</field>
+        <field name="points">[[0.25,0.7692],[0.76,0.7692],[0.76,0.8023],[0.25,0.8023]]</field>
     </record>
     <record id="poly_facade_a_f3" model="vertikali.polygon">
         <field name="name">Floor 3</field>
         <field name="sequence">190</field>
         <field name="view_id" ref="view_facade_a"/>
         <field name="floor">3</field>
-        <field name="points">[[0.25,0.84],[0.76,0.84],[0.76,0.88],[0.25,0.88]]</field>
+        <field name="points">[[0.25,0.8023],[0.76,0.8023],[0.76,0.8353],[0.25,0.8353]]</field>
     </record>
     <record id="poly_facade_a_f2" model="vertikali.polygon">
         <field name="name">Floor 2</field>
         <field name="sequence">200</field>
         <field name="view_id" ref="view_facade_a"/>
         <field name="floor">2</field>
-        <field name="points">[[0.25,0.88],[0.76,0.88],[0.76,0.92],[0.25,0.92]]</field>
+        <field name="points">[[0.25,0.8353],[0.76,0.8353],[0.76,0.8684],[0.25,0.8684]]</field>
     </record>
 
     <!-- ============ units ============
