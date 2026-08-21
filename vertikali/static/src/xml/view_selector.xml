@@ -174,7 +174,9 @@
 
             <!-- Masterplan: pick a block off the cover render. -->
             <div t-elif="state.mode === 'masterplan'" class="o_vk_body d-flex flex-grow-1 overflow-hidden">
-                <div class="o_vk_stage flex-grow-1 position-relative" t-ref="stage">
+                <div class="o_vk_stage flex-grow-1 position-relative" t-ref="stage"
+                     t-att-class="{ 'o_vk_drawing': state.drawing }"
+                     t-on-click="onStageClick">
                     <img t-if="coverSrc(state.project)" t-att-src="coverSrc(state.project)"
                          t-ref="img" class="o_vk_img" alt="" t-on-load="onImageLoad"/>
                     <div t-else="" class="o_vk_noimg">
@@ -191,27 +193,81 @@
                                      t-att-points="pointsAttr(b.points)"
                                      t-on-click="() => this.selectBlock(b)"/>
                         </t>
+
+                        <!-- Corner handles while a block outline is being adjusted. -->
+                        <t t-if="state.editingBlock and !state.drawing">
+                            <t t-foreach="blockPoints(state.editingBlock)" t-as="p" t-key="p_index">
+                                <circle class="o_vk_vtx" t-att-cx="p[0]" t-att-cy="p[1]" r="0.009"
+                                        t-on-pointerdown="(ev) => this.startDragBlockVertex(ev, state.editingBlock, p_index)"/>
+                            </t>
+                        </t>
+
+                        <!-- Shape being drawn. -->
+                        <t t-if="state.draft.length">
+                            <polygon t-if="state.draft.length > 1"
+                                     class="o_vk_draft" t-att-points="attr(state.draft)"/>
+                            <t t-foreach="state.draft" t-as="p" t-key="p_index">
+                                <circle t-att-class="p_index === 0 ? 'o_vk_vtx o_vk_first' : 'o_vk_vtx'"
+                                        t-att-cx="p[0]" t-att-cy="p[1]"
+                                        t-att-r="p_index === 0 ? 0.012 : 0.006"/>
+                            </t>
+                        </t>
                     </svg>
-                    <div class="o_vk_hint">Pick a block on the render, or use the swatches below.</div>
+                    <div class="o_vk_hint">
+                        <t t-if="state.drawing">
+                            Drawing <b>Block <t t-esc="state.editingBlock.code"/></b> —
+                            <t t-esc="state.draft.length"/> points. Close on the first point to finish.
+                            <button class="o_vk_link ms-2" t-on-click="undoPoint">undo</button>
+                            <button class="o_vk_link ms-2" t-on-click="finishBlockDraw">finish</button>
+                            <button class="o_vk_link ms-2"
+                                    t-on-click="() => { state.drawing = false; state.draft = []; state.editingBlock = null; }">cancel</button>
+                        </t>
+                        <t t-elif="state.editingBlock">
+                            Drag the corners of <b>Block <t t-esc="state.editingBlock.code"/></b> —
+                            saved automatically.
+                            <button class="o_vk_link ms-2"
+                                    t-on-click="() => (state.editingBlock = null)">done</button>
+                        </t>
+                        <t t-else="">Pick a block on the render, or use the list on the right.</t>
+                    </div>
                 </div>
                 <div class="o_vk_side">
                     <div class="o_vk_side_h">Blocks</div>
                     <div class="o_vk_list">
                         <t t-foreach="projectBlocks" t-as="b" t-key="b.id">
-                            <div class="o_vk_row d-flex align-items-center gap-2"
-                                 t-on-click="() => this.selectBlock(b)">
-                                <span class="o_vk_bsw" t-attf-style="background:{{b.color}}">
-                                    <t t-esc="b.code"/>
-                                </span>
-                                <span class="flex-grow-1">
-                                    <span class="o_vk_row_n"><t t-esc="b.name"/></span>
-                                    <span class="o_vk_row_m">
-                                        <t t-esc="b.available_count"/> free of <t t-esc="b.unit_count"/>
-                                        <t t-if="b.floors"> · <t t-esc="b.floors"/> floors</t>
+                            <div class="o_vk_row"
+                                 t-att-class="{ 'o_vk_row_sel': state.editingBlock and state.editingBlock.id === b.id }">
+                                <div class="d-flex align-items-center gap-2"
+                                     t-on-click="() => this.selectBlock(b)">
+                                    <span class="o_vk_bsw" t-attf-style="background:{{b.color}}">
+                                        <t t-esc="b.code"/>
                                     </span>
-                                </span>
+                                    <span class="flex-grow-1">
+                                        <span class="o_vk_row_n"><t t-esc="b.name"/></span>
+                                        <span class="o_vk_row_m">
+                                            <t t-esc="b.available_count"/> free of <t t-esc="b.unit_count"/>
+                                            <t t-if="b.floors"> · <t t-esc="b.floors"/> floors</t>
+                                        </span>
+                                    </span>
+                                </div>
+                                <!-- Shape controls: a block outline is edited
+                                     here, not through the zone editor. -->
+                                <div class="d-flex gap-2 mt-1 ms-4">
+                                    <button class="o_vk_link"
+                                            t-on-click.stop="() => this.startBlockDraw(b)">
+                                        <t t-esc="b.points ? 'redraw' : 'draw shape'"/>
+                                    </button>
+                                    <button t-if="b.points" class="o_vk_link"
+                                            t-on-click.stop="() => (state.editingBlock = b)">adjust</button>
+                                    <button t-if="b.points" class="o_vk_link o_vk_link_d"
+                                            t-on-click.stop="() => this.clearBlockShape(b)">delete shape</button>
+                                </div>
                             </div>
                         </t>
+                        <div t-if="!projectBlocks.length" class="o_vk_row_m p-3">
+                            No blocks on this project. Add them under
+                            Configuration → Projects.
+                        </div>
                     </div>
                 </div>
             </div>
@@ -236,13 +292,13 @@
                     ← back to facade
                 </button>
 
-                <button t-if="state.mode !== 'grid'" class="btn btn-sm"
+                <button t-if="isZoneMode" class="btn btn-sm"
                         t-att-class="state.editing ? 'btn-primary' : 'btn-secondary'"
                         t-on-click="toggleEdit">
                     <t t-esc="state.editing ? 'Editing zones' : 'Edit zones'"/>
                 </button>
 
-                <t t-if="state.editing and state.mode !== 'grid'">
+                <t t-if="state.editing and isZoneMode">
                     <button class="btn btn-sm btn-secondary" t-on-click="startDraw"
                             t-att-disabled="state.drawing">+ Draw zone</button>
                     <button class="btn btn-sm btn-secondary"
@@ -285,7 +341,7 @@
                 </span>
             </div>
 
-            <div t-if="state.editing and state.mode !== 'grid'" class="o_vk_hint px-2 py-1">
+            <div t-if="state.editing and isZoneMode" class="o_vk_hint px-2 py-1">
                 <t t-if="state.drawing">
                     <b>Click as many corners as you need</b> — follow the roofline
                     step by step. <t t-esc="state.draft.length"/> placed.

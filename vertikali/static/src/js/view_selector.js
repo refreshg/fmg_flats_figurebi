@@ -44,6 +44,7 @@ export class VertikaliSelector extends Component {
             unit: null,          // unit shown in the detail panel
             card: null,          // unit opened as a full card
             plan2d: true,        // 2D / 3D toggle on the card
+            editingBlock: null,  // block whose masterplan shape is being drawn
             filters: { rooms: [], status: [], areaMin: null, areaMax: null, priceMax: null },
             selected: null,
             loading: true,
@@ -149,6 +150,84 @@ export class VertikaliSelector extends Component {
             }
             return true;
         });
+    }
+
+    /** Zone editing only makes sense where zones exist. */
+    get isZoneMode() {
+        return this.state.mode === "facade" || this.state.mode === "floor";
+    }
+
+    // ------------------------------------------------- masterplan editing
+
+    /**
+     * Blocks are shapes on the project cover, not vertikali.polygon records,
+     * so they need their own draw/drag/delete path rather than reusing the
+     * zone editor.
+     */
+    startBlockDraw(block) {
+        this.state.editingBlock = block;
+        this.state.drawing = true;
+        this.state.draft = [];
+    }
+
+    async finishBlockDraw() {
+        const block = this.state.editingBlock;
+        if (!block) {
+            return;
+        }
+        if (this.state.draft.length < 3) {
+            this.notification.add("A shape needs at least 3 points.", { type: "warning" });
+            return;
+        }
+        const pts = [...this.state.draft];
+        this.state.draft = [];
+        this.state.drawing = false;
+        this.state.editingBlock = null;
+        await this.saveBlockShape(block, pts);
+    }
+
+    async saveBlockShape(block, pts) {
+        try {
+            await this.orm.write("vertikali.block", [block.id], {
+                points: JSON.stringify(pts),
+            });
+            block.points = JSON.stringify(pts);
+            this.notification.add(`Shape saved for block ${block.code}.`, { type: "success" });
+        } catch (e) {
+            this.notification.add(e.message || String(e), { type: "danger" });
+        }
+    }
+
+    async clearBlockShape(block) {
+        try {
+            await this.orm.write("vertikali.block", [block.id], { points: false });
+            block.points = false;
+            this.notification.add(`Shape cleared for block ${block.code}.`, { type: "info" });
+        } catch (e) {
+            this.notification.add(e.message || String(e), { type: "danger" });
+        }
+    }
+
+    /** Drag one corner of a block outline. */
+    startDragBlockVertex(ev, block, index) {
+        ev.preventDefault();
+        ev.stopPropagation();
+        const pts = this.parsePoints(block.points);
+        const move = (e) => {
+            pts[index] = this.toNorm(e);
+            block.points = JSON.stringify(pts);
+        };
+        const up = () => {
+            window.removeEventListener("pointermove", move);
+            window.removeEventListener("pointerup", up);
+            this.saveBlockShape(block, this.parsePoints(block.points));
+        };
+        window.addEventListener("pointermove", move);
+        window.addEventListener("pointerup", up);
+    }
+
+    blockPoints(block) {
+        return this.parsePoints(block.points);
     }
 
     /** Blocks of the current project. */
@@ -633,7 +712,12 @@ export class VertikaliSelector extends Component {
     }
 
     onStageClick(ev) {
-        if (!this.state.editing || !this.state.drawing) {
+        if (!this.state.drawing) {
+            return;
+        }
+        // Blocks are drawn on the masterplan without entering zone-edit mode.
+        const blockMode = !!this.state.editingBlock;
+        if (!blockMode && !this.state.editing) {
             return;
         }
         const p = this.toNorm(ev);
@@ -641,7 +725,11 @@ export class VertikaliSelector extends Component {
         if (this.state.draft.length >= 3) {
             const [fx, fy] = this.state.draft[0];
             if (Math.hypot(p[0] - fx, p[1] - fy) < 0.015) {
-                this.finishDraw();
+                if (blockMode) {
+                    this.finishBlockDraw();
+                } else {
+                    this.finishDraw();
+                }
                 return;
             }
         }
