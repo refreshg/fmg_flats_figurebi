@@ -509,6 +509,64 @@
         color: rgba(32, 30, 29, .65);
     }
 
+    // ---- what a facade band covers ----
+    .o_vk_zplan {
+        padding: 10px 12px;
+        border-bottom: 1px solid rgba(32, 30, 29, .15);
+        text-align: center;
+
+        img {
+            max-width: 100%;
+            max-height: 190px;
+            object-fit: contain;
+            border: 1px solid rgba(32, 30, 29, .15);
+            background: #fff;
+        }
+    }
+
+    .o_vk_zcount {
+        padding: 8px 12px;
+        font-size: 12px;
+        border-bottom: 1px solid rgba(32, 30, 29, .15);
+        b { font-weight: 700; }
+    }
+
+    .o_vk_ucard {
+        padding: 10px 12px;
+        border-bottom: 1px solid rgba(32, 30, 29, .12);
+        cursor: pointer;
+
+        &:hover { background: rgba(236, 48, 19, .07); }
+    }
+
+    .o_vk_uprice {
+        font-weight: 800;
+        font-size: 15px;
+        font-variant-numeric: tabular-nums;
+    }
+
+    // Ticking units for a band that covers only part of a storey.
+    .o_vk_upick {
+        margin-top: 8px;
+        max-height: 220px;
+        overflow-y: auto;
+        border: 1px solid rgba(32, 30, 29, .15);
+    }
+
+    .o_vk_upick_r {
+        display: flex;
+        align-items: center;
+        gap: 7px;
+        padding: 4px 8px;
+        font-size: 12px;
+        cursor: pointer;
+        border-bottom: 1px solid rgba(32, 30, 29, .08);
+
+        &:last-child { border-bottom: 0; }
+        &:hover { background: rgba(236, 48, 19, .07); }
+        input { cursor: pointer; }
+    }
+
     // ---- unit detail panel ----
     .o_vk_upanel { padding: 14px; }
 
@@ -569,15 +627,21 @@
 
     .o_vk_body {
         min-height: 0;             // let the flex children scroll
+        min-width: 0;
     }
 
     // ---- stage ----
+    // min-height/min-width 0 stop a flex item from refusing to shrink below
+    // its content: without them a wide render (2.3:1 and up) pushes the stage
+    // taller than the viewport, so the picture drops out of view and is cut.
     .o_vk_stage {
         position: relative;
         overflow: hidden;
         display: flex;
         align-items: center;
         justify-content: center;
+        min-height: 0;
+        min-width: 0;
     }
 
     // The image and the overlay are stacked in one grid cell, so the browser
@@ -590,7 +654,11 @@
         max-width: 100%;
         max-height: 100%;
         min-height: 0;
+        min-width: 0;
         position: relative;
+        // Shrink to the image so the frame is exactly the drawn area.
+        width: fit-content;
+        height: fit-content;
 
         > * { grid-area: 1 / 1; }
     }

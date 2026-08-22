@@ -663,6 +663,58 @@
                 </div>
 
                 <div class="o_vk_side">
+                    <!-- What the picked band covers: that floor's plan and the
+                         units it sells, so a facade previews the storey. -->
+                    <t t-if="state.selected and state.selected.floor and !state.editing">
+                        <div class="o_vk_side_h d-flex align-items-center">
+                            <span class="flex-grow-1">
+                                Floor <t t-esc="state.selected.floor"/>
+                                <t t-if="state.selected.section"> · Section <t t-esc="state.selected.section"/></t>
+                            </span>
+                            <button class="o_vk_link"
+                                    t-on-click="() => (state.selected = null)">×</button>
+                        </div>
+
+                        <div class="o_vk_zplan" t-if="zonePlanSrc">
+                            <img t-att-src="zonePlanSrc" alt="Floor plan"/>
+                            <button class="o_vk_link d-block mt-1"
+                                    t-on-click="() => this.setMode('floor')">Open floor plan</button>
+                        </div>
+
+                        <div class="o_vk_zcount">
+                            Found: <b><t t-esc="state.zoneUnits.length"/></b> units
+                        </div>
+
+                        <div class="o_vk_list">
+                            <t t-foreach="state.zoneUnits" t-as="u" t-key="u.id">
+                                <div class="o_vk_ucard" t-on-click="() => this.openCard(u)">
+                                    <div class="d-flex align-items-start gap-2">
+                                        <span class="flex-grow-1">
+                                            <span class="o_vk_uprice"><t t-esc="fmtMoney(u.list_price)"/></span>
+                                            <span class="o_vk_row_m d-block">
+                                                <t t-esc="fmtMoney(u.vk_price_sqm)"/> / m²
+                                            </span>
+                                        </span>
+                                        <span t-attf-class="o_vk_badge o_vk_b_{{u.vk_state}}">
+                                            <t t-esc="u.vk_state"/>
+                                        </span>
+                                    </div>
+                                    <div class="o_vk_row_m mt-1">
+                                        <t t-esc="u.default_code"/> ·
+                                        <t t-esc="u.vk_rooms"/> ·
+                                        <t t-esc="u.vk_area_total"/> m² ·
+                                        floor <t t-esc="u.vk_floor"/>
+                                    </div>
+                                </div>
+                            </t>
+                            <div t-if="!state.zoneUnits.length" class="o_vk_row_m p-3">
+                                No units match this band. Give it a floor (and a
+                                section, if the storey is split) in edit mode.
+                            </div>
+                        </div>
+                    </t>
+
+                    <t t-else="">
                     <div class="o_vk_side_h">Zones</div>
                     <div class="o_vk_list">
                         <t t-foreach="state.zones" t-as="z" t-key="z.id">
@@ -671,14 +723,15 @@
                                  t-on-click="() => this.onZoneClick(z)">
                                 <span class="flex-grow-1">
                                     <span class="o_vk_row_n"><t t-esc="z.name"/></span>
-                                    <span class="o_vk_row_m" t-if="z.product_tmpl_id">
-                                        <t t-esc="z.product_tmpl_id[1]"/>
+                                    <span class="o_vk_row_m" t-if="z.floor">
+                                        Floor <t t-esc="z.floor"/>
+                                        <t t-if="z.section"> · sec <t t-esc="z.section"/></t>
+                                        <t t-if="z.product_tmpl_ids and z.product_tmpl_ids.length">
+                                            · <t t-esc="z.product_tmpl_ids.length"/> units
+                                        </t>
                                     </span>
                                     <span class="o_vk_row_m" t-elif="z.target_view_id">
                                         → <t t-esc="z.target_view_id[1]"/>
-                                    </span>
-                                    <span class="o_vk_row_m" t-elif="z.floor">
-                                        Floor <t t-esc="z.floor"/>
                                     </span>
                                 </span>
                                 <span class="o_vk_dot" t-if="state.dirty.has(z.id)" title="Unsaved">●</span>
@@ -712,6 +765,40 @@
                                    t-att-value="state.selected.floor or ''"
                                    placeholder="e.g. 12"
                                    t-on-change="(ev) => this.assignFloor(state.selected, ev.target.value)"/>
+
+                            <!-- A storey split across wings needs the section
+                                 too, or the band would claim the whole floor. -->
+                            <label class="o_vk_kicker d-block mb-1 mt-2">Section</label>
+                            <input type="text" class="o_vk_num w-100"
+                                   t-att-value="state.selected.section or ''"
+                                   placeholder="empty = whole floor"
+                                   t-on-change="(ev) => this.setZoneSection(state.selected, ev.target.value)"/>
+
+                            <div class="d-flex align-items-center gap-2 mt-2">
+                                <span class="o_vk_row_m flex-grow-1">
+                                    <t t-esc="(state.selected.product_tmpl_ids or []).length"/> units attached
+                                </span>
+                                <button class="o_vk_link"
+                                        t-on-click="() => this.fillZoneUnits(state.selected)">
+                                    fill from floor
+                                </button>
+                            </div>
+
+                            <!-- Tick individual units when a band covers only
+                                 part of a storey. -->
+                            <div class="o_vk_upick" t-if="state.zoneUnits.length">
+                                <t t-foreach="state.zoneUnits" t-as="u" t-key="u.id">
+                                    <label class="o_vk_upick_r">
+                                        <input type="checkbox"
+                                               t-att-checked="zoneHasUnit(state.selected, u)"
+                                               t-on-change="() => this.toggleZoneUnit(state.selected, u)"/>
+                                        <span><t t-esc="u.default_code"/></span>
+                                        <span class="o_vk_row_m">
+                                            <t t-esc="u.vk_rooms"/> · <t t-esc="u.vk_area_total"/> m²
+                                        </span>
+                                    </label>
+                                </t>
+                            </div>
                         </div>
 
                         <button t-if="state.editing"
@@ -730,6 +817,7 @@
                             Show units on this floor
                         </button>
                     </div>
+                    </t>
                 </div>
             </div>
         </div>

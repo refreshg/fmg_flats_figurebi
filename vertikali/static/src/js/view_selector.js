@@ -45,6 +45,8 @@ export class VertikaliSelector extends Component {
             card: null,          // unit opened as a full card
             plan2d: true,        // 2D / 3D toggle on the card
             editingBlock: null,  // block whose masterplan shape is being drawn
+            zoneUnits: [],       // units behind the selected facade band
+            zonePlan: null,      // that floor's plan, shown beside them
             filters: { rooms: [], status: [], areaMin: null, areaMax: null, priceMax: null },
             selected: null,
             loading: true,
@@ -562,7 +564,8 @@ export class VertikaliSelector extends Component {
 
             const zones = await this.orm.searchRead(
                 "vertikali.polygon", [["view_id", "=", viewId]],
-                ["name", "floor", "points", "target_view_id", "product_tmpl_id"],
+                ["name", "floor", "section", "points", "target_view_id",
+                 "product_tmpl_id", "product_tmpl_ids"],
                 { order: "sequence, id" }
             );
             this.state.zones = zones.map((z) => ({ ...z, pts: this.parsePoints(z.points) }));
@@ -595,6 +598,118 @@ export class VertikaliSelector extends Component {
         );
         this.state.floorUnits = units;
         this.state.unitById = Object.fromEntries(units.map((u) => [u.id, u]));
+    }
+
+    /**
+     * Units behind the selected facade band, with that floor's plan.
+     *
+     * Prefers the units explicitly attached to the zone; falls back to the
+     * floor (and section, where the facade is split into wings) so a band
+     * still previews its storey before anyone has attached anything.
+     */
+    async loadZoneUnits(zone) {
+        this.state.zoneUnits = [];
+        this.state.zonePlan = null;
+        if (!zone || !zone.floor) {
+            return;
+        }
+        try {
+            const fields = [
+                "default_code", "vk_floor", "vk_section", "vk_rooms",
+                "vk_area_total", "list_price", "vk_price_sqm", "vk_state",
+                "vk_area_balcony", "vk_handover", "vk_rooms_detail",
+                "vk_condition",
+            ];
+            const ids = zone.product_tmpl_ids || [];
+            if (ids.length) {
+                this.state.zoneUnits = await this.orm.read(
+                    "product.template", ids, fields);
+            } else {
+                const domain = [
+                    ["vk_is_unit", "=", true], ["vk_floor", "=", zone.floor],
+                ];
+                if (zone.section) {
+                    domain.push(["vk_section", "=", zone.section]);
+                }
+                const building = this.state.block?.code || this.state.view?.building;
+                if (building) {
+                    domain.push(["vk_building", "=", building]);
+                }
+                this.state.zoneUnits = await this.orm.searchRead(
+                    "product.template", domain, fields, { order: "default_code" });
+            }
+
+            // The matching floor plan, so the band shows the layout too.
+            const plan = this.floorList.find((v) => v.floor === zone.floor);
+            if (plan) {
+                const [rec] = await this.orm.read(
+                    "vertikali.view", [plan.id], ["name", "image"]);
+                this.state.zonePlan = rec;
+            }
+        } catch (e) {
+            this.notification.add(e.message || String(e), { type: "danger" });
+        }
+    }
+
+    /** Attach every unit on this zone's floor/section in one go. */
+    async fillZoneUnits(zone) {
+        if (!zone?.floor) {
+            this.notification.add(
+                "Give the zone a floor first.", { type: "warning" });
+            return;
+        }
+        try {
+            await this.orm.call(
+                "vertikali.polygon", "action_fill_units_from_floor", [[zone.id]]);
+            const [rec] = await this.orm.read(
+                "vertikali.polygon", [zone.id], ["product_tmpl_ids"]);
+            zone.product_tmpl_ids = rec.product_tmpl_ids;
+            await this.loadZoneUnits(zone);
+            this.notification.add(
+                `${zone.product_tmpl_ids.length} units attached.`, { type: "success" });
+        } catch (e) {
+            this.notification.add(e.message || String(e), { type: "danger" });
+        }
+    }
+
+    /** Add or remove one unit from the selected zone. */
+    async toggleZoneUnit(zone, unit) {
+        const ids = [...(zone.product_tmpl_ids || [])];
+        const i = ids.indexOf(unit.id);
+        if (i >= 0) {
+            ids.splice(i, 1);
+        } else {
+            ids.push(unit.id);
+        }
+        try {
+            await this.orm.write("vertikali.polygon", [zone.id], {
+                product_tmpl_ids: [[6, 0, ids]],
+            });
+            zone.product_tmpl_ids = ids;
+        } catch (e) {
+            this.notification.add(e.message || String(e), { type: "danger" });
+        }
+    }
+
+    zoneHasUnit(zone, unit) {
+        return (zone?.product_tmpl_ids || []).includes(unit.id);
+    }
+
+    /** Save the zone's section, which narrows which units it covers. */
+    async setZoneSection(zone, value) {
+        const section = (value || "").trim() || false;
+        try {
+            await this.orm.write("vertikali.polygon", [zone.id], { section });
+            zone.section = section;
+            await this.loadZoneUnits(zone);
+        } catch (e) {
+            this.notification.add(e.message || String(e), { type: "danger" });
+        }
+    }
+
+    get zonePlanSrc() {
+        const p = this.state.zonePlan;
+        return p && p.image ? `data:image/png;base64,${p.image}` : null;
     }
 
     /** The unit a floor-plan zone stands for, if it is linked. */
@@ -693,6 +808,9 @@ export class VertikaliSelector extends Component {
             return;
         }
         this.state.selected = zone;
+        // Show what the band sells, plus that floor's plan, without leaving
+        // the facade -- the point of a facade band is to preview the storey.
+        this.loadZoneUnits(zone);
         if (this.state.editing) {
             return;
         }

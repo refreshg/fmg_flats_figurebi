@@ -389,6 +389,62 @@ class VertikaliPolygon(models.Model):
     # number of towers is whatever has been drawn -- no fixed A/B list.
     block_id = fields.Many2one(
         'vertikali.block', string="Block", ondelete='cascade', index=True)
+
+    # A facade band covers a whole storey, so it stands for several units at
+    # once -- product_tmpl_id holds a single unit and only suits a floor-plan
+    # zone. Listing them here lets the band report what it sells.
+    product_tmpl_ids = fields.Many2many(
+        'product.template',
+        'vertikali_polygon_product_rel', 'polygon_id', 'product_tmpl_id',
+        string="Units",
+        domain="[('vk_is_unit', '=', True)]",
+    )
+
+    unit_count = fields.Integer(
+        compute='_compute_unit_stats', string="Units")
+    available_count = fields.Integer(
+        compute='_compute_unit_stats', string="Available")
+
+    @api.depends('product_tmpl_ids.vk_state')
+    def _compute_unit_stats(self):
+        for poly in self:
+            units = poly.product_tmpl_ids
+            poly.unit_count = len(units)
+            poly.available_count = len(
+                units.filtered(lambda u: u.vk_state == 'available'))
+
+    # A storey is often split into several bands across the facade -- one per
+    # entrance or wing -- so a zone covers one section of one floor, not the
+    # whole floor. Left empty the zone means the entire storey.
+    section = fields.Char(
+        help="Section this band covers, e.g. 1. Leave empty for the whole floor.")
+
+    def _unit_domain(self):
+        """Units this zone stands for: floor, plus section and building."""
+        self.ensure_one()
+        domain = [('vk_is_unit', '=', True), ('vk_floor', '=', self.floor)]
+        if self.section:
+            domain.append(('vk_section', '=', self.section))
+        building = self.view_id.building
+        if building:
+            domain.append(('vk_building', '=', building))
+        return domain
+
+    def action_fill_units_from_floor(self):
+        """Attach the units this zone covers.
+
+        A band drawn over storey 5 usually means "floor 5" -- or, on a facade
+        split into wings, "floor 5, section 2". Filling from the floor beats
+        ticking boxes by hand; the building comes from the view, so blocks do
+        not bleed into each other.
+        """
+        for poly in self:
+            if not poly.floor:
+                raise ValidationError(_(
+                    "Set the zone's floor first — without it there is no way "
+                    "to tell which units it covers."))
+            poly.product_tmpl_ids = [
+                (6, 0, self.env['product.template'].search(poly._unit_domain()).ids)]
     product_tmpl_id = fields.Many2one(
         'product.template', string="Unit", ondelete='cascade', index=True,
         domain="[('vk_is_unit', '=', True)]")
