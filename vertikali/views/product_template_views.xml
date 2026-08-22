@@ -55,7 +55,7 @@
         <field name="arch" type="xml">
             <xpath expr="//field[@name='default_code']" position="after">
                 <field name="vk_building" optional="show"/>
-                <field name="vk_section" optional="hide"/>
+                <field name="vk_section" optional="show"/>
                 <field name="vk_floor" optional="show"/>
                 <field name="vk_state" optional="show" widget="badge"/>
                 <field name="vk_rooms" optional="show"/>

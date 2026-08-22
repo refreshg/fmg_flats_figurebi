@@ -784,18 +784,21 @@
                                 </button>
                             </div>
 
-                            <!-- Tick individual units when a band covers only
-                                 part of a storey. -->
-                            <div class="o_vk_upick" t-if="state.zoneUnits.length">
-                                <t t-foreach="state.zoneUnits" t-as="u" t-key="u.id">
+                            <!-- Every unit on the storey, so a band covering
+                                 part of it can be ticked by hand. Listing only
+                                 the section's units would show nothing while
+                                 the units carry no section yet. -->
+                            <div class="o_vk_upick" t-if="state.floorPick.length">
+                                <t t-foreach="state.floorPick" t-as="u" t-key="u.id">
                                     <label class="o_vk_upick_r">
                                         <input type="checkbox"
                                                t-att-checked="zoneHasUnit(state.selected, u)"
                                                t-on-change="() => this.toggleZoneUnit(state.selected, u)"/>
                                         <span><t t-esc="u.default_code"/></span>
-                                        <span class="o_vk_row_m">
-                                            <t t-esc="u.vk_rooms"/> · <t t-esc="u.vk_area_total"/> m²
+                                        <span class="o_vk_row_m" t-if="u.vk_section">
+                                            sec <t t-esc="u.vk_section"/>
                                         </span>
+                                        <span class="o_vk_row_m" t-else="">no section</span>
                                     </label>
                                 </t>
                             </div>

@@ -46,6 +46,7 @@ export class VertikaliSelector extends Component {
             plan2d: true,        // 2D / 3D toggle on the card
             editingBlock: null,  // block whose masterplan shape is being drawn
             zoneUnits: [],       // units behind the selected facade band
+            floorPick: [],       // every unit on that storey, for ticking
             zonePlan: null,      // that floor's plan, shown beside them
             filters: { rooms: [], status: [], areaMin: null, areaMax: null, priceMax: null },
             selected: null,
@@ -611,7 +612,17 @@ export class VertikaliSelector extends Component {
         this.state.zoneUnits = [];
         this.state.zonePlan = null;
         if (!zone || !zone.floor) {
+            this.state.floorPick = [];
             return;
+        }
+        // Everything on the storey, so the editor can tick units the section
+        // filter would hide -- picking by hand is the fallback when the units
+        // carry no section at all. Only refetched when the floor changes, so
+        // the list does not blink on every tick.
+        if (this.state.floorPick[0]?.vk_floor !== zone.floor) {
+            this.unitsOnFloor(zone.floor)
+                .then((rows) => { this.state.floorPick = rows; })
+                .catch(() => { this.state.floorPick = []; });
         }
         try {
             const fields = [
@@ -665,27 +676,84 @@ export class VertikaliSelector extends Component {
                 "vertikali.polygon", [zone.id], ["product_tmpl_ids"]);
             zone.product_tmpl_ids = rec.product_tmpl_ids;
             await this.loadZoneUnits(zone);
+
+            if (rec.product_tmpl_ids.length) {
+                this.notification.add(
+                    `${rec.product_tmpl_ids.length} units attached.`,
+                    { type: "success" });
+                return;
+            }
+
+            // Nothing matched. Almost always the zone asks for a section the
+            // units do not carry, so say that rather than reporting a bare
+            // zero -- and offer to stamp the section onto the floor's units.
+            if (zone.section) {
+                const onFloor = await this.unitsOnFloor(zone.floor);
+                if (onFloor.length) {
+                    const ok = window.confirm(
+                        `No unit on floor ${zone.floor} is marked section `
+                        + `"${zone.section}".\n\n`
+                        + `Set section "${zone.section}" on all ${onFloor.length} `
+                        + `units of this floor and attach them?`);
+                    if (ok) {
+                        await this.orm.write(
+                            "product.template", onFloor.map((u) => u.id),
+                            { vk_section: zone.section });
+                        await this.fillZoneUnits(zone);
+                        return;
+                    }
+                    this.notification.add(
+                        `Set the section on the units first, or clear it on `
+                        + `the zone to take the whole floor.`,
+                        { type: "warning" });
+                    return;
+                }
+            }
             this.notification.add(
-                `${zone.product_tmpl_ids.length} units attached.`, { type: "success" });
+                `No units found on floor ${zone.floor}.`, { type: "warning" });
         } catch (e) {
             this.notification.add(e.message || String(e), { type: "danger" });
         }
+    }
+
+    /** Units on a floor of the current building, ignoring section. */
+    async unitsOnFloor(floor) {
+        const domain = [["vk_is_unit", "=", true], ["vk_floor", "=", floor]];
+        const building = this.state.block?.code || this.state.view?.building;
+        if (building) {
+            domain.push(["vk_building", "=", building]);
+        }
+        return this.orm.searchRead(
+            "product.template", domain,
+            ["default_code", "vk_section", "vk_floor"],
+            { order: "default_code" });
     }
 
     /** Add or remove one unit from the selected zone. */
     async toggleZoneUnit(zone, unit) {
         const ids = [...(zone.product_tmpl_ids || [])];
         const i = ids.indexOf(unit.id);
-        if (i >= 0) {
-            ids.splice(i, 1);
-        } else {
+        const adding = i < 0;
+        if (adding) {
             ids.push(unit.id);
+        } else {
+            ids.splice(i, 1);
         }
         try {
             await this.orm.write("vertikali.polygon", [zone.id], {
                 product_tmpl_ids: [[6, 0, ids]],
             });
             zone.product_tmpl_ids = ids;
+
+            // Stamp the band's section onto the unit, so the two agree and a
+            // later fill-from-floor picks it up on its own.
+            if (adding && zone.section && unit.vk_section !== zone.section) {
+                await this.orm.write("product.template", [unit.id], {
+                    vk_section: zone.section,
+                });
+                unit.vk_section = zone.section;
+            }
+            await this.loadZoneUnits(zone);
         } catch (e) {
             this.notification.add(e.message || String(e), { type: "danger" });
         }
