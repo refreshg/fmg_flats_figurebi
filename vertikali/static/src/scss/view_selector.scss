@@ -17,7 +17,8 @@
     // always have a height -- when it collapses, nothing downstream can bound
     // the image and a wide render overflows instead of fitting. Fall back to
     // the viewport minus Odoo's chrome so the stage always has a real height.
-    --vk-chrome: 46px;
+    --vk-chrome: 46px;   // Odoo's top bar
+    --vk-bars: 120px;    // this selector's own breadcrumb + toolbars
     height: calc(100dvh - var(--vk-chrome));
     overflow: hidden;
 
@@ -665,13 +666,15 @@
     // sized to the render's natural pixels, so a large image overflowed the
     // stage -- cut off, with the overlay left hanging where the oversized
     // frame was.
+    // inline-block shrink-wraps the image, so the frame is exactly the drawn
+    // area. The overlay is then absolutely positioned against it rather than
+    // stacked in a grid cell: a cell stretches to the track and the SVG ran on
+    // below the picture, while min-content/fit-content tracks would size to
+    // the render's natural pixels and overflow instead.
     .o_vk_frame {
-        display: grid;
+        display: inline-block;
         position: relative;
-        min-height: 0;
-        min-width: 0;
-
-        > * { grid-area: 1 / 1; }
+        line-height: 0;          // no descender gap under the image
     }
 
     // No object-fit: the element is sized to the picture itself, so the frame
@@ -679,10 +682,13 @@
     // compensate for. The caps make a render of any proportion fit: a wide one
     // is bounded by the width, a tall one by the height, and the frame follows
     // whichever wins.
+    // Capped against the stage rather than the frame: the frame shrink-wraps
+    // the image, so sizing the image off it would be circular. Whichever axis
+    // binds first wins, so any proportion of render fits.
     .o_vk_img {
         display: block;
         max-width: 100%;
-        max-height: 100%;
+        max-height: calc(100dvh - var(--vk-chrome) - var(--vk-bars));
         width: auto;
         height: auto;
     }
@@ -700,9 +706,11 @@
         border: 2px dashed var(--vk-rule);
     }
 
-    // Stacked over the image by the grid, so it always covers exactly the
-    // picture -- no inline geometry, nothing to drift.
+    // Pinned to the frame, which is exactly the image, so the overlay always
+    // covers the picture -- no measured geometry, nothing to drift.
     .o_vk_svg {
+        position: absolute;
+        inset: 0;
         width: 100%;
         height: 100%;
         overflow: visible;
