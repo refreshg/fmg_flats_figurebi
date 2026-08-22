@@ -16,8 +16,7 @@
     // h-100 resolves against the parent, and the action container does not
     // always have a height -- when it collapses, nothing downstream can bound
     // the image and a wide render overflows instead of fitting. Fall back to
-    // the viewport minus Odoo's chrome so the stage always has a real height;
-    // the min() keeps the parent's height when it does provide one.
+    // the viewport minus Odoo's chrome so the stage always has a real height.
     --vk-chrome: 46px;
     height: calc(100dvh - var(--vk-chrome));
     overflow: hidden;
@@ -643,12 +642,16 @@
     // min-height/min-width 0 stop a flex item from refusing to shrink below
     // its content: without them a wide render (2.3:1 and up) pushes the stage
     // taller than the viewport, so the picture drops out of view and is cut.
+    // A grid centres the frame and, unlike flex, gives it a definite size to
+    // resolve the image's percentage caps against -- so the picture scales
+    // down to fit whatever its proportions are.
     .o_vk_stage {
         position: relative;
         overflow: hidden;
-        display: flex;
-        align-items: center;
-        justify-content: center;
+        display: grid;
+        place-items: center;
+        grid-template-columns: minmax(0, 1fr);
+        grid-template-rows: minmax(0, 1fr);
         min-height: 0;
         min-width: 0;
     }
@@ -657,17 +660,16 @@
     // keeps them exactly on top of each other. Measuring the picture in JS and
     // positioning the SVG from that measurement meant any stale layout showed
     // up as a drifted, wrongly-proportioned overlay.
+    // The frame wraps the picture and the overlay in one grid cell. It takes
+    // its size from the image alone: fit-content fought the max-* caps and
+    // sized to the render's natural pixels, so a large image overflowed the
+    // stage -- cut off, with the overlay left hanging where the oversized
+    // frame was.
     .o_vk_frame {
         display: grid;
-        place-items: center;
-        max-width: 100%;
-        max-height: 100%;
+        position: relative;
         min-height: 0;
         min-width: 0;
-        position: relative;
-        // Shrink to the image so the frame is exactly the drawn area.
-        width: fit-content;
-        height: fit-content;
 
         > * { grid-area: 1 / 1; }
     }
