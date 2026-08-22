@@ -13,6 +13,15 @@
     background: var(--Dropdown-bg, #f3f2f2);
     color: inherit;
 
+    // h-100 resolves against the parent, and the action container does not
+    // always have a height -- when it collapses, nothing downstream can bound
+    // the image and a wide render overflows instead of fitting. Fall back to
+    // the viewport minus Odoo's chrome so the stage always has a real height;
+    // the min() keeps the parent's height when it does provide one.
+    --vk-chrome: 46px;
+    height: calc(100dvh - var(--vk-chrome));
+    overflow: hidden;
+
     .o_vk_bar {
         border-bottom: 2px solid var(--vk-rule);
         flex: 0 0 auto;
@@ -665,7 +674,9 @@
 
     // No object-fit: the element is sized to the picture itself, so the frame
     // (and therefore the overlay) is exactly the drawn area -- no letterbox to
-    // compensate for.
+    // compensate for. The caps make a render of any proportion fit: a wide one
+    // is bounded by the width, a tall one by the height, and the frame follows
+    // whichever wins.
     .o_vk_img {
         display: block;
         max-width: 100%;
