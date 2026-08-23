@@ -226,7 +226,9 @@
         top: 0;
         right: 0;
         bottom: 0;
-        width: min(520px, 92vw);
+        // Sass parses a bare min() as its own function and refuses to mix px
+        // with vw, so this goes through clamp(), which it passes to CSS as-is.
+        width: clamp(280px, 92vw, 520px);
         background: var(--Dropdown-bg, #fff);
         border-left: 1px solid rgba(32, 30, 29, .16);
         box-shadow: -14px 0 40px rgba(0, 0, 0, .18);
