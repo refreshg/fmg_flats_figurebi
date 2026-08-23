@@ -118,12 +118,23 @@ class ProductTemplate(models.Model):
     vk_image_ids = fields.One2many(
         'vertikali.unit.image', 'product_tmpl_id', string="Extra Images")
 
+    # product.template carries no such flag of its own, and the selector needs
+    # to know whether a unit has a drawing before deciding to fall back to the
+    # shared layout -- without pulling image_1920 itself down the RPC to check.
+    vk_has_image = fields.Boolean(
+        compute='_compute_vk_has_image', store=True, string="Has Plan")
+
     # A typical flat repeats across the tower, so its drawing is shared rather
     # than uploaded 126 times. The unit's own image still wins when set.
     vk_layout_id = fields.Many2one(
         'vertikali.layout', string="Layout Type",
         help="Shared drawing for this flat type. Used when the unit has no "
              "image of its own.")
+
+    @api.depends('image_1920')
+    def _compute_vk_has_image(self):
+        for tmpl in self:
+            tmpl.vk_has_image = bool(tmpl.image_1920)
 
     def vk_room_lines(self):
         """Parse vk_rooms_detail into [(label, area)] for display."""

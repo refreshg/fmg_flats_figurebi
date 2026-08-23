@@ -48,6 +48,15 @@ class VertikaliProject(models.Model):
     block_ids = fields.One2many(
         'vertikali.block', 'project_id', string="Blocks")
 
+    # Lets the selector ask "is there a cover?" without downloading it.
+    has_image = fields.Boolean(
+        compute='_compute_has_image', store=True, string="Has Cover")
+
+    @api.depends('image')
+    def _compute_has_image(self):
+        for project in self:
+            project.has_image = bool(project.image)
+
     unit_count = fields.Integer(compute='_compute_unit_stats')
     available_count = fields.Integer(compute='_compute_unit_stats')
     price_from = fields.Monetary(

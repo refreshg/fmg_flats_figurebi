@@ -33,8 +33,17 @@ class VertikaliLayout(models.Model):
     area_total = fields.Float(string="Total Area (m²)", digits=(8, 2))
 
     image = fields.Image(string="Plan")
+    # Lets the selector ask "is there a plan?" without pulling the plan itself
+    # down the RPC just to find out.
+    has_image = fields.Boolean(
+        compute='_compute_has_image', store=True, string="Has Plan")
     image_ids = fields.One2many(
         'vertikali.unit.image', 'layout_id', string="Extra Images")
+
+    @api.depends('image')
+    def _compute_has_image(self):
+        for layout in self:
+            layout.has_image = bool(layout.image)
 
     product_tmpl_ids = fields.One2many(
         'product.template', 'vk_layout_id', string="Units")

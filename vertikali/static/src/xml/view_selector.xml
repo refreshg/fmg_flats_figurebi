@@ -4,10 +4,12 @@
     <t t-name="vertikali.Selector">
         <div class="o_vk_selector d-flex flex-column h-100">
 
-        <!-- Unit card: covers the selector while open, so the plan and the
-             specs get the whole screen rather than a cramped sidebar. -->
-        <div t-if="state.card" class="o_vk_card_full d-flex flex-column">
-            <div class="o_vk_ch d-flex align-items-center gap-4 flex-wrap">
+        <!-- Unit card: a drawer sliding in from the right, over whichever view
+             is open. The plan stays visible behind it, so the manager keeps
+             their place instead of the card swallowing the whole screen. -->
+        <div t-if="state.card" class="o_vk_scrim" t-on-click="closeCard"></div>
+        <div t-if="state.card" class="o_vk_card_full o_vk_drawer d-flex flex-column">
+            <div class="o_vk_ch d-flex align-items-center gap-3 flex-wrap">
                 <h2 class="o_vk_ch_t">
                     <t t-esc="state.card.vk_rooms"/> apartment
                     <span class="o_vk_ch_no">№<t t-esc="state.card.default_code"/></span>
@@ -15,17 +17,29 @@
                 <span t-attf-class="o_vk_badge o_vk_b_{{state.card.vk_state}}">
                     <t t-esc="state.card.vk_state"/>
                 </span>
-                <button class="o_vk_close ms-auto" t-on-click="closeCard">
-                    Close the card <span>&#215;</span>
+                <button class="o_vk_close ms-auto" t-on-click="closeCard"
+                        title="Close (Esc)">
+                    Close <span>&#215;</span>
                 </button>
             </div>
 
-            <div class="o_vk_cb d-flex flex-grow-1 overflow-hidden">
+            <div class="o_vk_cb d-flex flex-column flex-grow-1 overflow-auto">
                 <!-- Plan, with the gallery controls the reference shows. -->
                 <div class="o_vk_cplan flex-grow-1">
                     <div class="o_vk_cstage">
-                        <img t-if="slideSrc" t-att-src="slideSrc" class="o_vk_cimg2"
-                             t-att-alt="state.card.default_code"/>
+                        <!-- One t-if/t-else pair, nothing between them: a plain
+                             sibling inserted here detaches the t-else and the
+                             empty state silently never renders. The zoom button
+                             therefore lives inside the t-if branch. -->
+                        <t t-if="slideSrc">
+                            <img t-att-src="slideSrc" class="o_vk_cimg2"
+                                 t-on-click="openZoom" title="Click to enlarge"
+                                 t-att-alt="state.card.default_code"/>
+                            <!-- The drawer is narrow by design, so a plan needs
+                                 a way to be read at full size. -->
+                            <button class="o_vk_zoombtn" t-on-click="openZoom"
+                                    title="Enlarge">&#9974;</button>
+                        </t>
                         <div t-else="" class="o_vk_cempty">
                             <div class="o_vk_cempty_i">▦</div>
                             <div class="o_vk_cempty_t">No layout uploaded</div>
@@ -53,9 +67,14 @@
                             <div class="o_vk_comp_l"><t t-esc="orientationLabel"/></div>
                         </div>
 
-                        <button class="o_vk_cnext" t-if="state.gallery.length > 1"
-                                t-on-click="() => this.goSlide(state.slide + 1)"
-                                title="Next image">&#8250;</button>
+                        <t t-if="state.gallery.length > 1">
+                            <button class="o_vk_cnav o_vk_cprev"
+                                    t-on-click="() => this.goSlide(state.slide - 1)"
+                                    title="Previous image">&#8249;</button>
+                            <button class="o_vk_cnav o_vk_cnext"
+                                    t-on-click="() => this.goSlide(state.slide + 1)"
+                                    title="Next image">&#8250;</button>
+                        </t>
                     </div>
 
                     <div class="o_vk_cdots" t-if="state.gallery.length > 1">
@@ -145,10 +164,35 @@
             </div>
         </div>
 
+        <!-- Lightbox. Sits above the drawer so a plan can be read at full
+             size without losing the card behind it. -->
+        <div t-if="state.zoom" class="o_vk_lb" t-on-click="closeZoom">
+            <button class="o_vk_lb_x" t-on-click="closeZoom"
+                    title="Close (Esc)">&#215;</button>
+            <t t-if="state.gallery.length > 1">
+                <button class="o_vk_cnav o_vk_cprev"
+                        t-on-click.stop="() => this.goSlide(state.slide - 1)"
+                        title="Previous image">&#8249;</button>
+                <button class="o_vk_cnav o_vk_cnext"
+                        t-on-click.stop="() => this.goSlide(state.slide + 1)"
+                        title="Next image">&#8250;</button>
+            </t>
+            <!-- .stop so clicking the plan itself does not close the box. -->
+            <img t-att-src="slideSrc" class="o_vk_lb_img"
+                 t-on-click.stop="() => {}"
+                 t-att-alt="state.card and state.card.default_code"/>
+            <div class="o_vk_lb_cap" t-if="state.gallery.length">
+                <t t-esc="slideName"/>
+                <span t-if="state.gallery.length > 1" class="o_vk_lb_n">
+                    <t t-esc="state.slide + 1"/> / <t t-esc="state.gallery.length"/>
+                </span>
+            </div>
+        </div>
+
 
             <!-- Breadcrumb + steps, once a project is chosen. -->
             <div class="o_vk_steps d-flex align-items-center gap-3 px-3 pt-2 flex-wrap"
-                 t-if="state.project and !state.card">
+                 t-if="state.project">
                 <div class="o_vk_crumb d-flex align-items-center gap-2">
                     <button class="o_vk_link" t-on-click="backToProjects"
                             t-if="state.projects.length > 1">← Projects</button>
@@ -200,9 +244,11 @@
 
             <!-- One t-if chain for the whole body: error and loading first, so
                  a failure is never hidden behind a half-rendered screen. -->
-            <div t-if="state.card" class="d-none"></div>
+            <div t-if="false" class="d-none"></div>
             <div t-elif="state.error" class="alert alert-danger m-3"><t t-esc="state.error"/></div>
-            <div t-elif="state.loading and !state.project" class="text-muted p-4">Loading…</div>
+            <div t-elif="state.loading and !state.project" class="o_vk_load">
+                <t t-call="vertikali.Loader"/>
+            </div>
 
             <!-- Project chooser: cards, not a dropdown. -->
             <div t-elif="!state.project and state.projects.length"
@@ -212,7 +258,8 @@
                     <t t-foreach="state.projects" t-as="p" t-key="p.id">
                         <button class="o_vk_card" t-on-click="() => this.selectProject(p)">
                             <span class="o_vk_card_img">
-                                <img t-if="coverSrc(p)" t-att-src="coverSrc(p)" alt=""/>
+                                <img t-if="p.has_image" t-att-src="coverThumb(p)"
+                                     loading="lazy" alt=""/>
                                 <span t-else="" class="o_vk_card_ph">no cover</span>
                             </span>
                             <span class="o_vk_card_b">
@@ -235,7 +282,7 @@
                 <div class="o_vk_stage flex-grow-1 position-relative" t-ref="stage"
                      t-att-class="{ 'o_vk_drawing': state.drawing }"
                      t-on-click="onStageClick">
-                    <div t-if="!coverSrc(state.project)" class="o_vk_noimg">
+                    <div t-if="!state.project.has_image" class="o_vk_noimg">
                         <div>
                             <strong>No cover image</strong>
                             <div class="small">Upload one on the project to highlight blocks here.</div>
@@ -349,7 +396,7 @@
 
             <!-- View toolbar: only for the image-backed steps. Rendering it on
                  the chooser or the masterplan put a stray bar above them. -->
-            <div t-if="state.project and !state.card and isZoneMode"
+            <div t-if="state.project and isZoneMode"
                  class="o_vk_bar d-flex align-items-center gap-2 p-2 flex-wrap">
                 <select t-if="modeViews.length > 1"
                         class="form-select form-select-sm w-auto"
@@ -434,9 +481,11 @@
             <!-- New chain: the toolbar and hint above are plain siblings, so
                  a t-elif here would have no t-if to attach to and every branch
                  below it would silently never render. -->
-            <div t-if="!state.project or state.card or state.mode === 'masterplan'"
+            <div t-if="!state.project or state.mode === 'masterplan'"
                  class="d-none"></div>
-            <div t-elif="state.loading" class="text-muted p-4">Loading…</div>
+            <div t-elif="state.loading" class="o_vk_load">
+                <t t-call="vertikali.Loader"/>
+            </div>
 
             <!-- Grid: no image, the units themselves are the interface. -->
             <!-- Grid+ : the same units as cards, grouped by floor. -->
@@ -1063,6 +1112,18 @@
             <span class="o_vk_meta ms-auto">
                 <t t-esc="matchCount"/> / <t t-esc="state.units.length"/> units
             </span>
+        </div>
+    </t>
+
+    <!-- Centred loader. Odoo's own indicator is a small line of text pinned to
+         a corner of the screen, which reads as "nothing is happening" on the
+         wide image screens here. -->
+    <t t-name="vertikali.Loader">
+        <div class="o_vk_loader">
+            <div class="o_vk_loader_ring">
+                <span></span><span></span><span></span>
+            </div>
+            <div class="o_vk_loader_t">Loading…</div>
         </div>
     </t>
 

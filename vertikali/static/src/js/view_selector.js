@@ -45,6 +45,7 @@ export class VertikaliSelector extends Component {
             card: null,          // unit opened as a full card
             gallery: [],         // the card's images
             slide: 0,            // which one is showing
+            zoom: false,         // the current image, full screen
             editingBlock: null,  // block whose masterplan shape is being drawn
             tip: null,           // hovered band, for the floor tooltip
             cellTip: null,       // hovered grid cell, for the unit tooltip
@@ -68,6 +69,24 @@ export class VertikaliSelector extends Component {
         // Delete removes the selected zone while editing; Escape cancels a
         // draw. Bound on the document so it works wherever focus sits.
         this.onKeydown = (ev) => {
+            // The card and its lightbox come first: while one is open it owns
+            // the keyboard, so Escape backs out one layer at a time.
+            if (this.state.zoom) {
+                if (ev.key === "Escape") {
+                    this.closeZoom();
+                } else if (ev.key === "ArrowLeft") {
+                    this.goSlide(this.state.slide - 1);
+                } else if (ev.key === "ArrowRight") {
+                    this.goSlide(this.state.slide + 1);
+                }
+                return;
+            }
+            if (this.state.card) {
+                if (ev.key === "Escape") {
+                    this.closeCard();
+                }
+                return;
+            }
             if (!this.state.editing) {
                 return;
             }
@@ -89,11 +108,16 @@ export class VertikaliSelector extends Component {
 
         onWillStart(async () => {
             try {
+                // No image field here on purpose: a cover is a few megabytes
+                // of base64 and fetching one per project blocked the first
+                // paint for seconds. The chooser uses /web/image URLs, and
+                // the full cover is read only when a masterplan opens.
                 this.state.projects = await this.orm.searchRead(
                     "vertikali.project", [],
                     ["name", "building", "tagline", "description", "handover",
-                     "image", "unit_count", "available_count", "price_from",
-                     "use_masterplan", "use_facade", "use_floorplan", "use_grid"],
+                     "unit_count", "available_count", "price_from",
+                     "use_masterplan", "use_facade", "use_floorplan", "use_grid",
+                     "has_image", "write_date"],
                     { order: "sequence, id" }
                 );
                 this.state.blocks = await this.orm.searchRead(
@@ -739,9 +763,12 @@ export class VertikaliSelector extends Component {
             // layout, a furnished view and a couple of renders.
             // Read the whole Unit tab, so the card shows the record rather
             // than whatever the list view happened to carry.
+            // No image field in this read: the gallery addresses every picture
+            // by URL so the browser streams and caches them, and a card with a
+            // dozen renders no longer drags megabytes through the RPC.
             const [rec] = await this.orm.read(
                 "product.template", [unit.id],
-                ["image_1920", "vk_orientation", "vk_rooms_detail",
+                ["vk_has_image", "write_date", "vk_orientation", "vk_rooms_detail",
                  "vk_condition", "vk_handover", "vk_section", "vk_building",
                  "vk_rooms", "vk_floor", "vk_state", "vk_area_total",
                  "vk_area_living", "vk_area_balcony", "vk_price_sqm",
@@ -755,24 +782,37 @@ export class VertikaliSelector extends Component {
             let layout = null;
             if (layoutId) {
                 [layout] = await this.orm.read(
-                    "vertikali.layout", [layoutId], ["name", "image"]);
+                    "vertikali.layout", [layoutId],
+                    ["name", "has_image", "write_date"]);
             }
 
             const domain = layoutId
                 ? ["|", ["product_tmpl_id", "=", unit.id], ["layout_id", "=", layoutId]]
                 : [["product_tmpl_id", "=", unit.id]];
             const extra = await this.orm.searchRead(
-                "vertikali.unit.image", domain, ["name", "image"],
+                "vertikali.unit.image", domain, ["name", "write_date"],
                 { order: "sequence, id", limit: 20 });
 
             const shots = [];
-            if (rec.image_1920) {
-                shots.push({ id: "own", name: "Layout", image: rec.image_1920 });
-            } else if (layout?.image) {
-                shots.push({ id: "layout", name: layout.name, image: layout.image });
+            if (rec.vk_has_image) {
+                shots.push({
+                    id: "own", name: "Layout",
+                    src: this.imgUrl("product.template", unit.id, "image_1920",
+                                     rec.write_date),
+                });
+            } else if (layout?.has_image) {
+                shots.push({
+                    id: "layout", name: layout.name,
+                    src: this.imgUrl("vertikali.layout", layoutId, "image",
+                                     layout.write_date),
+                });
             }
             for (const img of extra) {
-                shots.push({ id: img.id, name: img.name, image: img.image });
+                shots.push({
+                    id: img.id, name: img.name,
+                    src: this.imgUrl("vertikali.unit.image", img.id, "image",
+                                     img.write_date),
+                });
             }
             this.state.gallery = shots;
             this.state.card.layoutName = layout?.name || null;
@@ -781,9 +821,18 @@ export class VertikaliSelector extends Component {
         }
     }
 
+    /** Streamed image URL. write_date busts the cache when the file changes. */
+    imgUrl(model, id, field, writeDate, size = 1920) {
+        const stamp = encodeURIComponent(writeDate || "");
+        return `/web/image/${model}/${id}/${field}/${size}x${size}?unique=${stamp}`;
+    }
+
     get slideSrc() {
-        const s = this.state.gallery[this.state.slide];
-        return s ? `data:image/png;base64,${s.image}` : null;
+        return this.state.gallery[this.state.slide]?.src || null;
+    }
+
+    get slideName() {
+        return this.state.gallery[this.state.slide]?.name || "";
     }
 
     goSlide(i) {
@@ -824,6 +873,17 @@ export class VertikaliSelector extends Component {
 
     closeCard() {
         this.state.card = null;
+        this.state.zoom = false;
+    }
+
+    openZoom() {
+        if (this.slideSrc) {
+            this.state.zoom = true;
+        }
+    }
+
+    closeZoom() {
+        this.state.zoom = false;
     }
 
     /** Room areas parsed from the free-text field, for the card breakdown. */
@@ -882,7 +942,8 @@ export class VertikaliSelector extends Component {
         try {
             const [view] = await this.orm.read(
                 "vertikali.view", [viewId],
-                ["name", "view_type", "building", "floor", "section", "image"]
+                ["name", "view_type", "building", "floor", "section",
+                 "has_image", "write_date"]
             );
             this.state.view = view;
 
@@ -988,7 +1049,8 @@ export class VertikaliSelector extends Component {
                     (v) => v.floor === floor && !v.section);
             if (plan) {
                 const [rec] = await this.orm.read(
-                    "vertikali.view", [plan.id], ["name", "image"]);
+                    "vertikali.view", [plan.id],
+                    ["name", "has_image", "write_date"]);
                 this.state.zonePlan = rec;
             }
         } catch (e) {
@@ -1126,7 +1188,11 @@ export class VertikaliSelector extends Component {
 
     get zonePlanSrc() {
         const p = this.state.zonePlan;
-        return p && p.image ? `data:image/png;base64,${p.image}` : null;
+        if (!p || !p.has_image) {
+            return null;
+        }
+        const stamp = encodeURIComponent(p.write_date || "");
+        return `/web/image/vertikali.view/${p.id}/image/1024x1024?unique=${stamp}`;
     }
 
     /** The unit a floor-plan zone stands for, if it is linked. */
@@ -1233,14 +1299,40 @@ export class VertikaliSelector extends Component {
         return pts.map((p) => p.join(",")).join(" ");
     }
 
+    /**
+     * Facade/floor render as a streamed URL.
+     *
+     * Same reasoning as the project cover: reading the base64 through the ORM
+     * held up the first paint by the whole size of the render, and the browser
+     * could not cache it between visits.
+     */
     get imageSrc() {
         const v = this.state.view;
-        return v && v.image ? `data:image/png;base64,${v.image}` : null;
+        if (!v || !v.has_image) {
+            return null;
+        }
+        const stamp = encodeURIComponent(v.write_date || "");
+        return `/web/image/vertikali.view/${v.id}/image/1920x1920?unique=${stamp}`;
     }
 
-    /** Project cover, used on the chooser and as the masterplan backdrop. */
-    coverSrc(project) {
-        return project?.image ? `data:image/png;base64,${project.image}` : null;
+    /**
+     * Project cover as a URL rather than inline base64.
+     *
+     * The browser then streams and caches it like any other image, instead of
+     * the whole thing riding along in the RPC payload before the page can
+     * paint. write_date busts the cache when the cover changes.
+     */
+    coverSrc(project, size = 1920) {
+        if (!project) {
+            return null;
+        }
+        const stamp = encodeURIComponent(project.write_date || "");
+        return `/web/image/vertikali.project/${project.id}/image/${size}x${size}?unique=${stamp}`;
+    }
+
+    /** Small version for the chooser cards. */
+    coverThumb(project) {
+        return this.coverSrc(project, 512);
     }
 
     pointsAttr(raw) {

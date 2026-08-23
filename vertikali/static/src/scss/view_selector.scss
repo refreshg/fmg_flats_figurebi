@@ -219,11 +219,32 @@
     }
 
     // ---- unit card ----
+    // A drawer over the right of the view, not a full-screen takeover: the
+    // manager keeps sight of the plan they picked the unit from.
     .o_vk_card_full {
         position: absolute;
-        inset: 0;
+        top: 0;
+        right: 0;
+        bottom: 0;
+        width: min(520px, 92vw);
         background: var(--Dropdown-bg, #fff);
+        border-left: 1px solid rgba(32, 30, 29, .16);
+        box-shadow: -14px 0 40px rgba(0, 0, 0, .18);
+        z-index: 6;
+        animation: o_vk_slidein .22s cubic-bezier(.2, .7, .3, 1);
+    }
+
+    // Dims the view behind the drawer and closes it on a click outside.
+    .o_vk_scrim {
+        position: absolute;
+        inset: 0;
+        background: rgba(32, 30, 29, .28);
         z-index: 5;
+        animation: o_vk_fadein .22s ease;
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+        .o_vk_card_full, .o_vk_scrim { animation: none; }
     }
 
     .o_vk_ch {
@@ -256,23 +277,50 @@
         display: flex;
         flex-direction: column;
         min-width: 0;
-        padding: 20px;
+        flex: 0 0 auto;
+        padding: 18px 20px 10px;
     }
 
-    // The plan area: image centred, compass and next-arrow pinned right.
+    // The plan area: image centred, compass and next-arrow pinned right. A
+    // fixed height keeps the specs below it in view without scrolling.
     .o_vk_cstage {
         position: relative;
-        flex: 1 1 auto;
+        flex: 0 0 auto;
+        height: 300px;
         display: flex;
         align-items: center;
         justify-content: center;
         min-height: 0;
+        background: rgba(32, 30, 29, .03);
+        border: 1px solid rgba(32, 30, 29, .1);
+    }
+
+    // Enlarge, pinned to the corner of the plan.
+    .o_vk_zoombtn {
+        position: absolute;
+        top: 8px;
+        right: 8px;
+        width: 32px;
+        height: 32px;
+        border: 0;
+        border-radius: 6px;
+        background: rgba(255, 255, 255, .92);
+        box-shadow: 0 1px 6px rgba(0, 0, 0, .18);
+        font-size: 15px;
+        line-height: 1;
+        color: #201e1d;
+        cursor: pointer;
+        z-index: 3;
+
+        &:hover { background: var(--vk-accent); color: #fff; }
+        &:focus-visible { outline: 2px solid var(--vk-accent); outline-offset: 2px; }
     }
 
     .o_vk_cimg2 {
         max-width: 100%;
         max-height: 100%;
         object-fit: contain;
+        cursor: zoom-in;
     }
 
     // Something to look at when no layout has been uploaded, rather than a
@@ -341,21 +389,39 @@
         opacity: .7;
     }
 
-    .o_vk_cnext {
+    // Centred on the plan rather than tucked into a corner: at the bottom
+    // right it read as page furniture and was easy to miss.
+    .o_vk_cnav {
         position: absolute;
-        right: 12px;
-        bottom: 12px;
-        width: 38px;
-        height: 38px;
+        top: 50%;
+        transform: translateY(-50%);
+        width: 48px;
+        height: 48px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
         border-radius: 50%;
-        border: 1px solid rgba(32, 30, 29, .25);
+        border: 0;
         background: #fff;
-        font-size: 19px;
+        box-shadow: 0 2px 12px rgba(0, 0, 0, .16);
+        font-size: 22px;
         line-height: 1;
+        color: #201e1d;
         cursor: pointer;
+        z-index: 3;
+        transition: background .12s, color .12s, box-shadow .12s;
 
-        &:hover { border-color: var(--vk-accent); color: var(--vk-accent); }
+        &:hover {
+            background: var(--vk-accent);
+            color: #fff;
+            box-shadow: 0 4px 18px rgba(236, 48, 19, .35);
+        }
+
+        &:focus-visible { outline: 2px solid var(--vk-accent); outline-offset: 3px; }
     }
+
+    .o_vk_cprev { left: 10px; }
+    .o_vk_cnext { right: 10px; }
 
     .o_vk_cdots {
         display: flex;
@@ -380,13 +446,12 @@
     .o_vk_cdot_on { background: var(--vk-accent); }
 
     // ---- specs panel ----
-    // Wider than the old sidebar: the reference gives the facts real room.
+    // Stacked under the plan now that the card is a drawer: side by side there
+    // would leave neither half a readable width.
     .o_vk_cside {
-        flex: 0 0 420px;
-        min-width: 360px;
-        border-left: 1px solid rgba(32, 30, 29, .15);
-        padding: 20px;
-        overflow-y: auto;
+        flex: 0 0 auto;
+        border-top: 1px solid rgba(32, 30, 29, .15);
+        padding: 18px 20px 24px;
     }
 
     // Area / Section / Delivery / Floor across the top.
@@ -1329,4 +1394,143 @@
         &.o_vk_sold { background: var(--vk-sold); color: rgba(32, 30, 29, .7); }
     }
 
+    // Loading state. It takes the whole free area so the spinner lands in the
+    // middle of the screen the user is waiting on, not in a corner.
+    .o_vk_load {
+        flex: 1 1 auto;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 240px;
+    }
+
+    .o_vk_loader {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 14px;
+    }
+
+    // Three arcs of one ring, each starting a third of a turn behind the last.
+    .o_vk_loader_ring {
+        position: relative;
+        width: 54px;
+        height: 54px;
+
+        span {
+            position: absolute;
+            inset: 0;
+            border: 3px solid transparent;
+            border-top-color: var(--vk-accent);
+            border-radius: 50%;
+            animation: o_vk_spin 1.1s cubic-bezier(.5, 0, .5, 1) infinite;
+        }
+
+        span:nth-child(2) { inset: 7px; animation-delay: -.12s; opacity: .65; }
+        span:nth-child(3) { inset: 14px; animation-delay: -.24s; opacity: .35; }
+    }
+
+    .o_vk_loader_t {
+        font-size: 12px;
+        letter-spacing: .09em;
+        text-transform: uppercase;
+        color: rgba(32, 30, 29, .55);
+    }
+
+    // Respect the OS setting: a pulsing ring instead of a spinning one.
+    @media (prefers-reduced-motion: reduce) {
+        .o_vk_loader_ring span {
+            animation: o_vk_pulse 1.4s ease-in-out infinite;
+        }
+    }
+
+    // ---- lightbox ----
+    // Fixed, not absolute: the enlarged plan should use the whole window, not
+    // the space the selector happens to occupy under Odoo's chrome.
+    .o_vk_lb {
+        position: fixed;
+        inset: 0;
+        z-index: 1080;
+        background: rgba(18, 17, 16, .92);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: zoom-out;
+        animation: o_vk_fadein .16s ease;
+    }
+
+    .o_vk_lb_img {
+        max-width: 94vw;
+        max-height: 88vh;
+        object-fit: contain;
+        cursor: default;
+        background: #fff;
+        box-shadow: 0 10px 50px rgba(0, 0, 0, .5);
+    }
+
+    // The shared arrows sit further out in the lightbox, clear of the plan.
+    .o_vk_lb .o_vk_cnav { z-index: 2; }
+    .o_vk_lb .o_vk_cprev { left: 24px; }
+    .o_vk_lb .o_vk_cnext { right: 24px; }
+
+    .o_vk_lb_x {
+        position: absolute;
+        top: 18px;
+        right: 22px;
+        width: 44px;
+        height: 44px;
+        border: 0;
+        border-radius: 50%;
+        background: rgba(255, 255, 255, .12);
+        color: #fff;
+        font-size: 26px;
+        line-height: 1;
+        cursor: pointer;
+        z-index: 2;
+
+        &:hover { background: var(--vk-accent); }
+        &:focus-visible { outline: 2px solid #fff; outline-offset: 2px; }
+    }
+
+    .o_vk_lb_cap {
+        position: absolute;
+        bottom: 22px;
+        left: 50%;
+        transform: translateX(-50%);
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        color: rgba(255, 255, 255, .8);
+        font-size: 13px;
+        letter-spacing: .04em;
+    }
+
+    .o_vk_lb_n {
+        font-variant-numeric: tabular-nums;
+        color: rgba(255, 255, 255, .55);
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+        .o_vk_lb { animation: none; }
+    }
+
+}
+
+@keyframes o_vk_slidein {
+    from { transform: translateX(24px); opacity: 0; }
+    to { transform: translateX(0); opacity: 1; }
+}
+
+@keyframes o_vk_fadein {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+@keyframes o_vk_spin {
+    to { transform: rotate(360deg); }
+}
+
+@keyframes o_vk_pulse {
+    0%, 100% { opacity: .25; }
+    50% { opacity: 1; }
 }
