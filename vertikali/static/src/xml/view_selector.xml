@@ -899,7 +899,7 @@
                     </t>
 
                     <!-- On a floor plan the storey is already open, so the
-                         panel lists what it sells -- same reading as the
+                         panel lists what it sells: the same reading as the
                          facade band's preview, minus the plan thumbnail. -->
                     <t t-elif="state.mode === 'floor' and !state.editing">
                         <div class="o_vk_side_h d-flex align-items-center">
