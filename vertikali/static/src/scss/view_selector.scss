@@ -777,13 +777,13 @@
 
     // ---- what a facade band covers ----
     .o_vk_zplan {
-        padding: 10px 12px;
-        border-bottom: 1px solid rgba(32, 30, 29, .15);
+        padding: 14px 16px;
+        border-bottom: 1px solid rgba(32, 30, 29, .12);
         text-align: center;
 
         img {
             max-width: 100%;
-            max-height: 190px;
+            max-height: 260px;
             object-fit: contain;
             border: 1px solid rgba(32, 30, 29, .15);
             background: #fff;
@@ -800,24 +800,30 @@
     }
 
     .o_vk_zcount {
-        padding: 8px 12px;
-        font-size: 12px;
-        border-bottom: 1px solid rgba(32, 30, 29, .15);
+        padding: 12px 16px;
+        font-size: 13.5px;
+        border-bottom: 1px solid rgba(32, 30, 29, .12);
         b { font-weight: 700; }
     }
 
+    // Cards, not rows: the reference gives each unit a bordered block with the
+    // price large enough to scan down the list.
     .o_vk_ucard {
-        padding: 10px 12px;
-        border-bottom: 1px solid rgba(32, 30, 29, .12);
+        margin: 10px 16px;
+        padding: 14px 16px;
+        border: 1px solid rgba(32, 30, 29, .18);
+        border-radius: 6px;
         cursor: pointer;
+        background: #fff;
 
-        &:hover { background: rgba(236, 48, 19, .07); }
+        &:hover { border-color: var(--vk-accent); box-shadow: 0 2px 10px rgba(0, 0, 0, .07); }
     }
 
     .o_vk_uprice {
         font-weight: 800;
-        font-size: 15px;
+        font-size: 21px;
         font-variant-numeric: tabular-nums;
+        line-height: 1.15;
     }
 
     // Ticking units for a band that covers only part of a storey.
@@ -1082,21 +1088,24 @@
     }
 
     // ---- side panel ----
-    // Never shrink away: this is where delete and the zone list live, and a
-    // squeezed viewport used to push it off-screen entirely.
+    // Wide enough for the floor plan and the unit cards to be read at a
+    // glance, as the reference has it -- at 280px both were too small to be
+    // useful. Never shrinks away: delete and the zone list live here.
     .o_vk_side {
-        flex: 0 0 280px;
-        min-width: 240px;
-        border-left: 2px solid var(--vk-rule);
+        flex: 0 0 clamp(360px, 30vw, 520px);
+        min-width: 340px;
+        border-left: 1px solid rgba(32, 30, 29, .15);
         display: flex;
         flex-direction: column;
         min-height: 0;
+        background: #fff;
     }
 
     .o_vk_side_h {
-        padding: 8px 12px;
+        padding: 13px 16px;
         font-weight: 700;
-        border-bottom: 2px solid var(--vk-rule);
+        font-size: 15px;
+        border-bottom: 1px solid rgba(32, 30, 29, .15);
         flex: 0 0 auto;
     }
 

@@ -122,16 +122,28 @@ export class VertikaliSelector extends Component {
 
     // ------------------------------------------------------------- steps
 
-    /** Steps this project switched on, in navigation order. */
+    /**
+     * Steps this project switched on, in navigation order.
+     *
+     * Grid+ and Properties are two more readings of the same inventory, so
+     * they ride on use_grid rather than needing switches of their own.
+     */
     get steps() {
         const p = this.state.project;
         const all = [
             { key: "masterplan", label: "Masterplan", icon: "▦", on: p?.use_masterplan },
-            { key: "facade", label: "Facade", icon: "▤", on: p?.use_facade },
-            { key: "floor", label: "Floor plans", icon: "▣", on: p?.use_floorplan },
-            { key: "grid", label: "Grid", icon: "⊞", on: p?.use_grid },
+            { key: "facade", label: "Facades", icon: "▤", on: p?.use_facade },
+            { key: "grid", label: "Grid", icon: "▩", on: p?.use_grid, count: true },
+            { key: "gridplus", label: "Grid+", icon: "◱", on: p?.use_grid, count: true },
+            { key: "properties", label: "Properties", icon: "☰", on: p?.use_grid, count: true },
+            { key: "floor", label: "Floors", icon: "▣", on: p?.use_floorplan },
         ];
         return p ? all.filter((s) => s.on) : all;
+    }
+
+    /** Inventory-backed steps share one dataset. */
+    get isInventoryMode() {
+        return ["grid", "gridplus", "properties"].includes(this.state.mode);
     }
 
     /** Views for the current project, mode and (if chosen) block. */
@@ -400,7 +412,8 @@ export class VertikaliSelector extends Component {
         if (!mode) {
             return;
         }
-        if (mode === "grid") {
+        // Grid, Grid+ and Properties are three readings of one dataset.
+        if (this.isInventoryMode) {
             await this.loadGrid();
             return;
         }
