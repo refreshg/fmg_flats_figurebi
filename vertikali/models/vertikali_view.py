@@ -141,26 +141,41 @@ class VertikaliProject(models.Model):
         elif self.categ_id:
             domain.append(('categ_id', 'child_of', self.categ_id.id))
         units = self.env['product.template'].search(domain)
-        floors = sorted({u.vk_floor for u in units if u.vk_floor}, reverse=True)
-        if not floors:
+        # One plan per floor *per section*: a storey split across entrances is
+        # several drawings, not one. Units with no section give a single plan
+        # covering the whole floor.
+        combos = sorted(
+            {(u.vk_floor, u.vk_section or False) for u in units if u.vk_floor},
+            key=lambda c: (-c[0], c[1] or ''),
+        )
+        if not combos:
             raise ValidationError(_(
                 "No units found for this project, so there are no floors to "
                 "generate. Add the units first."))
 
         existing = self.env['vertikali.view'].search([
             ('project_id', '=', self.id), ('view_type', '=', 'floor')])
-        have = set(existing.mapped('floor'))
+        have = {(v.floor, v.section or False) for v in existing}
 
-        vals = [{
-            'name': _("%(building)s - Floor %(floor)s",
-                      building=self.building or self.name, floor=floor),
-            'project_id': self.id,
-            'view_type': 'floor',
-            'building': self.building,
-            'floor': floor,
-            'categ_id': self.categ_id.id,
-            'sequence': 100 - floor,
-        } for floor in floors if floor not in have]
+        vals = []
+        for floor, section in combos:
+            if (floor, section) in have:
+                continue
+            label = _("%(building)s - Floor %(floor)s",
+                      building=self.building or self.name, floor=floor)
+            if section:
+                label = _("%(label)s · Section %(section)s",
+                          label=label, section=section)
+            vals.append({
+                'name': label,
+                'project_id': self.id,
+                'view_type': 'floor',
+                'building': self.building,
+                'floor': floor,
+                'section': section or False,
+                'categ_id': self.categ_id.id,
+                'sequence': 100 - floor,
+            })
 
         created = self.env['vertikali.view'].create(vals) if vals else \
             self.env['vertikali.view']
@@ -176,9 +191,9 @@ class VertikaliProject(models.Model):
                 'title': _("Floor views ready"),
                 'message': _(
                     "%(created)s created, %(skipped)s already existed, "
-                    "%(linked)s facade zones linked. Upload each floor's plan "
+                    "%(linked)s facade zones linked. Upload each plan "
                     "on its view.",
-                    created=len(created), skipped=len(floors) - len(vals),
+                    created=len(created), skipped=len(combos) - len(vals),
                     linked=linked,
                 ),
                 'type': 'success',
@@ -187,12 +202,18 @@ class VertikaliProject(models.Model):
         }
 
     def _link_facade_zones(self):
-        """Wire facade zones to the floor view with the same floor number."""
+        """Wire facade zones to their floor plan.
+
+        Matches on floor *and* section, so a band over section 2 opens that
+        wing's plan rather than whichever plan happens to share the storey.
+        A sectioned band falls back to the floor-wide plan when its own
+        section has none.
+        """
         self.ensure_one()
         floor_views = self.env['vertikali.view'].search([
             ('project_id', '=', self.id), ('view_type', '=', 'floor')])
-        by_floor = {v.floor: v for v in floor_views}
-        if not by_floor:
+        by_key = {(v.floor, v.section or False): v for v in floor_views}
+        if not by_key:
             return 0
 
         zones = self.env['vertikali.polygon'].search([
@@ -202,7 +223,8 @@ class VertikaliProject(models.Model):
         ])
         count = 0
         for zone in zones:
-            target = by_floor.get(zone.floor)
+            target = (by_key.get((zone.floor, zone.section or False))
+                      or by_key.get((zone.floor, False)))
             if target and zone.target_view_id != target:
                 zone.target_view_id = target
                 count += 1
@@ -325,6 +347,12 @@ class VertikaliView(models.Model):
     # plain labels here, matching the vk_* fields on the product.
     building = fields.Char(help="Building label, e.g. A.")
     floor = fields.Integer(help="Floor number, for floor plans.")
+
+    # A storey split across entrances needs one plan per section, not one per
+    # floor: each wing is a separate drawing. Empty means the plan covers the
+    # whole floor, which is the single-section case.
+    section = fields.Char(
+        help="Section this plan covers, e.g. 1. Empty means the whole floor.")
 
     project_id = fields.Many2one(
         'vertikali.project', string="Project", index=True, ondelete='cascade')

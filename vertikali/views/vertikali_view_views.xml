@@ -152,6 +152,7 @@
                 <field name="project_id" optional="show"/>
                 <field name="building" optional="show"/>
                 <field name="floor" optional="show"/>
+                <field name="section" optional="show"/>
                 <field name="has_image" string="Image" widget="boolean_toggle"
                        readonly="1"/>
                 <field name="polygon_count" string="Zones"/>
@@ -177,6 +178,9 @@
                             <field name="building"
                                    invisible="view_type == 'masterplan'"/>
                             <field name="floor"
+                                   invisible="view_type != 'floor'"/>
+                            <field name="section"
+                                   placeholder="empty = whole floor"
                                    invisible="view_type != 'floor'"/>
                         </group>
                         <group>

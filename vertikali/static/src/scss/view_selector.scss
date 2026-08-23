@@ -33,24 +33,71 @@
     .o_vk_uz_res  { fill: rgba(232, 163, 61, .34); stroke: #e8a33d; }
     .o_vk_uz_sold { fill: rgba(32, 30, 29, .22); stroke: rgba(32, 30, 29, .5); }
 
+    // HTML, not an SVG circle: the overlay stretches its viewBox, so a circle
+    // drawn inside it renders as an oval.
     .o_vk_pin {
-        fill: #fff;
-        stroke: rgba(32, 30, 29, .35);
-        stroke-width: .002;
-        cursor: pointer;
-    }
-
-    .o_vk_pin_sold, .o_vk_pin_reserved { fill: #201e1d; }
-
-    .o_vk_pin_t {
-        font-size: .017px;
+        position: absolute;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 30px;
+        height: 30px;
+        margin: -15px 0 0 -15px;
+        border-radius: 50%;
+        background: #fff;
+        border: 1px solid rgba(32, 30, 29, .35);
+        box-sizing: border-box;
+        font-size: 11px;
         font-weight: 700;
-        fill: #201e1d;
-        pointer-events: none;
+        color: #201e1d;
+        cursor: pointer;
+        z-index: 2;
+
+        &:hover { transform: scale(1.12); border-color: var(--vk-accent); }
     }
 
-    .o_vk_pin_sold + .o_vk_pin_t,
-    .o_vk_pin_reserved + .o_vk_pin_t { fill: #fff; }
+    .o_vk_pin_sold, .o_vk_pin_reserved {
+        background: #201e1d;
+        color: #fff;
+    }
+
+    // ---- section switcher ----
+    .o_vk_secbar {
+        position: absolute;
+        left: 50%;
+        bottom: 14px;
+        transform: translateX(-50%);
+        display: flex;
+        border: 1px solid rgba(32, 30, 29, .25);
+        background: #fff;
+        z-index: 3;
+        max-width: calc(100% - 40px);
+        overflow-x: auto;
+    }
+
+    .o_vk_secbtn {
+        background: transparent;
+        border: 0;
+        border-right: 1px solid rgba(32, 30, 29, .15);
+        font: inherit;
+        font-size: 12.5px;
+        color: #201e1d;
+        padding: 8px 16px;
+        cursor: pointer;
+        white-space: nowrap;
+
+        &:last-child { border-right: 0; }
+        &:hover { background: rgba(236, 48, 19, .08); }
+        &:focus-visible { outline: 2px solid var(--vk-accent); outline-offset: -2px; }
+    }
+
+    .o_vk_secbtn_on {
+        background: #201e1d;
+        color: #fff;
+        font-weight: 600;
+
+        &:hover { background: #201e1d; }
+    }
 
     // ---- floor stepper ----
     .o_vk_fstep {
@@ -738,36 +785,51 @@
 
     .o_vk_zone_edit { cursor: move; }
 
-    .o_vk_vtx {
-        fill: #fff;
-        stroke: var(--vk-accent);
-        stroke-width: .003;
-        vector-effect: non-scaling-stroke;
+    // Handles are HTML dots, not SVG circles: the overlay stretches a 0..1
+    // viewBox with preserveAspectRatio="none", so any circle drawn inside it
+    // comes out as an oval whose size follows the render's proportions. Screen
+    // pixels keep every handle the same round size on any image.
+    .o_vk_hdot {
+        position: absolute;
+        width: 12px;
+        height: 12px;
+        margin: -6px 0 0 -6px;      // centre on its point
+        border-radius: 50%;
+        background: #fff;
+        border: 2px solid var(--vk-accent);
+        box-sizing: border-box;
         cursor: grab;
+        z-index: 2;
 
-        &:hover { fill: #ffe0d9; }
-    }
-
-    // Hollow, smaller than a corner: click to insert a bend on that edge.
-    .o_vk_mid {
-        fill: rgba(255, 255, 255, .55);
-        stroke: var(--vk-accent);
-        stroke-width: .002;
-        stroke-dasharray: .004 .003;
-        vector-effect: non-scaling-stroke;
-        cursor: copy;
-
-        &:hover {
-            fill: #fff;
-            stroke-dasharray: none;
-        }
+        &:hover { background: #ffe0d9; transform: scale(1.15); }
+        &:active { cursor: grabbing; }
     }
 
     // Closing target while drawing.
-    .o_vk_first {
-        fill: var(--vk-accent);
-        stroke: #fff;
+    .o_vk_hdot_first {
+        width: 15px;
+        height: 15px;
+        margin: -7.5px 0 0 -7.5px;
+        background: var(--vk-accent);
+        border-color: #fff;
     }
+
+    // Midpoint: smaller and hollow, click to insert a bend.
+    .o_vk_hdot_mid {
+        width: 9px;
+        height: 9px;
+        margin: -4.5px 0 0 -4.5px;
+        background: rgba(255, 255, 255, .6);
+        border-style: dashed;
+        cursor: copy;
+
+        &:hover { background: #fff; border-style: solid; }
+    }
+
+
+    // Hollow, smaller than a corner: click to insert a bend on that edge.
+
+    // Closing target while drawing.
 
     .o_vk_draft {
         fill: rgba(236, 48, 19, .14);

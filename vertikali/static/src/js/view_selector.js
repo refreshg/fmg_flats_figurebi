@@ -98,7 +98,8 @@ export class VertikaliSelector extends Component {
                 );
                 const views = await this.orm.searchRead(
                     "vertikali.view", [],
-                    ["name", "view_type", "building", "floor", "project_id"],
+                    ["name", "view_type", "building", "floor", "section",
+                     "project_id"],
                     { order: "view_type, sequence, id" }
                 );
                 this.state.views = views;
@@ -559,7 +560,7 @@ export class VertikaliSelector extends Component {
         try {
             const [view] = await this.orm.read(
                 "vertikali.view", [viewId],
-                ["name", "view_type", "building", "floor", "image"]
+                ["name", "view_type", "building", "floor", "section", "image"]
             );
             this.state.view = view;
 
@@ -786,23 +787,59 @@ export class VertikaliSelector extends Component {
         return id ? this.state.unitById[id] : null;
     }
 
-    /** Floors available for the stepper, high to low. */
+    /** Every floor plan of the current project/block. */
+    get floorViews() {
+        return this.state.views.filter((v) => v.view_type === "floor"
+            && (!this.state.project || v.project_id?.[0] === this.state.project.id)
+            && (!this.state.block || !v.building || v.building === this.state.block.code));
+    }
+
+    /**
+     * Floors for the stepper, high to low -- one entry per storey even when
+     * the storey has several section plans, so the stepper lists floors and
+     * the section switcher handles the rest.
+     */
     get floorList() {
-        return this.state.views
-            .filter((v) => v.view_type === "floor"
-                && (!this.state.project || v.project_id?.[0] === this.state.project.id)
-                && (!this.state.block || !v.building || v.building === this.state.block.code))
-            .sort((a, b) => b.floor - a.floor);
+        const seen = new Set();
+        const out = [];
+        for (const v of this.floorViews.sort((a, b) => b.floor - a.floor)) {
+            if (seen.has(v.floor)) {
+                continue;
+            }
+            seen.add(v.floor);
+            out.push(v);
+        }
+        return out;
+    }
+
+    /** Section plans of the open storey, for the switcher along the bottom. */
+    get floorSections() {
+        const floor = this.state.view?.floor;
+        if (!floor) {
+            return [];
+        }
+        const rows = this.floorViews
+            .filter((v) => v.floor === floor)
+            .sort((a, b) => String(a.section || "").localeCompare(
+                String(b.section || ""), undefined, { numeric: true }));
+        // A lone plan is not worth a switcher.
+        return rows.length > 1 ? rows : [];
     }
 
     /** Move up or down a storey without leaving the plan. */
     async stepFloor(delta) {
         const list = this.floorList;
-        const i = list.findIndex((v) => v.id === this.state.view?.id);
+        const cur = this.state.view;
+        const i = list.findIndex((v) => v.floor === cur?.floor);
         const next = list[i - delta];   // list is high-to-low, so invert
-        if (next) {
-            await this.loadView(next.id);
+        if (!next) {
+            return;
         }
+        // Stay in the same section across storeys where that section exists,
+        // so stepping up a wing does not jump to a different one.
+        const same = this.floorViews.find(
+            (v) => v.floor === next.floor && (v.section || false) === (cur?.section || false));
+        await this.loadView((same || next).id);
     }
 
     parsePoints(raw) {

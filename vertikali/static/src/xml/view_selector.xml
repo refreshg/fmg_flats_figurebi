@@ -206,25 +206,27 @@
                                      t-on-click="() => this.selectBlock(b)"/>
                         </t>
 
-                        <!-- Corner handles while a block outline is being adjusted. -->
-                        <t t-if="state.editingBlock and !state.drawing">
-                            <t t-foreach="blockPoints(state.editingBlock)" t-as="p" t-key="p_index">
-                                <circle class="o_vk_vtx" t-att-cx="p[0]" t-att-cy="p[1]" r="0.009"
-                                        t-on-pointerdown="(ev) => this.startDragBlockVertex(ev, state.editingBlock, p_index)"/>
-                            </t>
-                        </t>
-
-                        <!-- Shape being drawn. -->
-                        <t t-if="state.draft.length">
-                            <polygon t-if="state.draft.length > 1"
-                                     class="o_vk_draft" t-att-points="attr(state.draft)"/>
-                            <t t-foreach="state.draft" t-as="p" t-key="p_index">
-                                <circle t-att-class="p_index === 0 ? 'o_vk_vtx o_vk_first' : 'o_vk_vtx'"
-                                        t-att-cx="p[0]" t-att-cy="p[1]"
-                                        t-att-r="p_index === 0 ? 0.012 : 0.006"/>
-                            </t>
-                        </t>
+                        <!-- Shape being drawn: outline only, points below. -->
+                        <polygon t-if="state.draft.length > 1"
+                                 class="o_vk_draft" t-att-points="attr(state.draft)"/>
                     </svg>
+
+                    <!-- Handles sit outside the stretched SVG, so they stay
+                         round whatever the render's proportions are. -->
+                    <t t-if="state.editingBlock and !state.drawing">
+                        <t t-foreach="blockPoints(state.editingBlock)" t-as="p" t-key="p_index">
+                            <div class="o_vk_hdot"
+                                 t-attf-style="left:{{p[0] * 100}}%;top:{{p[1] * 100}}%"
+                                 t-on-pointerdown="(ev) => this.startDragBlockVertex(ev, state.editingBlock, p_index)"/>
+                        </t>
+                    </t>
+
+                    <t t-if="state.draft.length">
+                        <t t-foreach="state.draft" t-as="p" t-key="p_index">
+                            <div t-att-class="p_index === 0 ? 'o_vk_hdot o_vk_hdot_first' : 'o_vk_hdot'"
+                                 t-attf-style="left:{{p[0] * 100}}%;top:{{p[1] * 100}}%"/>
+                        </t>
+                    </t>
                     </div>
                     <div class="o_vk_hint">
                         <t t-if="!projectBlocks.length">
@@ -587,60 +589,69 @@
                                      t-on-pointerdown="(ev) => this.startDragZone(ev, z)"/>
                         </t>
 
-                        <!-- Unit marker: number when free, a lock when taken,
-                             mirroring how a sold flat reads on a printed plan. -->
-                        <t t-if="!state.editing">
-                            <t t-foreach="state.zones" t-as="z" t-key="'m'+z.id">
-                                <t t-set="zu" t-value="zoneUnit(z)"/>
-                                <t t-if="zu and z.pts.length">
-                                    <t t-set="cx" t-value="z.pts.reduce((s,p) => s + p[0], 0) / z.pts.length"/>
-                                    <t t-set="cy" t-value="z.pts.reduce((s,p) => s + p[1], 0) / z.pts.length"/>
-                                    <circle t-att-cx="cx" t-att-cy="cy" r="0.018"
-                                            t-attf-class="o_vk_pin o_vk_pin_{{zu.vk_state}}"
-                                            t-on-click="() => this.openCard(zu)"/>
-                                    <text t-att-x="cx" t-att-y="cy" class="o_vk_pin_t"
-                                          text-anchor="middle" dominant-baseline="central">
-                                        <t t-if="zu.vk_state === 'available'">
-                                            <t t-esc="zu.default_code.slice(-3)"/>
-                                        </t>
-                                        <t t-else="">🔒</t>
-                                    </text>
-                                </t>
-                            </t>
-                        </t>
-
-                        <!-- Handles for the selected zone: corners to drag,
-                             edge midpoints to add a bend. -->
-                        <t t-if="state.editing and state.selected">
-                            <t t-foreach="edgeMidpoints(state.selected.pts)" t-as="m" t-key="'m'+m.i">
-                                <circle class="o_vk_mid"
-                                        t-att-cx="m.x" t-att-cy="m.y" r="0.006"
-                                        t-on-click.stop="() => this.addPointAfter(state.selected, m.i)">
-                                    <title>Add a point here</title>
-                                </circle>
-                            </t>
-                            <t t-foreach="state.selected.pts" t-as="p" t-key="p_index">
-                                <circle class="o_vk_vtx"
-                                        t-att-cx="p[0]" t-att-cy="p[1]" r="0.009"
-                                        t-on-pointerdown="(ev) => this.startDragVertex(ev, state.selected, p_index)"
-                                        t-on-contextmenu.prevent.stop="() => this.removePoint(state.selected, p_index)">
-                                    <title>Drag to move · right-click to remove</title>
-                                </circle>
-                            </t>
-                        </t>
-
-                        <!-- In-progress shape. The first point is drawn larger:
-                             clicking it again closes the polygon. -->
-                        <t t-if="state.draft.length">
-                            <polygon t-if="state.draft.length > 1"
-                                     class="o_vk_draft" t-att-points="attr(state.draft)"/>
-                            <t t-foreach="state.draft" t-as="p" t-key="p_index">
-                                <circle t-att-class="p_index === 0 ? 'o_vk_vtx o_vk_first' : 'o_vk_vtx'"
-                                        t-att-cx="p[0]" t-att-cy="p[1]"
-                                        t-att-r="p_index === 0 ? 0.012 : 0.006"/>
-                            </t>
-                        </t>
+                        <!-- Shape being drawn: outline only. Its points are
+                             HTML dots below, so they stay round. -->
+                        <polygon t-if="state.draft.length > 1"
+                                 class="o_vk_draft" t-att-points="attr(state.draft)"/>
                     </svg>
+
+                    <!-- Unit marker: number when free, a lock when taken,
+                         mirroring how a sold flat reads on a printed plan.
+                         HTML, so the badge is a circle rather than an oval. -->
+                    <t t-if="!state.editing">
+                        <t t-foreach="state.zones" t-as="z" t-key="'m'+z.id">
+                            <t t-set="zu" t-value="zoneUnit(z)"/>
+                            <t t-if="zu and z.pts.length">
+                                <div t-attf-class="o_vk_pin o_vk_pin_{{zu.vk_state}}"
+                                     t-attf-style="left:{{(z.pts.reduce((s,p) => s + p[0], 0) / z.pts.length) * 100}}%;top:{{(z.pts.reduce((s,p) => s + p[1], 0) / z.pts.length) * 100}}%"
+                                     t-att-title="zu.default_code"
+                                     t-on-click="() => this.openCard(zu)">
+                                    <t t-if="zu.vk_state === 'available'">
+                                        <t t-esc="zu.default_code.slice(-3)"/>
+                                    </t>
+                                    <t t-else="">🔒</t>
+                                </div>
+                            </t>
+                        </t>
+                    </t>
+
+                    <!-- Handles live outside the stretched SVG so they render
+                         as true circles at a fixed pixel size. -->
+                    <t t-if="state.editing and state.selected and !state.drawing">
+                        <t t-foreach="edgeMidpoints(state.selected.pts)" t-as="m" t-key="'m'+m.i">
+                            <div class="o_vk_hdot o_vk_hdot_mid"
+                                 t-attf-style="left:{{m.x * 100}}%;top:{{m.y * 100}}%"
+                                 title="Add a point here"
+                                 t-on-click.stop="() => this.addPointAfter(state.selected, m.i)"/>
+                        </t>
+                        <t t-foreach="state.selected.pts" t-as="p" t-key="p_index">
+                            <div class="o_vk_hdot"
+                                 t-attf-style="left:{{p[0] * 100}}%;top:{{p[1] * 100}}%"
+                                 title="Drag to move · right-click to remove"
+                                 t-on-pointerdown="(ev) => this.startDragVertex(ev, state.selected, p_index)"
+                                 t-on-contextmenu.prevent.stop="() => this.removePoint(state.selected, p_index)"/>
+                        </t>
+                    </t>
+
+                    <t t-if="state.draft.length">
+                        <t t-foreach="state.draft" t-as="p" t-key="p_index">
+                            <div t-att-class="p_index === 0 ? 'o_vk_hdot o_vk_hdot_first' : 'o_vk_hdot'"
+                                 t-attf-style="left:{{p[0] * 100}}%;top:{{p[1] * 100}}%"/>
+                        </t>
+                    </t>
+                    </div>
+
+                    <!-- Section switcher: a storey split across entrances has
+                         one plan per wing, so name which one is open. -->
+                    <div class="o_vk_secbar" t-if="floorSections.length">
+                        <t t-foreach="floorSections" t-as="fs" t-key="fs.id">
+                            <button class="o_vk_secbtn"
+                                    t-att-class="{ 'o_vk_secbtn_on': state.view and fs.id === state.view.id }"
+                                    t-on-click="() => this.loadView(fs.id)">
+                                <t t-if="fs.section">Section <t t-esc="fs.section"/></t>
+                                <t t-else="">Whole floor</t>
+                            </button>
+                        </t>
                     </div>
 
                     <!-- Floor stepper, as on a printed plan: the storey you
