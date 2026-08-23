@@ -531,7 +531,8 @@ export class VertikaliSelector extends Component {
                 "product.template", domain,
                 ["default_code", "vk_floor", "vk_section", "vk_rooms",
                  "vk_area_total", "vk_area_balcony", "vk_orientation",
-                 "list_price", "vk_price_sqm", "vk_state", "vk_handover"],
+                 "list_price", "vk_price_sqm", "vk_state", "vk_handover",
+                 "vk_has_image", "vk_layout_id", "write_date"],
                 { order: "vk_floor desc, vk_section, default_code" }
             );
         } catch (e) {
@@ -827,6 +828,38 @@ export class VertikaliSelector extends Component {
         return `/web/image/${model}/${id}/${field}/${size}x${size}?unique=${stamp}`;
     }
 
+    /**
+     * Small plan thumbnail for a unit row: its own drawing, else the shared
+     * layout's. Null when there is neither, so the row shows a blank square
+     * rather than Odoo's grey placeholder.
+     */
+    unitThumb(u, size = 256) {
+        if (!u) {
+            return null;
+        }
+        if (u.vk_has_image) {
+            return this.imgUrl("product.template", u.id, "image_1920",
+                               u.write_date, size);
+        }
+        const [layoutId] = u.vk_layout_id || [];
+        if (layoutId) {
+            return this.imgUrl("vertikali.layout", layoutId, "image",
+                               u.write_date, size);
+        }
+        return null;
+    }
+
+    /** Status counts for the open floor, mirroring the facade band's line. */
+    get floorStats() {
+        const s = { available: 0, reserved: 0, sold: 0 };
+        for (const u of this.state.floorUnits) {
+            if (s[u.vk_state] !== undefined) {
+                s[u.vk_state] += 1;
+            }
+        }
+        return s;
+    }
+
     get slideSrc() {
         return this.state.gallery[this.state.slide]?.src || null;
     }
@@ -980,7 +1013,8 @@ export class VertikaliSelector extends Component {
             "product.template", domain,
             ["default_code", "vk_floor", "vk_section", "vk_rooms", "vk_area_total",
              "vk_area_balcony", "vk_orientation", "list_price", "vk_price_sqm",
-             "vk_state", "vk_handover", "vk_rooms_detail", "vk_condition"],
+             "vk_state", "vk_handover", "vk_rooms_detail", "vk_condition",
+             "vk_has_image", "vk_layout_id", "write_date"],
             { order: "default_code" }
         );
         this.state.floorUnits = units;
@@ -1018,7 +1052,7 @@ export class VertikaliSelector extends Component {
                 "default_code", "vk_floor", "vk_section", "vk_rooms",
                 "vk_area_total", "list_price", "vk_price_sqm", "vk_state",
                 "vk_area_balcony", "vk_handover", "vk_rooms_detail",
-                "vk_condition",
+                "vk_condition", "vk_has_image", "vk_layout_id", "write_date",
             ];
             const ids = zone.product_tmpl_ids || [];
             if (ids.length) {

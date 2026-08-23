@@ -896,6 +896,32 @@
         &:hover { border-color: var(--vk-accent); box-shadow: 0 2px 10px rgba(0, 0, 0, .07); }
     }
 
+    // Plan thumbnail on a unit row. White ground: the drawings are dark lines
+    // on white, so a grey box would read as a broken image.
+    .o_vk_uthumb {
+        flex: 0 0 auto;
+        width: 62px;
+        height: 62px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border: 1px solid rgba(32, 30, 29, .12);
+        border-radius: 4px;
+        background: #fff;
+        overflow: hidden;
+
+        img {
+            max-width: 100%;
+            max-height: 100%;
+            object-fit: contain;
+        }
+    }
+
+    .o_vk_uthumb_ph {
+        font-size: 20px;
+        color: rgba(32, 30, 29, .25);
+    }
+
     .o_vk_uprice {
         font-weight: 800;
         font-size: 21px;

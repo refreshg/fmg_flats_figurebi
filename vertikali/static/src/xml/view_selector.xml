@@ -615,7 +615,7 @@
                                                                 t-att-class="{
                                                                     'o_vk_dim': u.dimmed,
                                                                     'o_vk_cell_on': state.unit and state.unit.id === u.id }"
-                                                                t-on-click="() => this.selectUnit(u)"
+                                                                t-on-click="() => this.openCard(u)"
                                                                 t-att-title="u.default_code + ' · ' + u.vk_area_total + ' m²'">
                                                             <t t-esc="cellLabel(u)"/>
                                                         </button>
@@ -889,29 +889,45 @@
 
                         <div class="o_vk_list">
                             <t t-foreach="state.zoneUnits" t-as="u" t-key="u.id">
-                                <div class="o_vk_ucard" t-on-click="() => this.openCard(u)">
-                                    <div class="d-flex align-items-start gap-2">
-                                        <span class="flex-grow-1">
-                                            <span class="o_vk_uprice"><t t-esc="fmtMoney(u.list_price)"/></span>
-                                            <span class="o_vk_row_m d-block">
-                                                <t t-esc="fmtMoney(u.vk_price_sqm)"/> / m²
-                                            </span>
-                                        </span>
-                                        <span t-attf-class="o_vk_badge o_vk_b_{{u.vk_state}}">
-                                            <t t-esc="u.vk_state"/>
-                                        </span>
-                                    </div>
-                                    <div class="o_vk_row_m mt-1">
-                                        <t t-esc="u.default_code"/> ·
-                                        <t t-esc="u.vk_rooms"/> ·
-                                        <t t-esc="u.vk_area_total"/> m² ·
-                                        floor <t t-esc="u.vk_floor"/>
-                                    </div>
-                                </div>
+                                <t t-call="vertikali.UnitRow"/>
                             </t>
                             <div t-if="!state.zoneUnits.length" class="o_vk_row_m p-3">
                                 No units match this band. Give it a floor (and a
                                 section, if the storey is split) in edit mode.
+                            </div>
+                        </div>
+                    </t>
+
+                    <!-- On a floor plan the storey is already open, so the
+                         panel lists what it sells -- same reading as the
+                         facade band's preview, minus the plan thumbnail. -->
+                    <t t-elif="state.mode === 'floor' and !state.editing">
+                        <div class="o_vk_side_h d-flex align-items-center">
+                            <span class="flex-grow-1">
+                                Floor <t t-esc="state.view ? state.view.floor : ''"/>
+                                <t t-if="state.view and state.view.section">
+                                    · Section <t t-esc="state.view.section"/></t>
+                            </span>
+                        </div>
+
+                        <div class="o_vk_zcount">
+                            <div>Found: <b><t t-esc="state.floorUnits.length"/></b> units</div>
+                            <div class="o_vk_zstat">
+                                <span><i class="o_vk_tdot o_vk_td_free"></i>
+                                    <t t-esc="floorStats.available"/> available</span>
+                                <span><i class="o_vk_tdot o_vk_td_res"></i>
+                                    <t t-esc="floorStats.reserved"/> reserved</span>
+                                <span><i class="o_vk_tdot o_vk_td_sold"></i>
+                                    <t t-esc="floorStats.sold"/> sold</span>
+                            </div>
+                        </div>
+
+                        <div class="o_vk_list">
+                            <t t-foreach="state.floorUnits" t-as="u" t-key="u.id">
+                                <t t-call="vertikali.UnitRow"/>
+                            </t>
+                            <div t-if="!state.floorUnits.length" class="o_vk_row_m p-3">
+                                No units on this floor yet.
                             </div>
                         </div>
                     </t>
@@ -1112,6 +1128,35 @@
             <span class="o_vk_meta ms-auto">
                 <t t-esc="matchCount"/> / <t t-esc="state.units.length"/> units
             </span>
+        </div>
+    </t>
+
+    <!-- One unit in a side panel: plan thumbnail, price, status. Expects `u`
+         from the calling t-foreach. Clicking opens the drawer card. -->
+    <t t-name="vertikali.UnitRow">
+        <div class="o_vk_ucard" t-on-click="() => this.openCard(u)">
+            <div class="d-flex align-items-start gap-2">
+                <span class="o_vk_uthumb">
+                    <img t-if="unitThumb(u)" t-att-src="unitThumb(u)"
+                         loading="lazy" alt=""/>
+                    <span t-else="" class="o_vk_uthumb_ph">▦</span>
+                </span>
+                <span class="flex-grow-1">
+                    <span class="o_vk_uprice"><t t-esc="fmtMoney(u.list_price)"/></span>
+                    <span class="o_vk_row_m d-block">
+                        <t t-esc="fmtMoney(u.vk_price_sqm)"/> / m²
+                    </span>
+                    <span class="o_vk_row_m d-block mt-1">
+                        <t t-esc="u.default_code"/> ·
+                        <t t-esc="u.vk_rooms"/> ·
+                        <t t-esc="u.vk_area_total"/> m² ·
+                        floor <t t-esc="u.vk_floor"/>
+                    </span>
+                </span>
+                <span t-attf-class="o_vk_badge o_vk_b_{{u.vk_state}}">
+                    <t t-esc="u.vk_state"/>
+                </span>
+            </div>
         </div>
     </t>
 
