@@ -61,6 +61,80 @@
         color: #fff;
     }
 
+    // ---- floor tooltip ----
+    // Sits above the band it describes, with a pointer beneath it.
+    .o_vk_tip {
+        position: absolute;
+        transform: translate(-50%, calc(-100% - 14px));
+        background: #fff;
+        color: #201e1d;
+        border-radius: 4px;
+        box-shadow: 0 4px 16px rgba(0, 0, 0, .22);
+        padding: 12px 16px;
+        min-width: 176px;
+        z-index: 4;
+        pointer-events: none;   // never steal the click from the band
+
+        &::after {
+            content: "";
+            position: absolute;
+            left: 50%;
+            bottom: -7px;
+            margin-left: -7px;
+            border: 7px solid transparent;
+            border-top-color: #fff;
+            border-bottom: 0;
+        }
+    }
+
+    .o_vk_tip_h {
+        font-weight: 700;
+        font-size: 15px;
+        padding-bottom: 7px;
+        margin-bottom: 7px;
+        border-bottom: 1px solid rgba(32, 30, 29, .15);
+    }
+
+    .o_vk_tip_r {
+        display: flex;
+        align-items: center;
+        font-size: 12.5px;
+        padding: 2px 0;
+    }
+
+    .o_vk_tip_p {
+        margin-top: 6px;
+        padding-top: 6px;
+        border-top: 1px solid rgba(32, 30, 29, .12);
+        font-size: 12.5px;
+        font-weight: 700;
+        font-variant-numeric: tabular-nums;
+    }
+
+    .o_vk_tdot {
+        display: inline-block;
+        width: 9px;
+        height: 9px;
+        border-radius: 50%;
+        margin-right: 7px;
+        flex: 0 0 9px;
+    }
+
+    .o_vk_td_free { background: var(--vk-free); }
+    .o_vk_td_res  { background: var(--vk-res); }
+    .o_vk_td_sold { background: var(--vk-sold); }
+
+    .o_vk_zstat {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 4px 12px;
+        margin-top: 5px;
+        font-size: 11.5px;
+        opacity: .85;
+
+        span { display: flex; align-items: center; }
+    }
+
     // ---- section switcher ----
     .o_vk_secbar {
         position: absolute;

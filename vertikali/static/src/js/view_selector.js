@@ -45,6 +45,7 @@ export class VertikaliSelector extends Component {
             card: null,          // unit opened as a full card
             plan2d: true,        // 2D / 3D toggle on the card
             editingBlock: null,  // block whose masterplan shape is being drawn
+            tip: null,           // hovered band, for the floor tooltip
             zoneUnits: [],       // units behind the selected facade band
             floorPick: [],       // every unit on that storey, for ticking
             zonePlan: null,      // that floor's plan, shown beside them
@@ -148,6 +149,60 @@ export class VertikaliSelector extends Component {
             }
             return true;
         });
+    }
+
+    /**
+     * Hover tooltip for a facade band: which storey, and what is left on it.
+     * Anchored to the band's own centre so it follows the shape.
+     */
+    showZoneTip(zone, ev) {
+        if (this.state.editing || this.state.drawing || !zone.pts?.length) {
+            return;
+        }
+        const xs = zone.pts.map((p) => p[0]);
+        const ys = zone.pts.map((p) => p[1]);
+        this.state.tip = {
+            zone,
+            x: (Math.min(...xs) + Math.max(...xs)) / 2,
+            y: (Math.min(...ys) + Math.max(...ys)) / 2,
+        };
+
+        // Stored counts only cover attached units. When a band has none, read
+        // the floor instead, so hovering still answers the question.
+        if (!zone.unit_count && zone.floor && !zone._tipLoaded) {
+            zone._tipLoaded = true;
+            this.unitsOnFloorFull(zone).then((rows) => {
+                const n = (s) => rows.filter((u) => u.vk_state === s).length;
+                const prices = rows
+                    .filter((u) => u.vk_state === "available")
+                    .map((u) => u.list_price);
+                Object.assign(zone, {
+                    unit_count: rows.length,
+                    available_count: n("available"),
+                    reserved_count: n("reserved"),
+                    sold_count: n("sold"),
+                    price_from: prices.length ? Math.min(...prices) : 0,
+                });
+            }).catch(() => {});
+        }
+    }
+
+    /** Units matching a band's floor and section, with status and price. */
+    async unitsOnFloorFull(zone) {
+        const domain = [["vk_is_unit", "=", true], ["vk_floor", "=", zone.floor]];
+        if (zone.section) {
+            domain.push(["vk_section", "=", zone.section]);
+        }
+        const building = this.state.block?.code || this.state.view?.building;
+        if (building) {
+            domain.push(["vk_building", "=", building]);
+        }
+        return this.orm.searchRead(
+            "product.template", domain, ["vk_state", "list_price"]);
+    }
+
+    hideZoneTip() {
+        this.state.tip = null;
     }
 
     /** Zone editing only makes sense where zones exist. */
@@ -567,7 +622,9 @@ export class VertikaliSelector extends Component {
             const zones = await this.orm.searchRead(
                 "vertikali.polygon", [["view_id", "=", viewId]],
                 ["name", "floor", "section", "points", "target_view_id",
-                 "product_tmpl_id", "product_tmpl_ids"],
+                 "product_tmpl_id", "product_tmpl_ids",
+                 "unit_count", "available_count", "reserved_count",
+                 "sold_count", "price_from"],
                 { order: "sequence, id" }
             );
             this.state.zones = zones.map((z) => ({ ...z, pts: this.parsePoints(z.points) }));
@@ -774,6 +831,21 @@ export class VertikaliSelector extends Component {
         } catch (e) {
             this.notification.add(e.message || String(e), { type: "danger" });
         }
+    }
+
+    /**
+     * Status split for the open band. Counts the units actually shown, so a
+     * band that has none attached still reports its floor honestly rather
+     * than three zeros.
+     */
+    get zoneStats() {
+        const n = (s) => this.state.zoneUnits.filter((u) => u.vk_state === s).length;
+        return {
+            total: this.state.zoneUnits.length,
+            available: n("available"),
+            reserved: n("reserved"),
+            sold: n("sold"),
+        };
     }
 
     get zonePlanSrc() {

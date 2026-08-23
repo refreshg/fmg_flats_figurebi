@@ -432,14 +432,34 @@ class VertikaliPolygon(models.Model):
         compute='_compute_unit_stats', string="Units")
     available_count = fields.Integer(
         compute='_compute_unit_stats', string="Available")
+    reserved_count = fields.Integer(
+        compute='_compute_unit_stats', string="Reserved")
+    sold_count = fields.Integer(
+        compute='_compute_unit_stats', string="Sold")
+    price_from = fields.Monetary(
+        compute='_compute_unit_stats', currency_field='currency_id',
+        string="From")
+    currency_id = fields.Many2one(
+        'res.currency', compute='_compute_currency')
 
-    @api.depends('product_tmpl_ids.vk_state')
+    def _compute_currency(self):
+        for poly in self:
+            poly.currency_id = self.env.company.currency_id
+
+    @api.depends('product_tmpl_ids.vk_state', 'product_tmpl_ids.list_price')
     def _compute_unit_stats(self):
         for poly in self:
             units = poly.product_tmpl_ids
+            by = lambda s: units.filtered(lambda u: u.vk_state == s)
+            available = by('available')
             poly.unit_count = len(units)
-            poly.available_count = len(
-                units.filtered(lambda u: u.vk_state == 'available'))
+            poly.available_count = len(available)
+            poly.reserved_count = len(by('reserved'))
+            poly.sold_count = len(by('sold'))
+            # Quote from what can still be bought; fall back to the whole band
+            # so a fully sold floor still shows a figure.
+            prices = available.mapped('list_price') or units.mapped('list_price')
+            poly.price_from = min(prices) if prices else 0.0
 
     # A storey is often split into several bands across the facade -- one per
     # entrance or wing -- so a zone covers one section of one floor, not the

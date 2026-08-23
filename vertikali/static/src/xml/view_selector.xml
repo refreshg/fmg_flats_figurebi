@@ -586,7 +586,9 @@
                                         'o_vk_uz_sold': zu and zu.vk_state === 'sold' }"
                                      t-att-points="attr(z.pts)"
                                      t-on-click="() => this.onZoneClick(z)"
-                                     t-on-pointerdown="(ev) => this.startDragZone(ev, z)"/>
+                                     t-on-pointerdown="(ev) => this.startDragZone(ev, z)"
+                                     t-on-mouseenter="(ev) => this.showZoneTip(z, ev)"
+                                     t-on-mouseleave="hideZoneTip"/>
                         </t>
 
                         <!-- Shape being drawn: outline only. Its points are
@@ -594,6 +596,37 @@
                         <polygon t-if="state.draft.length > 1"
                                  class="o_vk_draft" t-att-points="attr(state.draft)"/>
                     </svg>
+
+                    <!-- Floor tooltip on hover: which storey, and what is left
+                         on it, so a band answers the obvious question without
+                         a click. -->
+                    <div t-if="state.tip" class="o_vk_tip"
+                         t-attf-style="left:{{state.tip.x * 100}}%;top:{{state.tip.y * 100}}%">
+                        <div class="o_vk_tip_h">
+                            Floor <t t-esc="state.tip.zone.floor"/>
+                            <t t-if="state.tip.zone.section">
+                                · Section <t t-esc="state.tip.zone.section"/>
+                            </t>
+                        </div>
+                        <t t-if="state.tip.zone.unit_count">
+                            <div class="o_vk_tip_r">
+                                <span class="o_vk_tdot o_vk_td_free"></span>
+                                <t t-esc="state.tip.zone.available_count"/> available
+                            </div>
+                            <div class="o_vk_tip_r" t-if="state.tip.zone.reserved_count">
+                                <span class="o_vk_tdot o_vk_td_res"></span>
+                                <t t-esc="state.tip.zone.reserved_count"/> reserved
+                            </div>
+                            <div class="o_vk_tip_r" t-if="state.tip.zone.sold_count">
+                                <span class="o_vk_tdot o_vk_td_sold"></span>
+                                <t t-esc="state.tip.zone.sold_count"/> sold
+                            </div>
+                            <div class="o_vk_tip_p" t-if="state.tip.zone.price_from">
+                                from <t t-esc="fmtMoney(state.tip.zone.price_from)"/>
+                            </div>
+                        </t>
+                        <div t-else="" class="o_vk_tip_r">No units linked yet</div>
+                    </div>
 
                     <!-- Unit marker: number when free, a lock when taken,
                          mirroring how a sold flat reads on a printed plan.
@@ -693,7 +726,15 @@
                         </div>
 
                         <div class="o_vk_zcount">
-                            Found: <b><t t-esc="state.zoneUnits.length"/></b> units
+                            <div>Found: <b><t t-esc="state.zoneUnits.length"/></b> units</div>
+                            <div class="o_vk_zstat">
+                                <span><i class="o_vk_tdot o_vk_td_free"></i>
+                                    <t t-esc="zoneStats.available"/> available</span>
+                                <span><i class="o_vk_tdot o_vk_td_res"></i>
+                                    <t t-esc="zoneStats.reserved"/> reserved</span>
+                                <span><i class="o_vk_tdot o_vk_td_sold"></i>
+                                    <t t-esc="zoneStats.sold"/> sold</span>
+                            </div>
                         </div>
 
                         <div class="o_vk_list">
