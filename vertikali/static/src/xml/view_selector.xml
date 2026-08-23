@@ -486,19 +486,10 @@
                     <table class="o_vk_ptable">
                         <thead>
                             <tr>
-                                <t t-foreach="[
-                                        ['vk_state','Status'],
-                                        ['default_code','Unit'],
-                                        ['vk_rooms','Layout'],
-                                        ['vk_building','Building'],
-                                        ['vk_section','Section'],
-                                        ['vk_floor','Floor'],
-                                        ['vk_area_total','Area, m²'],
-                                        ['vk_price_sqm','Price / m²'],
-                                        ['list_price','Price']]" t-as="col" t-key="col[0]">
-                                    <th t-on-click="() => this.toggleSort(col[0])">
-                                        <t t-esc="col[1]"/>
-                                        <span class="o_vk_sortmark" t-if="state.sortBy === col[0]">
+                                <t t-foreach="tableCols" t-as="col" t-key="col.key">
+                                    <th t-on-click="() => this.toggleSort(col.key)">
+                                        <t t-esc="col.label"/>
+                                        <span class="o_vk_sortmark" t-if="state.sortBy === col.key">
                                             <t t-esc="state.sortAsc ? '▲' : '▼'"/>
                                         </span>
                                     </th>

@@ -190,6 +190,9 @@
                             <field name="section"
                                    placeholder="empty = whole floor"
                                    invisible="view_type != 'floor'"/>
+                            <field name="copy_to_floors"
+                                   placeholder="e.g. 3-10,12 — empty = all floors"
+                                   invisible="view_type != 'floor'"/>
                         </group>
                         <group>
                             <field name="categ_id"/>

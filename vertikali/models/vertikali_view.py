@@ -354,6 +354,34 @@ class VertikaliView(models.Model):
     section = fields.Char(
         help="Section this plan covers, e.g. 1. Empty means the whole floor.")
 
+    # Which storeys "Copy Plan + Zones" should reach. Empty means all of them,
+    # which is the common case for a tower of identical floors.
+    copy_to_floors = fields.Char(
+        string="Copy to Floors",
+        help="Floors to copy this plan onto, e.g. 3-10,12,15. "
+             "Leave empty to copy to every other floor.")
+
+    def _parse_floor_spec(self, spec):
+        """Turn '3-10,12,15' into {3,...,10,12,15}. Empty means every floor."""
+        wanted = set()
+        for chunk in (spec or '').replace(' ', '').split(','):
+            if not chunk:
+                continue
+            if '-' in chunk:
+                lo, _, hi = chunk.partition('-')
+                try:
+                    wanted.update(range(int(lo), int(hi) + 1))
+                except ValueError:
+                    raise ValidationError(_(
+                        "'%s' is not a floor range. Use 3-10.", chunk))
+            else:
+                try:
+                    wanted.add(int(chunk))
+                except ValueError:
+                    raise ValidationError(_(
+                        "'%s' is not a floor number.", chunk))
+        return wanted
+
     project_id = fields.Many2one(
         'vertikali.project', string="Project", index=True, ondelete='cascade')
 
@@ -401,17 +429,34 @@ class VertikaliView(models.Model):
         domain = [
             ('view_type', '=', 'floor'),
             ('id', '!=', self.id),
-            ('section', '=', self.section or False),
         ]
         if self.project_id:
             domain.append(('project_id', '=', self.project_id.id))
         if self.building:
             domain.append(('building', '=', self.building))
 
-        targets = self.env['vertikali.view'].search(domain)
+        # Prefer floors of the same section, but fall back to the ones with no
+        # section at all: sections are usually filled in after the plans are
+        # generated, so an exact match would find nothing and refuse to copy.
+        same_section = self.env['vertikali.view'].search(
+            domain + [('section', '=', self.section or False)])
+        targets = same_section
+        if not targets and self.section:
+            targets = self.env['vertikali.view'].search(
+                domain + [('section', '=', False)])
+            if targets:
+                # Those floors now belong to this section.
+                targets.write({'section': self.section})
+
+        # Narrow to the floors asked for, if any were named.
+        wanted = self._parse_floor_spec(self.copy_to_floors)
+        if wanted:
+            targets = targets.filtered(lambda v: v.floor in wanted)
+
         if not targets:
             raise ValidationError(_(
-                "No other floor views share this project and section."))
+                "No floor views matched. Generate the floor views from the "
+                "project first, or widen 'Copy to Floors'."))
 
         targets.write({'image': self.image})
 
@@ -573,6 +618,26 @@ class VertikaliPolygon(models.Model):
 
     # Denormalized for floor zones on a facade, where no single unit applies.
     floor = fields.Integer(help="Floor this zone represents, on a facade view.")
+
+    @api.model_create_multi
+    def create(self, vals_list):
+        """Inherit the view's floor and section when they are not given.
+
+        A zone drawn on a floor plan belongs to that storey; leaving floor at 0
+        made tooltips read "Floor 0" and broke every lookup keyed on it.
+        """
+        views = self.env['vertikali.view'].browse([
+            v['view_id'] for v in vals_list if v.get('view_id')])
+        by_id = {v.id: v for v in views}
+        for vals in vals_list:
+            view = by_id.get(vals.get('view_id'))
+            if not view or view.view_type != 'floor':
+                continue
+            if not vals.get('floor') and view.floor:
+                vals['floor'] = view.floor
+            if not vals.get('section') and view.section:
+                vals['section'] = view.section
+        return super().create(vals_list)
 
     @api.constrains('points')
     def _check_points(self):

@@ -505,6 +505,27 @@ export class VertikaliSelector extends Component {
         }
     }
 
+    /**
+     * Columns of the Properties table.
+     *
+     * Defined here rather than as an array literal inside t-foreach: OWL
+     * compiles the template to a function and a multi-line literal there
+     * breaks it ("v36 is not a function").
+     */
+    get tableCols() {
+        return [
+            { key: "vk_state", label: "Status" },
+            { key: "default_code", label: "Unit" },
+            { key: "vk_rooms", label: "Layout" },
+            { key: "vk_building", label: "Building" },
+            { key: "vk_section", label: "Section" },
+            { key: "vk_floor", label: "Floor" },
+            { key: "vk_area_total", label: "Area, m²" },
+            { key: "vk_price_sqm", label: "Price / m²" },
+            { key: "list_price", label: "Price" },
+        ];
+    }
+
     /** Grid+ groups the same units by floor, high to low. */
     get plusRows() {
         const byFloor = new Map();
@@ -1069,9 +1090,21 @@ export class VertikaliSelector extends Component {
     }
 
     /** The unit a floor-plan zone stands for, if it is linked. */
+    /**
+     * The flat a floor-plan zone stands for.
+     *
+     * Checks product_tmpl_ids first: zones are attached through the many2many
+     * now, and looking only at the old single link meant a drawn-and-linked
+     * zone opened nothing.
+     */
     zoneUnit(zone) {
-        const id = zone.product_tmpl_id?.[0];
-        return id ? this.state.unitById[id] : null;
+        const id = zone.product_tmpl_ids?.[0] || zone.product_tmpl_id?.[0];
+        if (!id) {
+            return null;
+        }
+        return this.state.unitById[id]
+            || this.state.floorUnits.find((u) => u.id === id)
+            || null;
     }
 
     /** Every floor plan of the current project/block. */
@@ -1209,13 +1242,12 @@ export class VertikaliSelector extends Component {
         if (this.state.editing) {
             return;
         }
-        // A zone standing for one unit has nothing to preview, so it opens.
-        if (!zone.floor && zone.product_tmpl_id) {
+        // On a floor plan a zone *is* a flat, so it opens its card. A facade
+        // band covers a whole storey and only previews it in the panel.
+        if (this.state.mode === "floor") {
             const unit = this.zoneUnit(zone);
             if (unit) {
                 this.openCard(unit);
-            } else {
-                this.openUnit(zone);
             }
         }
     }
