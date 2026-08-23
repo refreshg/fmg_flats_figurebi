@@ -708,8 +708,14 @@ export class VertikaliSelector extends Component {
                     "product.template", domain, fields, { order: "default_code" });
             }
 
-            // The matching floor plan, so the band shows the layout too.
-            const plan = this.floorList.find((v) => v.floor === zone.floor);
+            // The plan for this exact band: floor *and* section. floorList
+            // keeps one entry per storey, so it would hand back whichever
+            // section happened to come first.
+            const want = zone.section || false;
+            const plan = this.floorViews.find(
+                (v) => v.floor === zone.floor && (v.section || false) === want)
+                || this.floorViews.find(
+                    (v) => v.floor === zone.floor && !v.section);
             if (plan) {
                 const [rec] = await this.orm.read(
                     "vertikali.view", [plan.id], ["name", "image"]);
@@ -987,21 +993,32 @@ export class VertikaliSelector extends Component {
         this.state.selected = zone;
         // Show what the band sells, plus that floor's plan, without leaving
         // the facade -- the point of a facade band is to preview the storey.
+        // Entering the plan is a separate, deliberate step ("Open floor plan"
+        // in the panel); drilling in on this same click meant the preview was
+        // never visible.
         this.loadZoneUnits(zone);
         if (this.state.editing) {
             return;
         }
-        // Drill down: a zone opens its target view, or the unit it holds.
-        if (zone.target_view_id) {
-            this.state.mode = "floor";
-            this.loadView(zone.target_view_id[0]);
-        } else if (zone.product_tmpl_id) {
+        // A zone standing for one unit has nothing to preview, so it opens.
+        if (!zone.floor && zone.product_tmpl_id) {
             const unit = this.zoneUnit(zone);
             if (unit) {
                 this.openCard(unit);
             } else {
                 this.openUnit(zone);
             }
+        }
+    }
+
+    /** Enter the floor plan behind the selected band. */
+    openZonePlan(zone) {
+        if (zone?.target_view_id) {
+            this.state.mode = "floor";
+            this.loadView(zone.target_view_id[0]);
+        } else if (this.state.zonePlan) {
+            this.state.mode = "floor";
+            this.loadView(this.state.zonePlan.id);
         }
     }
 

@@ -651,7 +651,16 @@
             object-fit: contain;
             border: 1px solid rgba(32, 30, 29, .15);
             background: #fff;
+            cursor: pointer;
+
+            &:hover { border-color: var(--vk-accent); }
         }
+    }
+
+    .o_vk_zplan_none {
+        font-size: 12px;
+        opacity: .6;
+        text-align: left;
     }
 
     .o_vk_zcount {

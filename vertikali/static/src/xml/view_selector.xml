@@ -720,9 +720,17 @@
                         </div>
 
                         <div class="o_vk_zplan" t-if="zonePlanSrc">
-                            <img t-att-src="zonePlanSrc" alt="Floor plan"/>
+                            <img t-att-src="zonePlanSrc" alt="Floor plan"
+                                 t-on-click="() => this.openZonePlan(state.selected)"/>
                             <button class="o_vk_link d-block mt-1"
-                                    t-on-click="() => this.setMode('floor')">Open floor plan</button>
+                                    t-on-click="() => this.openZonePlan(state.selected)">
+                                Open floor plan
+                            </button>
+                        </div>
+                        <div t-elif="state.selected.floor" class="o_vk_zplan o_vk_zplan_none">
+                            No plan uploaded for this
+                            <t t-if="state.selected.section">section</t>
+                            <t t-else="">floor</t> yet.
                         </div>
 
                         <div class="o_vk_zcount">
