@@ -55,7 +55,8 @@ export class VertikaliSelector extends Component {
             zoneUnits: [],       // units behind the selected facade band
             floorPick: [],       // every unit on that storey, for ticking
             zonePlan: null,      // that floor's plan, shown beside them
-            filters: { rooms: [], status: [], areaMin: null, areaMax: null, priceMax: null },
+            filters: { rooms: [], status: [], orient: [], cond: [],
+                       areaMin: null, areaMax: null, priceMax: null },
             selected: null,
             loading: true,
             error: null,
@@ -532,7 +533,7 @@ export class VertikaliSelector extends Component {
                 ["default_code", "vk_floor", "vk_section", "vk_rooms",
                  "vk_area_total", "vk_area_balcony", "vk_orientation",
                  "list_price", "vk_price_sqm", "vk_state", "vk_handover",
-                 "vk_has_image", "vk_layout_id", "write_date"],
+                 "vk_condition", "vk_has_image", "vk_layout_id", "write_date"],
                 { order: "vk_floor desc, vk_section, default_code" }
             );
         } catch (e) {
@@ -620,12 +621,30 @@ export class VertikaliSelector extends Component {
         return found.sort((a, b) => String(a).localeCompare(String(b), undefined, { numeric: true }));
     }
 
+    /** Orientations present in the loaded units, for the filter chips. */
+    get orientOptions() {
+        return [...new Set(this.state.units.map((u) => u.vk_orientation).filter(Boolean))]
+            .sort();
+    }
+
+    /** Conditions present in the loaded units, for the filter chips. */
+    get condOptions() {
+        return [...new Set(this.state.units.map((u) => u.vk_condition).filter(Boolean))]
+            .sort();
+    }
+
     matchesFilters(u) {
         const f = this.state.filters;
         if (f.rooms.length && !f.rooms.includes(u.vk_rooms)) {
             return false;
         }
         if (f.status.length && !f.status.includes(u.vk_state)) {
+            return false;
+        }
+        if (f.orient.length && !f.orient.includes(u.vk_orientation)) {
+            return false;
+        }
+        if (f.cond.length && !f.cond.includes(u.vk_condition)) {
             return false;
         }
         if (f.areaMin && u.vk_area_total < f.areaMin) {
@@ -653,6 +672,8 @@ export class VertikaliSelector extends Component {
     clearFilters() {
         this.state.filters.rooms = [];
         this.state.filters.status = [];
+        this.state.filters.orient = [];
+        this.state.filters.cond = [];
         this.state.filters.areaMin = null;
         this.state.filters.areaMax = null;
         this.state.filters.priceMax = null;
@@ -660,7 +681,8 @@ export class VertikaliSelector extends Component {
 
     get filterActive() {
         const f = this.state.filters;
-        return !!(f.rooms.length || f.status.length || f.areaMin || f.areaMax || f.priceMax);
+        return !!(f.rooms.length || f.status.length || f.orient.length
+                  || f.cond.length || f.areaMin || f.areaMax || f.priceMax);
     }
 
     get matchCount() {
@@ -849,6 +871,28 @@ export class VertikaliSelector extends Component {
         return null;
     }
 
+    /**
+     * Floors that have a band on the open facade, top storey first — the
+     * facade's answer to the floor view's stepper rail. One entry per floor:
+     * a split storey keeps its per-section bands on the image itself.
+     */
+    get facadeFloors() {
+        const seen = new Map();
+        for (const z of this.state.zones) {
+            if (z.floor && !seen.has(z.floor)) {
+                seen.set(z.floor, z);
+            }
+        }
+        return [...seen.entries()]
+            .sort((a, b) => b[0] - a[0])
+            .map(([floor, zone]) => ({ floor, zone }));
+    }
+
+    /** Rail click: same as clicking the band itself. */
+    selectFacadeFloor(entry) {
+        this.onZoneClick(entry.zone);
+    }
+
     /** Status counts for the open floor, mirroring the facade band's line. */
     get floorStats() {
         const s = { available: 0, reserved: 0, sold: 0 };
@@ -876,24 +920,31 @@ export class VertikaliSelector extends Component {
     }
 
     /** Condition reads as its label, not the stored key ("white"). */
-    get conditionLabel() {
+    condLabel(v) {
         const map = {
             frame: "Frame",
             white: "White frame",
             green: "Green frame",
             renovated: "Renovated",
         };
-        const v = this.state.card?.vk_condition;
         return map[v] || v || null;
     }
 
-    /** Compass label for the unit's aspect. */
-    get orientationLabel() {
+    get conditionLabel() {
+        return this.condLabel(this.state.card?.vk_condition);
+    }
+
+    /** Compass label for a unit's aspect. */
+    orientLabel(v) {
         const map = {
             n: "North", ne: "North-East", e: "East", se: "South-East",
             s: "South", sw: "South-West", w: "West", nw: "North-West",
         };
-        return map[this.state.card?.vk_orientation] || null;
+        return map[v] || v || null;
+    }
+
+    get orientationLabel() {
+        return this.orientLabel(this.state.card?.vk_orientation);
     }
 
     /** Needle angle, clockwise from north. */

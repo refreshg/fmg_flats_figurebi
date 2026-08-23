@@ -89,17 +89,6 @@
 
                 <!-- Specs panel, wider and laid out like the reference. -->
                 <div class="o_vk_cside">
-                    <div class="o_vk_facts">
-                        <div><span>Area</span><b><t t-esc="state.card.vk_area_total"/> m²</b></div>
-                        <div t-if="state.card.vk_section">
-                            <span>Section</span><b><t t-esc="state.card.vk_section"/></b>
-                        </div>
-                        <div t-if="state.card.vk_handover">
-                            <span>Delivery</span><b><t t-esc="state.card.vk_handover"/></b>
-                        </div>
-                        <div><span>Floor</span><b><t t-esc="state.card.vk_floor"/></b></div>
-                    </div>
-
                     <div class="o_vk_crooms" t-if="cardRooms.length">
                         <div class="o_vk_kicker mb-1">Rooms</div>
                         <t t-foreach="cardRooms" t-as="r" t-key="r_index">
@@ -112,31 +101,39 @@
                     </div>
 
                     <!-- Everything the Unit tab holds, so the card is the
-                         whole record rather than a summary of it. -->
+                         whole record rather than a summary of it. Every row
+                         always renders: an empty value reads as a dash, so
+                         "not filled in" is visible instead of silent. -->
                     <div class="o_vk_cfacts">
                         <div><span>Project</span><b t-esc="state.project ? state.project.name : '—'"/></div>
-                        <div t-if="state.card.vk_building">
-                            <span>Building</span><b t-esc="state.card.vk_building"/>
+                        <div><span>Building</span><b t-esc="state.card.vk_building || '—'"/></div>
+                        <div><span>Section</span><b t-esc="state.card.vk_section || '—'"/></div>
+                        <div><span>Floor</span><b t-esc="state.card.vk_floor || '—'"/></div>
+                        <div><span>Layout</span><b t-esc="state.card.vk_rooms || '—'"/></div>
+                        <div><span>Layout Type</span><b t-esc="state.card.layoutName || '—'"/></div>
+                        <div><span>Orientation</span><b t-esc="orientationLabel || '—'"/></div>
+                        <div><span>Total area</span>
+                            <b t-if="state.card.vk_area_total"><t t-esc="state.card.vk_area_total"/> m²</b>
+                            <b t-else="">—</b>
                         </div>
-                        <div t-if="state.card.vk_rooms">
-                            <span>Layout</span><b t-esc="state.card.vk_rooms"/>
+                        <div><span>Living area</span>
+                            <b t-if="state.card.vk_area_living"><t t-esc="state.card.vk_area_living"/> m²</b>
+                            <b t-else="">—</b>
                         </div>
+                        <div><span>Balcony</span>
+                            <b t-if="state.card.vk_area_balcony"><t t-esc="state.card.vk_area_balcony"/> m²</b>
+                            <b t-else="">—</b>
+                        </div>
+                        <div><span>Condition</span><b t-esc="conditionLabel || '—'"/></div>
                         <div><span>Status</span>
                             <b t-attf-class="o_vk_badge o_vk_b_{{state.card.vk_state}}"
                                t-esc="state.card.vk_state"/>
                         </div>
-                        <div t-if="state.card.vk_area_living">
-                            <span>Living area</span><b><t t-esc="state.card.vk_area_living"/> m²</b>
+                        <div><span>Price / m²</span>
+                            <b t-if="state.card.vk_price_sqm" t-esc="fmtMoney(state.card.vk_price_sqm)"/>
+                            <b t-else="">—</b>
                         </div>
-                        <div t-if="state.card.vk_area_balcony">
-                            <span>Balcony</span><b><t t-esc="state.card.vk_area_balcony"/> m²</b>
-                        </div>
-                        <div t-if="state.card.vk_condition">
-                            <span>Condition</span><b t-esc="conditionLabel"/>
-                        </div>
-                        <div t-if="orientationLabel">
-                            <span>Orientation</span><b t-esc="orientationLabel"/>
-                        </div>
+                        <div><span>Handover</span><b t-esc="state.card.vk_handover || '—'"/></div>
                     </div>
 
                     <!-- Price last, as the thing being decided on. -->
@@ -846,6 +843,20 @@
                                 title="Floor down">⌄</button>
                         <div class="o_vk_flabel2">floor</div>
                     </div>
+
+                    <!-- Facade floor rail: every storey with a band, so a
+                         floor can be picked by number as well as by band. -->
+                    <div class="o_vk_fstep o_vk_fstep_all"
+                         t-if="state.mode === 'facade' and !state.editing and facadeFloors.length > 1">
+                        <t t-foreach="facadeFloors" t-as="ff" t-key="ff.floor">
+                            <button class="o_vk_fnum"
+                                    t-att-class="{ 'o_vk_fnum_on': state.selected and state.selected.floor === ff.floor }"
+                                    t-on-click="() => this.selectFacadeFloor(ff)">
+                                <t t-esc="ff.floor"/>
+                            </button>
+                        </t>
+                        <div class="o_vk_flabel2">floor</div>
+                    </div>
                 </div>
 
                 <div class="o_vk_side">
@@ -1103,6 +1114,28 @@
                 <button class="o_vk_chip o_vk_chip_sold"
                         t-att-class="{ 'o_vk_chip_on': state.filters.status.includes('sold') }"
                         t-on-click="() => this.toggleFilter('status', 'sold')">Sold</button>
+            </div>
+
+            <div class="d-flex align-items-center gap-1" t-if="orientOptions.length">
+                <span class="o_vk_flabel">Orientation</span>
+                <t t-foreach="orientOptions" t-as="o" t-key="o">
+                    <button class="o_vk_chip"
+                            t-att-class="{ 'o_vk_chip_on': state.filters.orient.includes(o) }"
+                            t-on-click="() => this.toggleFilter('orient', o)">
+                        <t t-esc="orientLabel(o)"/>
+                    </button>
+                </t>
+            </div>
+
+            <div class="d-flex align-items-center gap-1" t-if="condOptions.length">
+                <span class="o_vk_flabel">Condition</span>
+                <t t-foreach="condOptions" t-as="c" t-key="c">
+                    <button class="o_vk_chip"
+                            t-att-class="{ 'o_vk_chip_on': state.filters.cond.includes(c) }"
+                            t-on-click="() => this.toggleFilter('cond', c)">
+                        <t t-esc="condLabel(c)"/>
+                    </button>
+                </t>
             </div>
 
             <div class="d-flex align-items-center gap-1">

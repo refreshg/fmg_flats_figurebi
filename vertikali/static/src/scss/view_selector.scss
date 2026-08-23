@@ -197,6 +197,19 @@
 
     .o_vk_fbtn { font-size: 15px; opacity: .5; &:hover { opacity: 1; } }
 
+    // The facade lists every storey with a band, so the rail scrolls when a
+    // tall tower outgrows the stage instead of overflowing it.
+    .o_vk_fstep_all {
+        max-height: 78%;
+        overflow-y: auto;
+        padding: 4px 2px;
+        background: rgba(255, 255, 255, .82);
+        border-radius: 8px;
+        scrollbar-width: thin;
+
+        .o_vk_fnum { font-size: 15px; padding: 1px 8px; }
+    }
+
     .o_vk_fnum {
         font-size: 19px;
         font-weight: 300;
