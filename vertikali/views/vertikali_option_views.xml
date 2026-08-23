@@ -25,10 +25,11 @@
                         domain="[('attribute', '=', 'condition')]"/>
                 <filter string="View" name="filter_view"
                         domain="[('attribute', '=', 'view')]"/>
-                <group string="Group By">
-                    <filter string="Attribute" name="group_attribute"
-                            context="{'group_by': 'attribute'}"/>
-                </group>
+                <separator/>
+                <!-- No <group> wrapper: in Odoo 19's search RNG, group takes
+                     no string attribute and the whole view fails RelaxNG. -->
+                <filter string="Attribute" name="group_attribute"
+                        context="{'group_by': 'attribute'}"/>
             </search>
         </field>
     </record>
