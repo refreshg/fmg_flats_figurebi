@@ -429,6 +429,25 @@ export class VertikaliSelector extends Component {
      * compiles inline expressions, and a block of assignments there breaks
      * the generated function ("v36 is not a function").
      */
+    /**
+     * Load the view a <select> picked.
+     *
+     * The id is parsed here, not in the template: OWL evaluates template
+     * expressions in a restricted scope where parseInt and Math are undefined,
+     * which threw "v34 is not a function" on every change.
+     */
+    onViewSelect(ev) {
+        const id = Number(ev.target.value);
+        if (id) {
+            this.loadView(id);
+        }
+    }
+
+    onFilterNumber(field, ev) {
+        const v = Number(ev.target.value);
+        this.state.filters[field] = Number.isFinite(v) && ev.target.value !== "" ? v : null;
+    }
+
     cancelBlockDraw() {
         this.state.drawing = false;
         this.state.draft = [];

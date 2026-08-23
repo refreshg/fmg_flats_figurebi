@@ -353,7 +353,7 @@
                  class="o_vk_bar d-flex align-items-center gap-2 p-2 flex-wrap">
                 <select t-if="modeViews.length > 1"
                         class="form-select form-select-sm w-auto"
-                        t-on-change="(ev) => this.loadView(parseInt(ev.target.value))">
+                        t-on-change="onViewSelect">
                     <t t-foreach="modeViews" t-as="v" t-key="v.id">
                         <option t-att-value="v.id"
                                 t-att-selected="state.view and v.id === state.view.id">
@@ -1044,17 +1044,17 @@
                 <span class="o_vk_flabel">m²</span>
                 <input type="number" class="o_vk_num" placeholder="from"
                        t-att-value="state.filters.areaMin"
-                       t-on-input="(ev) => (state.filters.areaMin = parseFloat(ev.target.value) || null)"/>
+                       t-on-input="(ev) => this.onFilterNumber('areaMin', ev)"/>
                 <input type="number" class="o_vk_num" placeholder="to"
                        t-att-value="state.filters.areaMax"
-                       t-on-input="(ev) => (state.filters.areaMax = parseFloat(ev.target.value) || null)"/>
+                       t-on-input="(ev) => this.onFilterNumber('areaMax', ev)"/>
             </div>
 
             <div class="d-flex align-items-center gap-1">
                 <span class="o_vk_flabel">Max price</span>
                 <input type="number" class="o_vk_num o_vk_num_w" placeholder="any"
                        t-att-value="state.filters.priceMax"
-                       t-on-input="(ev) => (state.filters.priceMax = parseFloat(ev.target.value) || null)"/>
+                       t-on-input="(ev) => this.onFilterNumber('priceMax', ev)"/>
             </div>
 
             <button t-if="filterActive" class="btn btn-sm btn-link p-0"
