@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <record id="view_copy_plan_wizard_form" model="ir.ui.view">
+        <field name="name">vertikali.copy.plan.wizard.form</field>
+        <field name="model">vertikali.copy.plan.wizard</field>
+        <field name="arch" type="xml">
+            <form string="Copy Plan to Floors">
+                <field name="source_view_id" invisible="1"/>
+                <field name="available_view_ids" invisible="1"/>
+                <group>
+                    <field name="copy_zones"/>
+                </group>
+                <label for="target_view_ids" string="Copy onto these floors"/>
+                <field name="target_view_ids" nolabel="1" widget="many2many">
+                    <list>
+                        <field name="name"/>
+                        <field name="floor"/>
+                        <field name="section"/>
+                        <field name="has_image" string="Has image"/>
+                        <field name="polygon_count" string="Zones"/>
+                    </list>
+                </field>
+                <p class="text-muted small mt-2">
+                    Floors already carrying a plan will be overwritten.
+                </p>
+                <footer>
+                    <button name="action_apply" type="object"
+                            string="Copy" class="btn-primary"/>
+                    <button name="action_select_all" type="object"
+                            string="Select All Floors" class="btn-secondary"/>
+                    <button string="Cancel" class="btn-secondary" special="cancel"/>
+                </footer>
+            </form>
+        </field>
+    </record>
+
+</odoo>

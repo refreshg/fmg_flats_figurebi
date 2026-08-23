@@ -422,6 +422,27 @@ export class VertikaliSelector extends Component {
         await this.setMode(steps.length ? steps[0].key : null);
     }
 
+    /**
+     * Back to the site plan from inside a block.
+     *
+     * A method rather than a multi-statement arrow in the template: OWL
+     * compiles inline expressions, and a block of assignments there breaks
+     * the generated function ("v36 is not a function").
+     */
+    cancelBlockDraw() {
+        this.state.drawing = false;
+        this.state.draft = [];
+        this.state.editingBlock = null;
+    }
+
+    backToMasterplan() {
+        this.state.block = null;
+        this.state.mode = "masterplan";
+        this.state.view = null;
+        this.state.zones = [];
+        this.state.selected = null;
+    }
+
     backToProjects() {
         this.state.project = null;
         this.state.block = null;
@@ -1130,6 +1151,24 @@ export class VertikaliSelector extends Component {
             out.push(v);
         }
         return out;
+    }
+
+    /**
+     * The storeys shown in the stepper: the current one and two either side.
+     *
+     * Filtered here rather than with Math.abs() in the template -- OWL
+     * evaluates template expressions in a restricted scope where Math is not
+     * defined, which threw "v36 is not a function" on every floor change.
+     */
+    get stepperFloors() {
+        const cur = this.state.view?.floor;
+        if (cur === undefined || cur === null) {
+            return [];
+        }
+        return this.floorList.filter((v) => {
+            const d = v.floor - cur;
+            return (d < 0 ? -d : d) <= 2;
+        });
     }
 
     /** Section plans of the open storey, for the switcher along the bottom. */

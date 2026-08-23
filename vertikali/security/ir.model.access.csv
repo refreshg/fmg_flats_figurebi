@@ -11,3 +11,4 @@ access_vertikali_layout_salesman,vertikali.layout salesman,model_vertikali_layou
 access_vertikali_layout_manager,vertikali.layout manager,model_vertikali_layout,sales_team.group_sale_manager,1,1,1,1
 access_vertikali_unit_image_salesman,vertikali.unit.image salesman,model_vertikali_unit_image,sales_team.group_sale_salesman,1,0,0,0
 access_vertikali_unit_image_manager,vertikali.unit.image manager,model_vertikali_unit_image,sales_team.group_sale_manager,1,1,1,1
+access_vertikali_copy_plan_wizard,vertikali.copy.plan.wizard,model_vertikali_copy_plan_wizard,sales_team.group_sale_manager,1,1,1,1

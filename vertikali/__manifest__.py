@@ -14,7 +14,7 @@ apartment-specific fields and the visual selector are custom.
     """,
     'author': "Vertikali",
     'category': 'Sales',
-    'version': '19.0.1.3.0',
+    'version': '19.0.1.4.0',
     'license': 'LGPL-3',
 
     # crm/sale_crm give us the opportunity -> multiple quotations flow (D6),
@@ -34,6 +34,7 @@ apartment-specific fields and the visual selector are custom.
         'views/product_template_views.xml',
         'views/vertikali_layout_views.xml',
         'views/vertikali_view_views.xml',
+        'wizard/copy_plan_wizard_views.xml',
         'views/menus.xml',
         # Sample building. Loaded as ordinary data because this database runs
         # without demo data (base.demo is False), and it is marked noupdate so

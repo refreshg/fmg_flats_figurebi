@@ -160,7 +160,7 @@
                              is unreachable once a block has been entered. -->
                         <button t-if="state.project.use_masterplan"
                                 class="o_vk_link ms-1"
-                                t-on-click="() => { state.block = null; state.mode = 'masterplan'; state.view = null; state.zones = []; }">
+                                t-on-click="backToMasterplan">
                             ↑ masterplan
                         </button>
                     </t>
@@ -290,7 +290,7 @@
                             <button class="o_vk_link ms-2" t-on-click="undoPoint">undo</button>
                             <button class="o_vk_link ms-2" t-on-click="finishBlockDraw">finish</button>
                             <button class="o_vk_link ms-2"
-                                    t-on-click="() => { state.drawing = false; state.draft = []; state.editingBlock = null; }">cancel</button>
+                                    t-on-click="cancelBlockDraw">cancel</button>
                         </t>
                         <t t-elif="state.editingBlock">
                             Drag the corners of <b>Block <t t-esc="state.editingBlock.code"/></b> —
@@ -786,9 +786,8 @@
                     <div class="o_vk_fstep" t-if="state.mode === 'floor' and floorList.length > 1">
                         <button class="o_vk_fbtn" t-on-click="() => this.stepFloor(1)"
                                 title="Floor up">⌃</button>
-                        <t t-foreach="floorList" t-as="fv" t-key="fv.id">
-                            <button t-if="Math.abs(fv.floor - state.view.floor) &lt;= 2"
-                                    class="o_vk_fnum"
+                        <t t-foreach="stepperFloors" t-as="fv" t-key="fv.id">
+                            <button class="o_vk_fnum"
                                     t-att-class="{ 'o_vk_fnum_on': fv.id === state.view.id }"
                                     t-on-click="() => this.loadView(fv.id)">
                                 <t t-esc="fv.floor"/>

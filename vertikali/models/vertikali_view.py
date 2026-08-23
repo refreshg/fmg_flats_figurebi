@@ -354,34 +354,6 @@ class VertikaliView(models.Model):
     section = fields.Char(
         help="Section this plan covers, e.g. 1. Empty means the whole floor.")
 
-    # Which storeys "Copy Plan + Zones" should reach. Empty means all of them,
-    # which is the common case for a tower of identical floors.
-    copy_to_floors = fields.Char(
-        string="Copy to Floors",
-        help="Floors to copy this plan onto, e.g. 3-10,12,15. "
-             "Leave empty to copy to every other floor.")
-
-    def _parse_floor_spec(self, spec):
-        """Turn '3-10,12,15' into {3,...,10,12,15}. Empty means every floor."""
-        wanted = set()
-        for chunk in (spec or '').replace(' ', '').split(','):
-            if not chunk:
-                continue
-            if '-' in chunk:
-                lo, _, hi = chunk.partition('-')
-                try:
-                    wanted.update(range(int(lo), int(hi) + 1))
-                except ValueError:
-                    raise ValidationError(_(
-                        "'%s' is not a floor range. Use 3-10.", chunk))
-            else:
-                try:
-                    wanted.add(int(chunk))
-                except ValueError:
-                    raise ValidationError(_(
-                        "'%s' is not a floor number.", chunk))
-        return wanted
-
     project_id = fields.Many2one(
         'vertikali.project', string="Project", index=True, ondelete='cascade')
 
@@ -406,95 +378,30 @@ class VertikaliView(models.Model):
         for view in self:
             view.has_image = bool(view.image)
 
-    def action_copy_image_to_floors(self):
-        """Push this plan *and its zones* onto the project's other floors.
+    def action_open_copy_wizard(self):
+        """Ask which storeys to copy onto, rather than assuming all of them.
 
-        Towers repeat one typical storey, so uploading the same drawing 21
-        times -- and redrawing the same unit outlines on each -- is pure
-        busywork. Zones are copied without their unit links: the outlines are
-        identical from floor to floor, but which flat sits behind each one is
-        not, so those are picked per floor afterwards.
-
-        Sections are respected: a Section 2 plan only lands on other Section 2
-        floors, since those are different drawings.
+        A tower usually repeats one typical floor, but rarely every floor: the
+        ground level, a penthouse or a service storey differ. So the targets
+        are ticked from the project's real floor views.
         """
         self.ensure_one()
-        if not self.image:
-            raise ValidationError(_(
-                "Upload the plan on this view first, then copy it."))
         if self.view_type != 'floor':
             raise ValidationError(_(
                 "Only floor plans can be copied across floors."))
-
-        domain = [
-            ('view_type', '=', 'floor'),
-            ('id', '!=', self.id),
-        ]
-        if self.project_id:
-            domain.append(('project_id', '=', self.project_id.id))
-        if self.building:
-            domain.append(('building', '=', self.building))
-
-        # Prefer floors of the same section, but fall back to the ones with no
-        # section at all: sections are usually filled in after the plans are
-        # generated, so an exact match would find nothing and refuse to copy.
-        same_section = self.env['vertikali.view'].search(
-            domain + [('section', '=', self.section or False)])
-        targets = same_section
-        if not targets and self.section:
-            targets = self.env['vertikali.view'].search(
-                domain + [('section', '=', False)])
-            if targets:
-                # Those floors now belong to this section.
-                targets.write({'section': self.section})
-
-        # Narrow to the floors asked for, if any were named.
-        wanted = self._parse_floor_spec(self.copy_to_floors)
-        if wanted:
-            targets = targets.filtered(lambda v: v.floor in wanted)
-
-        if not targets:
+        if not self.image:
             raise ValidationError(_(
-                "No floor views matched. Generate the floor views from the "
-                "project first, or widen 'Copy to Floors'."))
-
-        targets.write({'image': self.image})
-
-        # Replace each target's zones with a copy of this view's outlines.
-        zones = self.polygon_ids
-        copied = 0
-        if zones:
-            targets.mapped('polygon_ids').unlink()
-            vals = []
-            for target in targets:
-                for zone in zones:
-                    vals.append({
-                        'name': zone.name,
-                        'sequence': zone.sequence,
-                        'view_id': target.id,
-                        'points': zone.points,
-                        'floor': target.floor,
-                        'section': target.section or False,
-                        # No product_tmpl_id(s): the outline repeats, the
-                        # flats behind it do not.
-                    })
-            self.env['vertikali.polygon'].create(vals)
-            copied = len(vals)
-
+                "Upload the plan on this view first, then copy it."))
+        wizard = self.env['vertikali.copy.plan.wizard'].create({
+            'source_view_id': self.id,
+        })
         return {
-            'type': 'ir.actions.client',
-            'tag': 'display_notification',
-            'params': {
-                'title': _("Plan copied"),
-                'message': _(
-                    "Applied to %(count)s floor(s)%(scope)s, with "
-                    "%(zones)s zone(s) redrawn. Assign the units per floor.",
-                    count=len(targets),
-                    scope=_(" of section %s", self.section) if self.section else "",
-                    zones=copied,
-                ),
-                'type': 'success',
-            },
+            'type': 'ir.actions.act_window',
+            'name': _("Copy plan to floors"),
+            'res_model': 'vertikali.copy.plan.wizard',
+            'res_id': wizard.id,
+            'view_mode': 'form',
+            'target': 'new',
         }
 
     @api.depends('polygon_ids')

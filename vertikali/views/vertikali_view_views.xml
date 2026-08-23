@@ -166,12 +166,11 @@
         <field name="arch" type="xml">
             <form string="Visual View">
                 <header>
-                    <button name="action_copy_image_to_floors" type="object"
-                            string="Copy Plan + Zones to All Floors"
+                    <button name="action_open_copy_wizard" type="object"
+                            string="Copy Plan to Floors…"
                             class="btn-primary"
                             invisible="view_type != 'floor' or not has_image"
-                            confirm="This replaces the plan and the zones on every other floor of this project and section. Unit links on those floors will be cleared. Continue?"
-                            help="Apply this drawing and its outlines to every other floor of the same project and section."/>
+                            help="Choose which storeys get this drawing and its outlines."/>
                 </header>
                 <sheet>
                     <field name="image" widget="image" class="oe_avatar"/>
@@ -189,9 +188,6 @@
                                    invisible="view_type != 'floor'"/>
                             <field name="section"
                                    placeholder="empty = whole floor"
-                                   invisible="view_type != 'floor'"/>
-                            <field name="copy_to_floors"
-                                   placeholder="e.g. 3-10,12 — empty = all floors"
                                    invisible="view_type != 'floor'"/>
                         </group>
                         <group>
