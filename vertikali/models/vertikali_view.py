@@ -378,6 +378,80 @@ class VertikaliView(models.Model):
         for view in self:
             view.has_image = bool(view.image)
 
+    def action_copy_image_to_floors(self):
+        """Push this plan *and its zones* onto the project's other floors.
+
+        Towers repeat one typical storey, so uploading the same drawing 21
+        times -- and redrawing the same unit outlines on each -- is pure
+        busywork. Zones are copied without their unit links: the outlines are
+        identical from floor to floor, but which flat sits behind each one is
+        not, so those are picked per floor afterwards.
+
+        Sections are respected: a Section 2 plan only lands on other Section 2
+        floors, since those are different drawings.
+        """
+        self.ensure_one()
+        if not self.image:
+            raise ValidationError(_(
+                "Upload the plan on this view first, then copy it."))
+        if self.view_type != 'floor':
+            raise ValidationError(_(
+                "Only floor plans can be copied across floors."))
+
+        domain = [
+            ('view_type', '=', 'floor'),
+            ('id', '!=', self.id),
+            ('section', '=', self.section or False),
+        ]
+        if self.project_id:
+            domain.append(('project_id', '=', self.project_id.id))
+        if self.building:
+            domain.append(('building', '=', self.building))
+
+        targets = self.env['vertikali.view'].search(domain)
+        if not targets:
+            raise ValidationError(_(
+                "No other floor views share this project and section."))
+
+        targets.write({'image': self.image})
+
+        # Replace each target's zones with a copy of this view's outlines.
+        zones = self.polygon_ids
+        copied = 0
+        if zones:
+            targets.mapped('polygon_ids').unlink()
+            vals = []
+            for target in targets:
+                for zone in zones:
+                    vals.append({
+                        'name': zone.name,
+                        'sequence': zone.sequence,
+                        'view_id': target.id,
+                        'points': zone.points,
+                        'floor': target.floor,
+                        'section': target.section or False,
+                        # No product_tmpl_id(s): the outline repeats, the
+                        # flats behind it do not.
+                    })
+            self.env['vertikali.polygon'].create(vals)
+            copied = len(vals)
+
+        return {
+            'type': 'ir.actions.client',
+            'tag': 'display_notification',
+            'params': {
+                'title': _("Plan copied"),
+                'message': _(
+                    "Applied to %(count)s floor(s)%(scope)s, with "
+                    "%(zones)s zone(s) redrawn. Assign the units per floor.",
+                    count=len(targets),
+                    scope=_(" of section %s", self.section) if self.section else "",
+                    zones=copied,
+                ),
+                'type': 'success',
+            },
+        }
+
     @api.depends('polygon_ids')
     def _compute_polygon_count(self):
         for view in self:

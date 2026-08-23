@@ -47,6 +47,9 @@ export class VertikaliSelector extends Component {
             slide: 0,            // which one is showing
             editingBlock: null,  // block whose masterplan shape is being drawn
             tip: null,           // hovered band, for the floor tooltip
+            cellTip: null,       // hovered grid cell, for the unit tooltip
+            sortBy: "default_code",
+            sortAsc: true,
             zoneUnits: [],       // units behind the selected facade band
             floorPick: [],       // every unit on that storey, for ticking
             zonePlan: null,      // that floor's plan, shown beside them
@@ -448,6 +451,52 @@ export class VertikaliSelector extends Component {
         }
     }
 
+    /** Units passing the filters, for the list-shaped views. */
+    get filteredUnits() {
+        return this.state.units.filter((u) => this.matchesFilters(u));
+    }
+
+    /** Filtered units in the table's current sort order. */
+    get sortedUnits() {
+        const key = this.state.sortBy;
+        const dir = this.state.sortAsc ? 1 : -1;
+        return [...this.filteredUnits].sort((a, b) => {
+            const x = a[key], y = b[key];
+            if (typeof x === "number" && typeof y === "number") {
+                return (x - y) * dir;
+            }
+            return String(x ?? "").localeCompare(
+                String(y ?? ""), undefined, { numeric: true }) * dir;
+        });
+    }
+
+    toggleSort(key) {
+        if (this.state.sortBy === key) {
+            this.state.sortAsc = !this.state.sortAsc;
+        } else {
+            this.state.sortBy = key;
+            this.state.sortAsc = true;
+        }
+    }
+
+    /** Grid+ groups the same units by floor, high to low. */
+    get plusRows() {
+        const byFloor = new Map();
+        for (const u of this.filteredUnits) {
+            if (!byFloor.has(u.vk_floor)) {
+                byFloor.set(u.vk_floor, []);
+            }
+            byFloor.get(u.vk_floor).push(u);
+        }
+        return [...byFloor.entries()]
+            .sort((a, b) => b[0] - a[0])
+            .map(([floor, units]) => ({
+                floor,
+                units: units.sort((a, b) => String(a.default_code)
+                    .localeCompare(String(b.default_code), undefined, { numeric: true })),
+            }));
+    }
+
     /** Distinct layouts present, for the filter chips. */
     get layouts() {
         return [...new Set(this.state.units.map((u) => u.vk_rooms).filter(Boolean))].sort();
@@ -543,6 +592,36 @@ export class VertikaliSelector extends Component {
             }));
     }
 
+    /**
+     * Hover card over a grid cell: what the unit is and what it costs, the
+     * way the reference shows it. Anchored to the cell in page coordinates,
+     * since the grid scrolls.
+     */
+    showCellTip(unit, ev) {
+        const r = ev.currentTarget.getBoundingClientRect();
+        this.state.cellTip = {
+            unit,
+            x: r.left + r.width / 2,
+            y: r.top,
+        };
+    }
+
+    hideCellTip() {
+        this.state.cellTip = null;
+    }
+
+    /** Open the plan for a grid row, so a floor is one click from the table. */
+    async openFloorFromGrid(floor) {
+        const plan = this.floorViews.find((v) => v.floor === floor);
+        if (!plan) {
+            this.notification.add(
+                `No floor plan for floor ${floor} yet.`, { type: "warning" });
+            return;
+        }
+        this.state.mode = "floor";
+        await this.loadView(plan.id);
+    }
+
     /** Short label inside a cell: room count reads faster than a code. */
     cellLabel(unit) {
         const r = unit.vk_rooms || "";
@@ -571,10 +650,15 @@ export class VertikaliSelector extends Component {
         try {
             // The product image plus any extra images: a unit usually has a
             // layout, a furnished view and a couple of renders.
+            // Read the whole Unit tab, so the card shows the record rather
+            // than whatever the list view happened to carry.
             const [rec] = await this.orm.read(
                 "product.template", [unit.id],
                 ["image_1920", "vk_orientation", "vk_rooms_detail",
-                 "vk_condition", "vk_handover", "vk_section"]);
+                 "vk_condition", "vk_handover", "vk_section", "vk_building",
+                 "vk_rooms", "vk_floor", "vk_state", "vk_area_total",
+                 "vk_area_living", "vk_area_balcony", "vk_price_sqm",
+                 "list_price"]);
             Object.assign(this.state.card, rec);
 
             const extra = await this.orm.searchRead(
@@ -605,6 +689,18 @@ export class VertikaliSelector extends Component {
         if (n) {
             this.state.slide = (i + n) % n;
         }
+    }
+
+    /** Condition reads as its label, not the stored key ("white"). */
+    get conditionLabel() {
+        const map = {
+            frame: "Frame",
+            white: "White frame",
+            green: "Green frame",
+            renovated: "Renovated",
+        };
+        const v = this.state.card?.vk_condition;
+        return map[v] || v || null;
     }
 
     /** Compass label for the unit's aspect. */
@@ -738,7 +834,10 @@ export class VertikaliSelector extends Component {
     async loadZoneUnits(zone) {
         this.state.zoneUnits = [];
         this.state.zonePlan = null;
-        if (!zone || !zone.floor) {
+        // On a floor plan the zone stands for a flat on the open storey, so
+        // the floor comes from the view rather than the zone itself.
+        const floor = zone?.floor || this.state.view?.floor;
+        if (!zone || !floor) {
             this.state.floorPick = [];
             return;
         }
@@ -746,8 +845,8 @@ export class VertikaliSelector extends Component {
         // filter would hide -- picking by hand is the fallback when the units
         // carry no section at all. Only refetched when the floor changes, so
         // the list does not blink on every tick.
-        if (this.state.floorPick[0]?.vk_floor !== zone.floor) {
-            this.unitsOnFloor(zone.floor)
+        if (this.state.floorPick[0]?.vk_floor !== floor) {
+            this.unitsOnFloor(floor)
                 .then((rows) => { this.state.floorPick = rows; })
                 .catch(() => { this.state.floorPick = []; });
         }
@@ -764,7 +863,7 @@ export class VertikaliSelector extends Component {
                     "product.template", ids, fields);
             } else {
                 const domain = [
-                    ["vk_is_unit", "=", true], ["vk_floor", "=", zone.floor],
+                    ["vk_is_unit", "=", true], ["vk_floor", "=", floor],
                 ];
                 if (zone.section) {
                     domain.push(["vk_section", "=", zone.section]);
@@ -782,9 +881,9 @@ export class VertikaliSelector extends Component {
             // section happened to come first.
             const want = zone.section || false;
             const plan = this.floorViews.find(
-                (v) => v.floor === zone.floor && (v.section || false) === want)
+                (v) => v.floor === floor && (v.section || false) === want)
                 || this.floorViews.find(
-                    (v) => v.floor === zone.floor && !v.section);
+                    (v) => v.floor === floor && !v.section);
             if (plan) {
                 const [rec] = await this.orm.read(
                     "vertikali.view", [plan.id], ["name", "image"]);

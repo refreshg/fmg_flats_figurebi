@@ -165,6 +165,14 @@
         <field name="model">vertikali.view</field>
         <field name="arch" type="xml">
             <form string="Visual View">
+                <header>
+                    <button name="action_copy_image_to_floors" type="object"
+                            string="Copy Plan + Zones to All Floors"
+                            class="btn-primary"
+                            invisible="view_type != 'floor' or not has_image"
+                            confirm="This replaces the plan and the zones on every other floor of this project and section. Unit links on those floors will be cleared. Continue?"
+                            help="Apply this drawing and its outlines to every other floor of the same project and section."/>
+                </header>
                 <sheet>
                     <field name="image" widget="image" class="oe_avatar"/>
                     <div class="oe_title">

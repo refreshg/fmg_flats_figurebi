@@ -92,16 +92,31 @@
                         </t>
                     </div>
 
+                    <!-- Everything the Unit tab holds, so the card is the
+                         whole record rather than a summary of it. -->
                     <div class="o_vk_cfacts">
                         <div><span>Project</span><b t-esc="state.project ? state.project.name : '—'"/></div>
-                        <div t-if="state.card.vk_condition">
-                            <span>Condition</span><b t-esc="state.card.vk_condition"/>
+                        <div t-if="state.card.vk_building">
+                            <span>Building</span><b t-esc="state.card.vk_building"/>
+                        </div>
+                        <div t-if="state.card.vk_rooms">
+                            <span>Layout</span><b t-esc="state.card.vk_rooms"/>
+                        </div>
+                        <div><span>Status</span>
+                            <b t-attf-class="o_vk_badge o_vk_b_{{state.card.vk_state}}"
+                               t-esc="state.card.vk_state"/>
+                        </div>
+                        <div t-if="state.card.vk_area_living">
+                            <span>Living area</span><b><t t-esc="state.card.vk_area_living"/> m²</b>
                         </div>
                         <div t-if="state.card.vk_area_balcony">
                             <span>Balcony</span><b><t t-esc="state.card.vk_area_balcony"/> m²</b>
                         </div>
+                        <div t-if="state.card.vk_condition">
+                            <span>Condition</span><b t-esc="conditionLabel"/>
+                        </div>
                         <div t-if="orientationLabel">
-                            <span>Aspect</span><b t-esc="orientationLabel"/>
+                            <span>Orientation</span><b t-esc="orientationLabel"/>
                         </div>
                     </div>
 
@@ -419,60 +434,101 @@
             <div t-elif="state.loading" class="text-muted p-4">Loading…</div>
 
             <!-- Grid: no image, the units themselves are the interface. -->
+            <!-- Grid+ : the same units as cards, grouped by floor. -->
+            <div t-elif="state.mode === 'gridplus'" class="o_vk_body d-flex flex-column flex-grow-1 overflow-hidden">
+                <t t-call="vertikali.Filters"/>
+                <div class="o_vk_legend d-flex gap-3 px-3 py-1">
+                    <span><i class="o_vk_sw o_vk_sw_free"></i>Available</span>
+                    <span><i class="o_vk_sw o_vk_sw_res"></i>Reserved</span>
+                    <span><i class="o_vk_sw o_vk_sw_sold"></i>Sold</span>
+                </div>
+                <div class="flex-grow-1 overflow-auto p-3">
+                    <div t-if="!filteredUnits.length" class="text-muted">No units match.</div>
+                    <t t-foreach="plusRows" t-as="row" t-key="row.floor">
+                        <div class="o_vk_prow">
+                            <div class="o_vk_pfloor"><t t-esc="row.floor"/></div>
+                            <div class="o_vk_pcards">
+                                <t t-foreach="row.units" t-as="u" t-key="u.id">
+                                    <button t-attf-class="o_vk_pcard o_vk_p_{{u.vk_state}}"
+                                            t-on-click="() => this.openCard(u)">
+                                        <span class="o_vk_pc_top">
+                                            <span class="o_vk_pc_r"><t t-esc="cellLabel(u)"/></span>
+                                            <span class="o_vk_pc_c">№<t t-esc="u.default_code"/></span>
+                                        </span>
+                                        <span class="o_vk_pc_p">
+                                            <t t-if="u.vk_state === 'sold'">Sold</t>
+                                            <t t-elif="u.vk_state === 'reserved'">Booking</t>
+                                            <t t-else=""><t t-esc="fmtMoney(u.list_price)"/></t>
+                                        </span>
+                                        <span class="o_vk_pc_a">
+                                            <t t-esc="u.vk_area_total"/> m²
+                                            <t t-if="u.vk_state === 'available'">
+                                                · <t t-esc="fmtMoney(u.vk_price_sqm)"/> /m²
+                                            </t>
+                                        </span>
+                                    </button>
+                                </t>
+                            </div>
+                        </div>
+                    </t>
+                </div>
+            </div>
+
+            <!-- Properties : the sortable table. -->
+            <div t-elif="state.mode === 'properties'" class="o_vk_body d-flex flex-column flex-grow-1 overflow-hidden">
+                <t t-call="vertikali.Filters"/>
+                <div class="flex-grow-1 overflow-auto">
+                    <table class="o_vk_ptable">
+                        <thead>
+                            <tr>
+                                <t t-foreach="[
+                                        ['vk_state','Status'],
+                                        ['default_code','Unit'],
+                                        ['vk_rooms','Layout'],
+                                        ['vk_building','Building'],
+                                        ['vk_section','Section'],
+                                        ['vk_floor','Floor'],
+                                        ['vk_area_total','Area, m²'],
+                                        ['vk_price_sqm','Price / m²'],
+                                        ['list_price','Price']]" t-as="col" t-key="col[0]">
+                                    <th t-on-click="() => this.toggleSort(col[0])">
+                                        <t t-esc="col[1]"/>
+                                        <span class="o_vk_sortmark" t-if="state.sortBy === col[0]">
+                                            <t t-esc="state.sortAsc ? '▲' : '▼'"/>
+                                        </span>
+                                    </th>
+                                </t>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <t t-foreach="sortedUnits" t-as="u" t-key="u.id">
+                                <tr t-on-click="() => this.openCard(u)">
+                                    <td>
+                                        <span t-attf-class="o_vk_tdot o_vk_td_{{u.vk_state === 'available' ? 'free' : (u.vk_state === 'reserved' ? 'res' : 'sold')}}"></span>
+                                        <t t-esc="u.vk_state"/>
+                                    </td>
+                                    <td><t t-esc="u.default_code"/></td>
+                                    <td><t t-esc="u.vk_rooms"/></td>
+                                    <td><t t-esc="u.vk_building"/></td>
+                                    <td><t t-esc="u.vk_section or '—'"/></td>
+                                    <td class="o_vk_num_c"><t t-esc="u.vk_floor"/></td>
+                                    <td class="o_vk_num_c"><t t-esc="u.vk_area_total"/></td>
+                                    <td class="o_vk_num_c"><t t-esc="fmtMoney(u.vk_price_sqm)"/></td>
+                                    <td class="o_vk_num_c"><b><t t-esc="fmtMoney(u.list_price)"/></b></td>
+                                </tr>
+                            </t>
+                        </tbody>
+                    </table>
+                    <div t-if="!sortedUnits.length" class="text-muted p-3">No units match.</div>
+                </div>
+            </div>
+
             <div t-elif="state.mode === 'grid'" class="o_vk_body d-flex flex-grow-1 overflow-hidden">
 
                 <div class="d-flex flex-column flex-grow-1 overflow-hidden">
 
                     <!-- filters -->
-                    <div class="o_vk_filters d-flex align-items-center gap-3 px-3 py-2 flex-wrap">
-                        <div class="d-flex align-items-center gap-1">
-                            <span class="o_vk_flabel">Layout</span>
-                            <t t-foreach="layouts" t-as="r" t-key="r">
-                                <button class="o_vk_chip"
-                                        t-att-class="{ 'o_vk_chip_on': state.filters.rooms.includes(r) }"
-                                        t-on-click="() => this.toggleFilter('rooms', r)">
-                                    <t t-esc="r"/>
-                                </button>
-                            </t>
-                        </div>
-
-                        <div class="d-flex align-items-center gap-1">
-                            <span class="o_vk_flabel">Status</span>
-                            <button class="o_vk_chip o_vk_chip_free"
-                                    t-att-class="{ 'o_vk_chip_on': state.filters.status.includes('available') }"
-                                    t-on-click="() => this.toggleFilter('status', 'available')">Free</button>
-                            <button class="o_vk_chip o_vk_chip_res"
-                                    t-att-class="{ 'o_vk_chip_on': state.filters.status.includes('reserved') }"
-                                    t-on-click="() => this.toggleFilter('status', 'reserved')">Reserved</button>
-                            <button class="o_vk_chip o_vk_chip_sold"
-                                    t-att-class="{ 'o_vk_chip_on': state.filters.status.includes('sold') }"
-                                    t-on-click="() => this.toggleFilter('status', 'sold')">Sold</button>
-                        </div>
-
-                        <div class="d-flex align-items-center gap-1">
-                            <span class="o_vk_flabel">m²</span>
-                            <input type="number" class="o_vk_num" placeholder="from"
-                                   t-att-value="state.filters.areaMin"
-                                   t-on-input="(ev) => (state.filters.areaMin = parseFloat(ev.target.value) || null)"/>
-                            <input type="number" class="o_vk_num" placeholder="to"
-                                   t-att-value="state.filters.areaMax"
-                                   t-on-input="(ev) => (state.filters.areaMax = parseFloat(ev.target.value) || null)"/>
-                        </div>
-
-                        <div class="d-flex align-items-center gap-1">
-                            <span class="o_vk_flabel">Max price</span>
-                            <input type="number" class="o_vk_num o_vk_num_w" placeholder="any"
-                                   t-att-value="state.filters.priceMax"
-                                   t-on-input="(ev) => (state.filters.priceMax = parseFloat(ev.target.value) || null)"/>
-                        </div>
-
-                        <button t-if="filterActive" class="btn btn-sm btn-link p-0"
-                                t-on-click="clearFilters">clear</button>
-
-                        <span class="o_vk_meta ms-auto">
-                            <t t-esc="matchCount"/> / <t t-esc="state.units.length"/> units
-                        </span>
-                    </div>
+                    <t t-call="vertikali.Filters"/>
 
                     <!-- legend -->
                     <div class="o_vk_legend d-flex gap-3 px-3 py-1">
@@ -509,6 +565,8 @@
                                                 <div class="o_vk_grow">
                                                     <t t-foreach="c.units" t-as="u" t-key="u.id">
                                                         <button t-attf-class="o_vk_cell o_vk_{{u.vk_state}}"
+                                                                t-on-mouseenter="(ev) => this.showCellTip(u, ev)"
+                                                                t-on-mouseleave="hideCellTip"
                                                                 t-att-class="{
                                                                     'o_vk_dim': u.dimmed,
                                                                     'o_vk_cell_on': state.unit and state.unit.id === u.id }"
@@ -865,9 +923,19 @@
                                    placeholder="empty = whole floor"
                                    t-on-change="(ev) => this.setZoneSection(state.selected, ev.target.value)"/>
 
-                            <div class="d-flex align-items-center gap-2 mt-2">
+                        </div>
+
+                        <!-- Picking the flats behind an outline. Needed on the
+                             floor plan above all: copied zones arrive with no
+                             unit links, since the outline repeats from floor
+                             to floor but the flats do not. -->
+                        <div t-if="state.editing and isZoneMode" class="mt-3">
+                            <div class="d-flex align-items-center gap-2">
                                 <span class="o_vk_row_m flex-grow-1">
                                     <t t-esc="(state.selected.product_tmpl_ids or []).length"/> units attached
+                                    <t t-if="state.mode === 'floor' and state.view">
+                                        · floor <t t-esc="state.view.floor"/>
+                                    </t>
                                 </span>
                                 <button class="o_vk_link"
                                         t-on-click="() => this.fillZoneUnits(state.selected)">
@@ -875,10 +943,8 @@
                                 </button>
                             </div>
 
-                            <!-- Every unit on the storey, so a band covering
-                                 part of it can be ticked by hand. Listing only
-                                 the section's units would show nothing while
-                                 the units carry no section yet. -->
+                            <!-- Only this storey's units are listed, so a
+                                 21-floor tower never offers the wrong flat. -->
                             <div class="o_vk_upick" t-if="state.floorPick.length">
                                 <t t-foreach="state.floorPick" t-as="u" t-key="u.id">
                                     <label class="o_vk_upick_r">
@@ -886,12 +952,15 @@
                                                t-att-checked="zoneHasUnit(state.selected, u)"
                                                t-on-change="() => this.toggleZoneUnit(state.selected, u)"/>
                                         <span><t t-esc="u.default_code"/></span>
-                                        <span class="o_vk_row_m" t-if="u.vk_section">
-                                            sec <t t-esc="u.vk_section"/>
+                                        <span class="o_vk_row_m">
+                                            <t t-esc="u.vk_rooms or ''"/>
+                                            <t t-if="u.vk_area_total"> · <t t-esc="u.vk_area_total"/> m²</t>
                                         </span>
-                                        <span class="o_vk_row_m" t-else="">no section</span>
                                     </label>
                                 </t>
+                            </div>
+                            <div t-else="" class="o_vk_row_m mt-2">
+                                No units found for this floor.
                             </div>
                         </div>
 
@@ -914,6 +983,58 @@
                     </t>
                 </div>
             </div>
+        </div>
+    </t>
+
+    <t t-name="vertikali.Filters">
+        <div class="o_vk_filters d-flex align-items-center gap-3 px-3 py-2 flex-wrap">
+            <div class="d-flex align-items-center gap-1">
+                <span class="o_vk_flabel">Layout</span>
+                <t t-foreach="layouts" t-as="r" t-key="r">
+                    <button class="o_vk_chip"
+                            t-att-class="{ 'o_vk_chip_on': state.filters.rooms.includes(r) }"
+                            t-on-click="() => this.toggleFilter('rooms', r)">
+                        <t t-esc="r"/>
+                    </button>
+                </t>
+            </div>
+
+            <div class="d-flex align-items-center gap-1">
+                <span class="o_vk_flabel">Status</span>
+                <button class="o_vk_chip o_vk_chip_free"
+                        t-att-class="{ 'o_vk_chip_on': state.filters.status.includes('available') }"
+                        t-on-click="() => this.toggleFilter('status', 'available')">Free</button>
+                <button class="o_vk_chip o_vk_chip_res"
+                        t-att-class="{ 'o_vk_chip_on': state.filters.status.includes('reserved') }"
+                        t-on-click="() => this.toggleFilter('status', 'reserved')">Reserved</button>
+                <button class="o_vk_chip o_vk_chip_sold"
+                        t-att-class="{ 'o_vk_chip_on': state.filters.status.includes('sold') }"
+                        t-on-click="() => this.toggleFilter('status', 'sold')">Sold</button>
+            </div>
+
+            <div class="d-flex align-items-center gap-1">
+                <span class="o_vk_flabel">m²</span>
+                <input type="number" class="o_vk_num" placeholder="from"
+                       t-att-value="state.filters.areaMin"
+                       t-on-input="(ev) => (state.filters.areaMin = parseFloat(ev.target.value) || null)"/>
+                <input type="number" class="o_vk_num" placeholder="to"
+                       t-att-value="state.filters.areaMax"
+                       t-on-input="(ev) => (state.filters.areaMax = parseFloat(ev.target.value) || null)"/>
+            </div>
+
+            <div class="d-flex align-items-center gap-1">
+                <span class="o_vk_flabel">Max price</span>
+                <input type="number" class="o_vk_num o_vk_num_w" placeholder="any"
+                       t-att-value="state.filters.priceMax"
+                       t-on-input="(ev) => (state.filters.priceMax = parseFloat(ev.target.value) || null)"/>
+            </div>
+
+            <button t-if="filterActive" class="btn btn-sm btn-link p-0"
+                    t-on-click="clearFilters">clear</button>
+
+            <span class="o_vk_meta ms-auto">
+                <t t-esc="matchCount"/> / <t t-esc="state.units.length"/> units
+            </span>
         </div>
     </t>
 

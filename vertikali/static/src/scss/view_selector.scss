@@ -1160,4 +1160,154 @@
         .o_vk_body { flex-direction: column; }
         .o_vk_side { flex: 1 1 auto; border-left: 0; border-top: 2px solid var(--vk-rule); }
     }
+
+    // ---- Grid+ : the same units as cards ----
+    .o_vk_prow {
+        display: flex;
+        align-items: flex-start;
+        gap: 12px;
+        margin-bottom: 10px;
+    }
+
+    .o_vk_pfloor {
+        flex: 0 0 34px;
+        text-align: right;
+        font-size: 13px;
+        font-weight: 700;
+        opacity: .45;
+        padding-top: 14px;
+        font-variant-numeric: tabular-nums;
+    }
+
+    .o_vk_pcards {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        flex: 1 1 auto;
+    }
+
+    .o_vk_pcard {
+        width: 150px;
+        border: 0;
+        border-radius: 5px;
+        padding: 9px 11px;
+        text-align: left;
+        font: inherit;
+        cursor: pointer;
+        display: flex;
+        flex-direction: column;
+        gap: 3px;
+
+        &:hover { filter: brightness(.95); }
+    }
+
+    .o_vk_p_available { background: rgba(26, 161, 121, .82); color: #fff; }
+    .o_vk_p_reserved  { background: rgba(232, 163, 61, .9); color: #201e1d; }
+    .o_vk_p_sold      { background: rgba(32, 30, 29, .13); color: rgba(32, 30, 29, .62); }
+
+    .o_vk_pc_top {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        font-size: 10.5px;
+        opacity: .85;
+    }
+
+    .o_vk_pc_r { font-weight: 800; }
+    .o_vk_pc_p { font-weight: 800; font-size: 14px; font-variant-numeric: tabular-nums; }
+    .o_vk_pc_a { font-size: 10.5px; opacity: .85; font-variant-numeric: tabular-nums; }
+
+    // ---- Properties : the sortable table ----
+    .o_vk_ptable {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 13px;
+
+        th {
+            position: sticky;
+            top: 0;
+            background: #fff;
+            text-align: left;
+            font-weight: 600;
+            font-size: 11.5px;
+            text-transform: uppercase;
+            letter-spacing: .04em;
+            opacity: .7;
+            padding: 10px 12px;
+            border-bottom: 1px solid rgba(32, 30, 29, .2);
+            cursor: pointer;
+            white-space: nowrap;
+
+            &:hover { opacity: 1; color: var(--vk-accent); }
+        }
+
+        td {
+            padding: 9px 12px;
+            border-bottom: 1px solid rgba(32, 30, 29, .08);
+        }
+
+        tbody tr {
+            cursor: pointer;
+            &:hover { background: rgba(236, 48, 19, .06); }
+        }
+    }
+
+    .o_vk_num_c { text-align: right; font-variant-numeric: tabular-nums; }
+    .o_vk_sortmark { font-size: 8px; margin-left: 4px; }
+
+    // ---- grid cell tooltip ----
+    // Fixed, because the grid scrolls: anchored in page coordinates.
+    .o_vk_ctip {
+        position: fixed;
+        transform: translate(-50%, calc(-100% - 10px));
+        background: #fff;
+        border-radius: 5px;
+        box-shadow: 0 4px 18px rgba(0, 0, 0, .2);
+        padding: 10px 14px;
+        min-width: 170px;
+        z-index: 10;
+        pointer-events: none;
+        font-size: 12.5px;
+    }
+
+    .o_vk_ctip_h {
+        display: flex;
+        align-items: center;
+        gap: 7px;
+        font-size: 11px;
+        opacity: .7;
+        margin-bottom: 3px;
+    }
+
+    .o_vk_ctip_r {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 17px;
+        height: 17px;
+        border-radius: 3px;
+        font-weight: 700;
+        font-size: 10.5px;
+        color: #fff;
+    }
+
+    .o_vk_ctip_p { font-size: 16px; font-weight: 800; font-variant-numeric: tabular-nums; }
+    .o_vk_ctip_a { font-size: 11.5px; opacity: .7; font-variant-numeric: tabular-nums; }
+
+    // ---- floor-plan link on a grid row ----
+    .o_vk_planlink {
+        background: transparent;
+        border: 0;
+        font: inherit;
+        font-size: 11.5px;
+        color: #2a6ae0;
+        cursor: pointer;
+        white-space: nowrap;
+        opacity: 0;
+
+        &:hover { text-decoration: underline; }
+    }
+
+    .o_vk_gtable tbody tr:hover .o_vk_planlink { opacity: 1; }
+
 }
