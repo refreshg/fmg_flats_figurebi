@@ -23,6 +23,8 @@ opportunity-დან ჯავშნამდე.
 - **Inventory → Units** — ბინები, ფილტრებით და ₾/მ²-ით
 - **Configuration → Projects** — რომელი საფეხურები აქვს პროექტს
 - **Configuration → Visual Views** — სურათები და ზონების რედაქტორი
+- **Configuration → Layout Types** — განმეორებადი ბინის ტიპები (გეგმა ერთხელ)
+- **Configuration → Unit Attributes** — Condition/View მნიშვნელობები
 
 ## მოთხოვნები
 
@@ -71,13 +73,15 @@ sudo systemctl start odoo
 | opportunity → შეთავაზებები | `crm.lead.order_ids` — სტანდარტული |
 | ჯავშანი → გაყიდვა | `sale.order.state` |
 
-**Custom:** ბინის ველები (`vk_*`), ₾/მ² (computed), პოლიგონები, შახმატკა.
+**Custom:** ბინის ველები (`vk_*`), ₾/მ² (computed), პოლიგონები, შახმატკა,
+ბინის drawer-ბარათი გალერეით/lightbox-ით, Layout Types, Unit Attributes.
 
 ### რატომ რეალური ველები და არა Properties
 
 `product.template.product_properties` არსებობს, მაგრამ Properties-ზე computed ველი
 არ დაიშვება და group-by/sort შეზღუდულია. ₾/მ² სორტირებადი უნდა იყოს — ამიტომ
-კრიტიკული ველები რეალურია. მეორეხარისხოვანისთვის (ხედი, რემონტი) Properties რჩება.
+კრიტიკული ველები რეალურია. კონფიგურირებადი სიები (ხედი, რემონტი) —
+`vertikali.option` მოდელზეა: გუნდი მნიშვნელობებს თვითონ ამატებს.
 
 ## ვერსიონირება
 
