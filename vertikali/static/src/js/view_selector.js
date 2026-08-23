@@ -50,6 +50,7 @@ export class VertikaliSelector extends Component {
             cellTip: null,       // hovered grid cell, for the unit tooltip
             sortBy: "default_code",
             sortAsc: true,
+            unitTotal: 0,        // count for the inventory tab badges
             zoneUnits: [],       // units behind the selected facade band
             floorPick: [],       // every unit on that storey, for ticking
             zonePlan: null,      // that floor's plan, shown beside them
@@ -147,6 +148,29 @@ export class VertikaliSelector extends Component {
     /** Inventory-backed steps share one dataset. */
     get isInventoryMode() {
         return ["grid", "gridplus", "properties"].includes(this.state.mode);
+    }
+
+    /** Units in scope, for the badge on the inventory tabs. */
+    get inventoryCount() {
+        return this.state.units.length || this.state.unitTotal || 0;
+    }
+
+    /**
+     * Count the units of the current block without loading them, so the tabs
+     * can show a figure before one of them is opened.
+     */
+    async refreshUnitTotal() {
+        const domain = [["vk_is_unit", "=", true]];
+        const building = this.state.block?.code || this.state.project?.building;
+        if (building) {
+            domain.push(["vk_building", "=", building]);
+        }
+        try {
+            this.state.unitTotal = await this.orm.searchCount(
+                "product.template", domain);
+        } catch {
+            this.state.unitTotal = 0;
+        }
     }
 
     /** Views for the current project, mode and (if chosen) block. */
@@ -372,6 +396,7 @@ export class VertikaliSelector extends Component {
         this.state.project = project;
         this.state.block = null;
         this.state.unit = null;
+        this.refreshUnitTotal();
         // The masterplan is the project's own screen: it shows the site and
         // the blocks on it. Auto-entering a block skipped that entirely, even
         // when the project had one to show.
@@ -392,6 +417,7 @@ export class VertikaliSelector extends Component {
 
     async selectBlock(block) {
         this.state.block = block;
+        this.refreshUnitTotal();
         const steps = this.steps.filter((s) => s.key !== "masterplan");
         await this.setMode(steps.length ? steps[0].key : null);
     }

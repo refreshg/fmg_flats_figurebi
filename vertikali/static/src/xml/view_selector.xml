@@ -173,6 +173,11 @@
                                 t-on-click="() => this.setMode(s.key)">
                             <span class="o_vk_tab_i"><t t-esc="s.icon"/></span>
                             <span><t t-esc="s.label"/></span>
+                            <!-- Inventory tabs carry the unit count, as the
+                                 reference does. -->
+                            <span class="o_vk_tabn" t-if="s.count and inventoryCount">
+                                <t t-esc="inventoryCount"/>
+                            </span>
                         </button>
                     </t>
                 </div>
@@ -578,6 +583,15 @@
                                                 </div>
                                             </td>
                                         </t>
+                                        <!-- Straight to that storey's plan,
+                                             so the table is one click from the
+                                             drawing. -->
+                                        <td class="o_vk_glink">
+                                            <button class="o_vk_planlink"
+                                                    t-on-click="() => this.openFloorFromGrid(row.floor)">
+                                                Plan <t t-esc="row.floor"/> floor
+                                            </button>
+                                        </td>
                                     </tr>
                                 </t>
                             </tbody>
@@ -983,6 +997,30 @@
                     </t>
                 </div>
             </div>
+
+        <!-- Hover card over a grid cell. Lives at the root and is
+             position:fixed, so it is never clipped by the scrolling table. -->
+        <div t-if="state.cellTip" class="o_vk_ctip"
+             t-attf-style="left:{{state.cellTip.x}}px;top:{{state.cellTip.y}}px">
+            <div class="o_vk_ctip_h">
+                <span t-attf-class="o_vk_ctip_r o_vk_{{state.cellTip.unit.vk_state}}">
+                    <t t-esc="cellLabel(state.cellTip.unit)"/>
+                </span>
+                <span>Apartment</span>
+                <span class="ms-auto">№<t t-esc="state.cellTip.unit.default_code"/></span>
+            </div>
+            <div class="o_vk_ctip_p">
+                <t t-if="state.cellTip.unit.vk_state === 'sold'">Sold</t>
+                <t t-elif="state.cellTip.unit.vk_state === 'reserved'">Booking</t>
+                <t t-else=""><t t-esc="fmtMoney(state.cellTip.unit.list_price)"/></t>
+            </div>
+            <div class="o_vk_ctip_a">
+                <t t-esc="state.cellTip.unit.vk_area_total"/> m²
+                <t t-if="state.cellTip.unit.vk_state === 'available'">
+                    — <t t-esc="fmtMoney(state.cellTip.unit.vk_price_sqm)"/> /m²
+                </t>
+            </div>
+        </div>
         </div>
     </t>
 

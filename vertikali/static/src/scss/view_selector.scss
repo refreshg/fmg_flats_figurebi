@@ -624,6 +624,16 @@
 
     .o_vk_tab_i { font-size: 14px; line-height: 1; }
 
+    .o_vk_tabn {
+        font-size: 10.5px;
+        font-weight: 600;
+        padding: 1px 7px;
+        border-radius: 999px;
+        background: rgba(32, 30, 29, .1);
+    }
+
+    .o_vk_tab_on .o_vk_tabn { background: rgba(255, 255, 255, .28); }
+
     // ---- grid (shakhmatka) ----
     .o_vk_filters {
         border-bottom: 1px solid var(--vk-rule);
@@ -1309,5 +1319,14 @@
     }
 
     .o_vk_gtable tbody tr:hover .o_vk_planlink { opacity: 1; }
+
+    .o_vk_glink { padding-left: 14px; white-space: nowrap; }
+
+    // The tooltip's little status square reuses the cell colours.
+    .o_vk_ctip_r {
+        &.o_vk_available { background: var(--vk-free); }
+        &.o_vk_reserved { background: var(--vk-res); color: #201e1d; }
+        &.o_vk_sold { background: var(--vk-sold); color: rgba(32, 30, 29, .7); }
+    }
 
 }
