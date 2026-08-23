@@ -43,7 +43,8 @@ export class VertikaliSelector extends Component {
             unitById: {},
             unit: null,          // unit shown in the detail panel
             card: null,          // unit opened as a full card
-            plan2d: true,        // 2D / 3D toggle on the card
+            gallery: [],         // the card's images
+            slide: 0,            // which one is showing
             editingBlock: null,  // block whose masterplan shape is being drawn
             tip: null,           // hovered band, for the floor tooltip
             zoneUnits: [],       // units behind the selected facade band
@@ -547,12 +548,67 @@ export class VertikaliSelector extends Component {
     }
 
     /** Open the full unit card (the plan + specs screen). */
-    openCard(unit) {
+    async openCard(unit) {
         if (!unit) {
             return;
         }
         this.state.card = unit;
-        this.state.plan2d = true;
+        this.state.slide = 0;
+        this.state.gallery = [];
+        try {
+            // The product image plus any extra images: a unit usually has a
+            // layout, a furnished view and a couple of renders.
+            const [rec] = await this.orm.read(
+                "product.template", [unit.id],
+                ["image_1920", "vk_orientation", "vk_rooms_detail",
+                 "vk_condition", "vk_handover", "vk_section"]);
+            Object.assign(this.state.card, rec);
+
+            const extra = await this.orm.searchRead(
+                "product.image", [["product_tmpl_id", "=", unit.id]],
+                ["name", "image_1920"], { limit: 12 });
+
+            const shots = [];
+            if (rec.image_1920) {
+                shots.push({ id: 0, name: "Layout", image: rec.image_1920 });
+            }
+            for (const img of extra) {
+                shots.push({ id: img.id, name: img.name, image: img.image_1920 });
+            }
+            this.state.gallery = shots;
+        } catch (e) {
+            // A missing product.image model must not stop the card opening.
+            this.state.gallery = [];
+        }
+    }
+
+    get slideSrc() {
+        const s = this.state.gallery[this.state.slide];
+        return s ? `data:image/png;base64,${s.image}` : null;
+    }
+
+    goSlide(i) {
+        const n = this.state.gallery.length;
+        if (n) {
+            this.state.slide = (i + n) % n;
+        }
+    }
+
+    /** Compass label for the unit's aspect. */
+    get orientationLabel() {
+        const map = {
+            n: "North", ne: "North-East", e: "East", se: "South-East",
+            s: "South", sw: "South-West", w: "West", nw: "North-West",
+        };
+        return map[this.state.card?.vk_orientation] || null;
+    }
+
+    /** Needle angle, clockwise from north. */
+    get orientationDeg() {
+        const deg = {
+            n: 0, ne: 45, e: 90, se: 135, s: 180, sw: 225, w: 270, nw: 315,
+        };
+        return deg[this.state.card?.vk_orientation] ?? 0;
     }
 
     closeCard() {

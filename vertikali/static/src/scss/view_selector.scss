@@ -227,65 +227,183 @@
     }
 
     .o_vk_ch {
-        padding: 12px 18px;
-        border-bottom: 3px solid #201e1d;
+        padding: 14px 20px;
+        border-bottom: 1px solid rgba(32, 30, 29, .15);
         flex: 0 0 auto;
     }
 
     .o_vk_ch_t { font-weight: 800; font-size: 22px; margin: 0; }
+    .o_vk_ch_no { opacity: .45; font-weight: 500; }
 
-    .o_vk_ch_m {
+    .o_vk_close {
+        background: transparent;
+        border: 0;
+        font: inherit;
+        font-size: 13px;
+        color: #2a6ae0;
+        cursor: pointer;
         display: flex;
-        flex-direction: column;
-        line-height: 1.2;
+        align-items: center;
+        gap: 8px;
 
-        span { font-size: 10.5px; text-transform: uppercase; letter-spacing: .05em; opacity: .55; }
-        b { font-size: 18px; font-weight: 800; font-variant-numeric: tabular-nums; }
+        span { font-size: 17px; line-height: 1; }
+        &:hover { text-decoration: underline; }
     }
 
     .o_vk_cb { min-height: 0; }
 
-    .o_vk_cplan { padding: 18px; gap: 14px; min-width: 0; }
-
-    .o_vk_cmodes { display: flex; flex-direction: column; gap: 6px; flex: 0 0 auto; }
-
-    .o_vk_cmode {
-        width: 46px;
-        padding: 8px 0;
-        border: 1px solid rgba(32, 30, 29, .25);
-        background: transparent;
-        font: inherit;
-        font-weight: 700;
-        font-size: 12px;
-        cursor: pointer;
-        color: inherit;
+    .o_vk_cplan {
+        display: flex;
+        flex-direction: column;
+        min-width: 0;
+        padding: 20px;
     }
 
-    .o_vk_cmode_on { background: var(--vk-res); border-color: var(--vk-res); color: #201e1d; }
-
-    .o_vk_cimg {
-        border: 1px solid rgba(32, 30, 29, .15);
-        background: rgba(32, 30, 29, .04);
+    // The plan area: image centred, compass and next-arrow pinned right.
+    .o_vk_cstage {
+        position: relative;
+        flex: 1 1 auto;
         display: flex;
         align-items: center;
         justify-content: center;
+        min-height: 0;
     }
 
-    .o_vk_cph { font-size: 12.5px; opacity: .55; }
+    .o_vk_cimg2 {
+        max-width: 100%;
+        max-height: 100%;
+        object-fit: contain;
+    }
 
+    // Something to look at when no layout has been uploaded, rather than a
+    // blank half-screen.
+    .o_vk_cempty {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+        padding: 40px;
+        border: 1px dashed rgba(32, 30, 29, .25);
+        background: rgba(32, 30, 29, .03);
+        max-width: 460px;
+    }
+
+    .o_vk_cempty_i { font-size: 44px; opacity: .25; line-height: 1; }
+    .o_vk_cempty_t { font-weight: 700; font-size: 15px; margin-top: 12px; }
+    .o_vk_cempty_s { font-size: 12.5px; opacity: .65; margin-top: 6px; max-width: 340px; }
+
+    // ---- compass ----
+    .o_vk_compass {
+        position: absolute;
+        right: 8px;
+        top: 8px;
+        text-align: center;
+    }
+
+    .o_vk_comp_dial {
+        position: relative;
+        width: 74px;
+        height: 74px;
+        border: 1px solid rgba(32, 30, 29, .2);
+        border-radius: 50%;
+        background: #fff;
+
+        span {
+            position: absolute;
+            font-size: 9.5px;
+            font-weight: 600;
+            opacity: .6;
+        }
+    }
+
+    .o_vk_comp_n { top: 4px; left: 50%; transform: translateX(-50%); }
+    .o_vk_comp_s { bottom: 4px; left: 50%; transform: translateX(-50%); }
+    .o_vk_comp_e { right: 5px; top: 50%; transform: translateY(-50%); }
+    .o_vk_comp_w { left: 5px; top: 50%; transform: translateY(-50%); }
+
+    // Needle points the way the unit faces; rotated from north by inline style.
+    .o_vk_comp_needle {
+        position: absolute;
+        left: 50%;
+        top: 50%;
+        width: 0;
+        height: 0;
+        margin: -26px 0 0 -5px;
+        border: 5px solid transparent;
+        border-bottom: 26px solid var(--vk-accent);
+        transform-origin: 50% 100%;
+    }
+
+    .o_vk_comp_l {
+        font-size: 10.5px;
+        margin-top: 4px;
+        opacity: .7;
+    }
+
+    .o_vk_cnext {
+        position: absolute;
+        right: 12px;
+        bottom: 12px;
+        width: 38px;
+        height: 38px;
+        border-radius: 50%;
+        border: 1px solid rgba(32, 30, 29, .25);
+        background: #fff;
+        font-size: 19px;
+        line-height: 1;
+        cursor: pointer;
+
+        &:hover { border-color: var(--vk-accent); color: var(--vk-accent); }
+    }
+
+    .o_vk_cdots {
+        display: flex;
+        justify-content: center;
+        gap: 7px;
+        padding-top: 14px;
+        flex: 0 0 auto;
+    }
+
+    .o_vk_cdot {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        border: 0;
+        padding: 0;
+        background: rgba(32, 30, 29, .22);
+        cursor: pointer;
+
+        &:hover { background: rgba(32, 30, 29, .45); }
+    }
+
+    .o_vk_cdot_on { background: var(--vk-accent); }
+
+    // ---- specs panel ----
+    // Wider than the old sidebar: the reference gives the facts real room.
     .o_vk_cside {
-        flex: 0 0 340px;
-        min-width: 300px;
+        flex: 0 0 420px;
+        min-width: 360px;
         border-left: 1px solid rgba(32, 30, 29, .15);
-        padding: 18px;
+        padding: 20px;
         overflow-y: auto;
     }
 
-    .o_vk_cmeta { font-weight: 600; font-size: 13.5px; margin-bottom: 16px; }
-    .o_vk_sep { opacity: .3; margin: 0 6px; }
+    // Area / Section / Delivery / Floor across the top.
+    .o_vk_facts {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(84px, 1fr));
+        gap: 10px 14px;
+        padding-bottom: 14px;
+        border-bottom: 1px solid rgba(32, 30, 29, .15);
+
+        > div { display: flex; flex-direction: column; }
+        span { font-size: 10.5px; text-transform: uppercase; letter-spacing: .05em; opacity: .55; }
+        b { font-size: 14.5px; font-weight: 700; font-variant-numeric: tabular-nums; }
+    }
 
     .o_vk_crooms {
-        margin-bottom: 16px;
+        margin: 14px 0;
 
         > div { display: flex; gap: 10px; font-size: 12.5px; padding: 2px 0; }
         b { min-width: 62px; font-variant-numeric: tabular-nums; font-weight: 600; }
@@ -301,19 +419,37 @@
         b { font-weight: 600; }
     }
 
+    .o_vk_cprice {
+        margin-top: 16px;
+        padding-top: 14px;
+        border-top: 1px solid rgba(32, 30, 29, .15);
+        display: flex;
+        align-items: baseline;
+        gap: 10px;
+        flex-wrap: wrap;
+    }
+
+    .o_vk_cprice_v {
+        font-size: 26px;
+        font-weight: 800;
+        font-variant-numeric: tabular-nums;
+    }
+
+    .o_vk_cprice_m { font-size: 12.5px; opacity: .6; font-variant-numeric: tabular-nums; }
+
     .o_vk_cta {
         width: 100%;
-        margin-top: 16px;
-        padding: 11px;
-        background: #201e1d;
+        margin-top: 14px;
+        padding: 12px;
+        background: var(--vk-accent);
         color: #fff;
         border: 0;
         font: inherit;
         font-weight: 700;
-        font-size: 13px;
+        font-size: 14px;
         cursor: pointer;
 
-        &:hover { background: var(--vk-accent); }
+        &:hover { filter: brightness(.9); }
     }
 
     .o_vk_strip { margin-top: 18px; }

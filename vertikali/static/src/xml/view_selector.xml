@@ -8,48 +8,81 @@
              specs get the whole screen rather than a cramped sidebar. -->
         <div t-if="state.card" class="o_vk_card_full d-flex flex-column">
             <div class="o_vk_ch d-flex align-items-center gap-4 flex-wrap">
-                <h2 class="o_vk_ch_t">Unit <t t-esc="state.card.default_code"/></h2>
-                <div class="o_vk_ch_m">
-                    <span>Area</span><b><t t-esc="state.card.vk_area_total"/> m²</b>
-                </div>
-                <div class="o_vk_ch_m">
-                    <span>Price</span><b><t t-esc="fmtMoney(state.card.list_price)"/></b>
-                </div>
-                <div class="o_vk_ch_m">
-                    <span>Per m²</span><b><t t-esc="fmtMoney(state.card.vk_price_sqm)"/></b>
-                </div>
-                <button class="o_vk_link ms-auto" t-on-click="closeCard">back ←</button>
+                <h2 class="o_vk_ch_t">
+                    <t t-esc="state.card.vk_rooms"/> apartment
+                    <span class="o_vk_ch_no">№<t t-esc="state.card.default_code"/></span>
+                </h2>
+                <span t-attf-class="o_vk_badge o_vk_b_{{state.card.vk_state}}">
+                    <t t-esc="state.card.vk_state"/>
+                </span>
+                <button class="o_vk_close ms-auto" t-on-click="closeCard">
+                    Close the card <span>&#215;</span>
+                </button>
             </div>
 
             <div class="o_vk_cb d-flex flex-grow-1 overflow-hidden">
-                <div class="o_vk_cplan flex-grow-1 d-flex">
-                    <div class="o_vk_cmodes">
-                        <button class="o_vk_cmode"
-                                t-att-class="{ 'o_vk_cmode_on': state.plan2d }"
-                                t-on-click="() => (state.plan2d = true)">2D</button>
-                        <button class="o_vk_cmode"
-                                t-att-class="{ 'o_vk_cmode_on': !state.plan2d }"
-                                t-on-click="() => (state.plan2d = false)">3D</button>
+                <!-- Plan, with the gallery controls the reference shows. -->
+                <div class="o_vk_cplan flex-grow-1">
+                    <div class="o_vk_cstage">
+                        <img t-if="slideSrc" t-att-src="slideSrc" class="o_vk_cimg2"
+                             t-att-alt="state.card.default_code"/>
+                        <div t-else="" class="o_vk_cempty">
+                            <div class="o_vk_cempty_i">▦</div>
+                            <div class="o_vk_cempty_t">No layout uploaded</div>
+                            <div class="o_vk_cempty_s">
+                                Add it as the product image on
+                                <b><t t-esc="state.card.default_code"/></b>,
+                                or attach extra views under Product &#8250; Images.
+                            </div>
+                            <button class="btn btn-sm btn-secondary mt-3"
+                                    t-on-click="() => this.openUnitRecord(state.card)">
+                                Open the product
+                            </button>
+                        </div>
+
+                        <!-- Compass: which way the unit faces. -->
+                        <div class="o_vk_compass" t-if="orientationLabel">
+                            <div class="o_vk_comp_dial">
+                                <span class="o_vk_comp_n">N</span>
+                                <span class="o_vk_comp_e">E</span>
+                                <span class="o_vk_comp_s">S</span>
+                                <span class="o_vk_comp_w">W</span>
+                                <span class="o_vk_comp_needle"
+                                      t-attf-style="transform:rotate({{orientationDeg}}deg)"></span>
+                            </div>
+                            <div class="o_vk_comp_l"><t t-esc="orientationLabel"/></div>
+                        </div>
+
+                        <button class="o_vk_cnext" t-if="state.gallery.length > 1"
+                                t-on-click="() => this.goSlide(state.slide + 1)"
+                                title="Next image">&#8250;</button>
                     </div>
-                    <div class="o_vk_cimg flex-grow-1">
-                        <span class="o_vk_cph">
-                            <t t-if="state.plan2d">2D plan — upload it on the product image</t>
-                            <t t-else="">3D view not provided for this unit</t>
-                        </span>
+
+                    <div class="o_vk_cdots" t-if="state.gallery.length > 1">
+                        <t t-foreach="state.gallery" t-as="g" t-key="g.id">
+                            <button class="o_vk_cdot"
+                                    t-att-class="{ 'o_vk_cdot_on': g_index === state.slide }"
+                                    t-att-title="g.name"
+                                    t-on-click="() => this.goSlide(g_index)"></button>
+                        </t>
                     </div>
                 </div>
 
+                <!-- Specs panel, wider and laid out like the reference. -->
                 <div class="o_vk_cside">
-                    <div class="o_vk_cmeta">
-                        <t t-esc="state.card.vk_rooms"/>
-                        <span class="o_vk_sep">|</span>
-                        Floor <t t-esc="state.card.vk_floor"/>
-                        <t t-if="state.block">
-                            <span class="o_vk_sep">|</span> Block <t t-esc="state.block.code"/>
-                        </t>
+                    <div class="o_vk_facts">
+                        <div><span>Area</span><b><t t-esc="state.card.vk_area_total"/> m²</b></div>
+                        <div t-if="state.card.vk_section">
+                            <span>Section</span><b><t t-esc="state.card.vk_section"/></b>
+                        </div>
+                        <div t-if="state.card.vk_handover">
+                            <span>Delivery</span><b><t t-esc="state.card.vk_handover"/></b>
+                        </div>
+                        <div><span>Floor</span><b><t t-esc="state.card.vk_floor"/></b></div>
                     </div>
 
                     <div class="o_vk_crooms" t-if="cardRooms.length">
+                        <div class="o_vk_kicker mb-1">Rooms</div>
                         <t t-foreach="cardRooms" t-as="r" t-key="r_index">
                             <div>
                                 <b t-if="r.area"><t t-esc="r.area"/> m²</b>
@@ -58,32 +91,30 @@
                             </div>
                         </t>
                     </div>
-                    <div t-else="" class="o_vk_row_m mb-3">
-                        No room breakdown entered for this unit.
-                    </div>
 
                     <div class="o_vk_cfacts">
                         <div><span>Project</span><b t-esc="state.project ? state.project.name : '—'"/></div>
-                        <div><span>Status</span>
-                            <b t-attf-class="o_vk_badge o_vk_b_{{state.card.vk_state}}">
-                                <t t-esc="state.card.vk_state"/></b>
-                        </div>
                         <div t-if="state.card.vk_condition">
                             <span>Condition</span><b t-esc="state.card.vk_condition"/>
                         </div>
                         <div t-if="state.card.vk_area_balcony">
                             <span>Balcony</span><b><t t-esc="state.card.vk_area_balcony"/> m²</b>
                         </div>
-                        <div t-if="state.card.vk_handover">
-                            <span>Handover</span><b t-esc="state.card.vk_handover"/>
+                        <div t-if="orientationLabel">
+                            <span>Aspect</span><b t-esc="orientationLabel"/>
                         </div>
+                    </div>
+
+                    <!-- Price last, as the thing being decided on. -->
+                    <div class="o_vk_cprice">
+                        <span class="o_vk_cprice_v"><t t-esc="fmtMoney(state.card.list_price)"/></span>
+                        <span class="o_vk_cprice_m"><t t-esc="fmtMoney(state.card.vk_price_sqm)"/> / m²</span>
                     </div>
 
                     <button class="o_vk_cta" t-on-click="() => this.openUnitRecord(state.card)">
                         Open in Odoo
                     </button>
 
-                    <!-- Where this unit sits on its floor. -->
                     <div class="o_vk_strip" t-if="floorStrip.length">
                         <div class="o_vk_kicker mb-1">Position on floor</div>
                         <div class="d-flex flex-wrap gap-1">
