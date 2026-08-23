@@ -112,6 +112,9 @@
                         <div><span>Layout</span><b t-esc="state.card.vk_rooms || '—'"/></div>
                         <div><span>Layout Type</span><b t-esc="state.card.layoutName || '—'"/></div>
                         <div><span>Orientation</span><b t-esc="orientationLabel || '—'"/></div>
+                        <div><span>View</span>
+                            <b t-esc="(state.card.vk_view_id and state.card.vk_view_id[1]) || '—'"/>
+                        </div>
                         <div><span>Total area</span>
                             <b t-if="state.card.vk_area_total"><t t-esc="state.card.vk_area_total"/> m²</b>
                             <b t-else="">—</b>
@@ -598,9 +601,13 @@
                             <tbody>
                                 <t t-foreach="gridRows" t-as="row" t-key="row.floor">
                                     <tr>
-                                        <th class="o_vk_gfloor">
+                                        <!-- Just the storey number: the free
+                                             count under it read as a second,
+                                             unexplained figure. It lives in
+                                             the tooltip instead. -->
+                                        <th class="o_vk_gfloor"
+                                            t-att-title="row.free + ' available on floor ' + row.floor">
                                             <t t-esc="row.floor"/>
-                                            <small><t t-esc="row.free"/></small>
                                         </th>
                                         <t t-foreach="row.cells" t-as="c" t-key="c.section">
                                             <td class="o_vk_gsecCell">
@@ -1092,7 +1099,7 @@
 
     <t t-name="vertikali.Filters">
         <div class="o_vk_filters d-flex align-items-center gap-3 px-3 py-2 flex-wrap">
-            <div class="d-flex align-items-center gap-1">
+            <div class="d-flex align-items-center gap-1" t-if="state.filterVis.layout">
                 <span class="o_vk_flabel">Layout</span>
                 <t t-foreach="layouts" t-as="r" t-key="r">
                     <button class="o_vk_chip"
@@ -1103,7 +1110,7 @@
                 </t>
             </div>
 
-            <div class="d-flex align-items-center gap-1">
+            <div class="d-flex align-items-center gap-1" t-if="state.filterVis.status">
                 <span class="o_vk_flabel">Status</span>
                 <button class="o_vk_chip o_vk_chip_free"
                         t-att-class="{ 'o_vk_chip_on': state.filters.status.includes('available') }"
@@ -1116,7 +1123,8 @@
                         t-on-click="() => this.toggleFilter('status', 'sold')">Sold</button>
             </div>
 
-            <div class="d-flex align-items-center gap-1" t-if="orientOptions.length">
+            <div class="d-flex align-items-center gap-1"
+                 t-if="state.filterVis.orient and orientOptions.length">
                 <span class="o_vk_flabel">Orientation</span>
                 <t t-foreach="orientOptions" t-as="o" t-key="o">
                     <button class="o_vk_chip"
@@ -1127,18 +1135,31 @@
                 </t>
             </div>
 
-            <div class="d-flex align-items-center gap-1" t-if="condOptions.length">
+            <div class="d-flex align-items-center gap-1"
+                 t-if="state.filterVis.cond and condOptions.length">
                 <span class="o_vk_flabel">Condition</span>
-                <t t-foreach="condOptions" t-as="c" t-key="c">
+                <t t-foreach="condOptions" t-as="c" t-key="c.id">
                     <button class="o_vk_chip"
-                            t-att-class="{ 'o_vk_chip_on': state.filters.cond.includes(c) }"
-                            t-on-click="() => this.toggleFilter('cond', c)">
-                        <t t-esc="condLabel(c)"/>
+                            t-att-class="{ 'o_vk_chip_on': state.filters.cond.includes(c.id) }"
+                            t-on-click="() => this.toggleFilter('cond', c.id)">
+                        <t t-esc="c.name"/>
                     </button>
                 </t>
             </div>
 
-            <div class="d-flex align-items-center gap-1">
+            <div class="d-flex align-items-center gap-1"
+                 t-if="state.filterVis.vview and viewOptions.length">
+                <span class="o_vk_flabel">View</span>
+                <t t-foreach="viewOptions" t-as="v" t-key="v.id">
+                    <button class="o_vk_chip"
+                            t-att-class="{ 'o_vk_chip_on': state.filters.vview.includes(v.id) }"
+                            t-on-click="() => this.toggleFilter('vview', v.id)">
+                        <t t-esc="v.name"/>
+                    </button>
+                </t>
+            </div>
+
+            <div class="d-flex align-items-center gap-1" t-if="state.filterVis.area">
                 <span class="o_vk_flabel">m²</span>
                 <input type="number" class="o_vk_num" placeholder="from"
                        t-att-value="state.filters.areaMin"
@@ -1148,7 +1169,7 @@
                        t-on-input="(ev) => this.onFilterNumber('areaMax', ev)"/>
             </div>
 
-            <div class="d-flex align-items-center gap-1">
+            <div class="d-flex align-items-center gap-1" t-if="state.filterVis.price">
                 <span class="o_vk_flabel">Max price</span>
                 <input type="number" class="o_vk_num o_vk_num_w" placeholder="any"
                        t-att-value="state.filters.priceMax"
@@ -1160,6 +1181,23 @@
 
             <span class="o_vk_meta ms-auto">
                 <t t-esc="matchCount"/> / <t t-esc="state.units.length"/> units
+            </span>
+
+            <!-- Which groups this bar shows. Saved per browser. -->
+            <span class="position-relative">
+                <button class="o_vk_gear" title="Configure filters"
+                        t-on-click="() => (state.filterCfg = !state.filterCfg)">⚙</button>
+                <div t-if="state.filterCfg" class="o_vk_gearpop">
+                    <div class="o_vk_gearpop_h">Show filters</div>
+                    <t t-foreach="filterGroups" t-as="g" t-key="g.key">
+                        <label class="o_vk_gearrow">
+                            <input type="checkbox"
+                                   t-att-checked="state.filterVis[g.key]"
+                                   t-on-change="() => this.toggleFilterVis(g.key)"/>
+                            <t t-esc="g.label"/>
+                        </label>
+                    </t>
+                </div>
             </span>
         </div>
     </t>

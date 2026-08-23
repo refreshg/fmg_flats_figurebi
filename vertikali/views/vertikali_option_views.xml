@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- Editable list, grouped by attribute: adding a value is one row, the
+         same as adding it on the fly from a unit's dropdown. -->
+    <record id="view_vertikali_option_list" model="ir.ui.view">
+        <field name="name">vertikali.option.list</field>
+        <field name="model">vertikali.option</field>
+        <field name="arch" type="xml">
+            <list editable="bottom">
+                <field name="sequence" widget="handle"/>
+                <field name="attribute"/>
+                <field name="name"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_vertikali_option_search" model="ir.ui.view">
+        <field name="name">vertikali.option.search</field>
+        <field name="model">vertikali.option</field>
+        <field name="arch" type="xml">
+            <search>
+                <field name="name"/>
+                <filter string="Condition" name="filter_condition"
+                        domain="[('attribute', '=', 'condition')]"/>
+                <filter string="View" name="filter_view"
+                        domain="[('attribute', '=', 'view')]"/>
+                <group string="Group By">
+                    <filter string="Attribute" name="group_attribute"
+                            context="{'group_by': 'attribute'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <record id="action_vertikali_options" model="ir.actions.act_window">
+        <field name="name">Unit Attributes</field>
+        <field name="res_model">vertikali.option</field>
+        <field name="view_mode">list</field>
+        <field name="context">{'search_default_group_attribute': 1}</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">Add an attribute value</p>
+            <p>Values for Condition and View on units. The sales team can
+               also add them straight from the unit form's dropdowns.</p>
+        </field>
+    </record>
+
+</odoo>

@@ -62,6 +62,16 @@ class ProductTemplate(models.Model):
         ],
         string="Orientation",
     )
+    # What the windows actually look at ("Sea", "Courtyard"). A configurable
+    # list, not a Selection: each project names its own views, and the team
+    # adds values from the dropdown itself (quick-create) or in Configuration.
+    vk_view_id = fields.Many2one(
+        'vertikali.option',
+        string="View",
+        domain=[('attribute', '=', 'view')],
+        context={'default_attribute': 'view'},
+        help="What the unit's windows face, e.g. Courtyard, Sea, City.",
+    )
 
     # Areas are stored in square metres. Kept as plain floats rather than
     # uom-based fields: the sales UoM stays "Units" (one apartment), so area is
@@ -102,14 +112,14 @@ class ProductTemplate(models.Model):
         help="One room per line, e.g. 'Living 20.0'. Shown on the unit card.",
     )
 
-    vk_condition = fields.Selection(
-        selection=[
-            ('frame', "Frame"),
-            ('white', "White frame"),
-            ('green', "Green frame"),
-            ('renovated', "Renovated"),
-        ],
+    # Same configurable-list treatment as vk_view_id: renovation packages are
+    # named per project (was a fixed Selection; the stock values are seeded as
+    # vertikali.option records in data/option_data.xml).
+    vk_condition_id = fields.Many2one(
+        'vertikali.option',
         string="Condition",
+        domain=[('attribute', '=', 'condition')],
+        context={'default_attribute': 'condition'},
     )
 
     # Extra views of the unit -- furnished render, 3D, view from the window.

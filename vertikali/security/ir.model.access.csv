@@ -12,3 +12,5 @@ access_vertikali_layout_manager,vertikali.layout manager,model_vertikali_layout,
 access_vertikali_unit_image_salesman,vertikali.unit.image salesman,model_vertikali_unit_image,sales_team.group_sale_salesman,1,0,0,0
 access_vertikali_unit_image_manager,vertikali.unit.image manager,model_vertikali_unit_image,sales_team.group_sale_manager,1,1,1,1
 access_vertikali_copy_plan_wizard,vertikali.copy.plan.wizard,model_vertikali_copy_plan_wizard,sales_team.group_sale_manager,1,1,1,1
+access_vertikali_option_salesman,vertikali.option salesman,model_vertikali_option,sales_team.group_sale_salesman,1,0,1,0
+access_vertikali_option_manager,vertikali.option manager,model_vertikali_option,sales_team.group_sale_manager,1,1,1,1

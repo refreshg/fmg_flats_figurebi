@@ -55,4 +55,10 @@
               action="action_vertikali_layouts"
               sequence="20"/>
 
+    <menuitem id="menu_vertikali_options"
+              name="Unit Attributes"
+              parent="menu_vertikali_config"
+              action="action_vertikali_options"
+              sequence="30"/>
+
 </odoo>

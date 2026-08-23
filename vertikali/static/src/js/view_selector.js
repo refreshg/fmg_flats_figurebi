@@ -18,6 +18,30 @@ import { Component, onWillStart, onWillUnmount, useRef, useState } from "@odoo/o
  * different heights, so zones are arbitrary quadrilaterals dragged into place
  * rather than generated bands.
  */
+// The filter groups the gear can show or hide, in bar order.
+export const FILTER_GROUPS = [
+    { key: "layout", label: "Layout" },
+    { key: "status", label: "Status" },
+    { key: "orient", label: "Orientation" },
+    { key: "cond", label: "Condition" },
+    { key: "vview", label: "View" },
+    { key: "area", label: "m²" },
+    { key: "price", label: "Max price" },
+];
+
+const FILTER_VIS_KEY = "vertikali.filterVis";
+
+/** The user's saved choice of visible filter groups; everything on first. */
+function loadFilterVis() {
+    const vis = Object.fromEntries(FILTER_GROUPS.map((g) => [g.key, true]));
+    try {
+        Object.assign(vis, JSON.parse(window.localStorage.getItem(FILTER_VIS_KEY) || "{}"));
+    } catch {
+        // Corrupt storage falls back to everything visible.
+    }
+    return vis;
+}
+
 export class VertikaliSelector extends Component {
     static template = "vertikali.Selector";
     static props = { ...Component.props, action: { type: Object, optional: true } };
@@ -55,8 +79,12 @@ export class VertikaliSelector extends Component {
             zoneUnits: [],       // units behind the selected facade band
             floorPick: [],       // every unit on that storey, for ticking
             zonePlan: null,      // that floor's plan, shown beside them
-            filters: { rooms: [], status: [], orient: [], cond: [],
+            filters: { rooms: [], status: [], orient: [], cond: [], vview: [],
                        areaMin: null, areaMax: null, priceMax: null },
+            // Which filter groups show, chosen by the user via the gear and
+            // remembered per browser.
+            filterVis: loadFilterVis(),
+            filterCfg: false,    // the gear popover
             selected: null,
             loading: true,
             error: null,
@@ -533,7 +561,7 @@ export class VertikaliSelector extends Component {
                 ["default_code", "vk_floor", "vk_section", "vk_rooms",
                  "vk_area_total", "vk_area_balcony", "vk_orientation",
                  "list_price", "vk_price_sqm", "vk_state", "vk_handover",
-                 "vk_condition", "vk_has_image", "vk_layout_id", "write_date"],
+                 "vk_condition_id", "vk_view_id", "vk_has_image", "vk_layout_id", "write_date"],
                 { order: "vk_floor desc, vk_section, default_code" }
             );
         } catch (e) {
@@ -627,10 +655,28 @@ export class VertikaliSelector extends Component {
             .sort();
     }
 
+    /** Distinct many2one values on the loaded units, as {id, name} chips. */
+    _m2oOptions(field) {
+        const seen = new Map();
+        for (const u of this.state.units) {
+            const v = u[field];
+            if (v && !seen.has(v[0])) {
+                seen.set(v[0], v[1]);
+            }
+        }
+        return [...seen.entries()]
+            .map(([id, name]) => ({ id, name }))
+            .sort((a, b) => a.name.localeCompare(b.name));
+    }
+
     /** Conditions present in the loaded units, for the filter chips. */
     get condOptions() {
-        return [...new Set(this.state.units.map((u) => u.vk_condition).filter(Boolean))]
-            .sort();
+        return this._m2oOptions("vk_condition_id");
+    }
+
+    /** Window views present in the loaded units, for the filter chips. */
+    get viewOptions() {
+        return this._m2oOptions("vk_view_id");
     }
 
     matchesFilters(u) {
@@ -644,7 +690,10 @@ export class VertikaliSelector extends Component {
         if (f.orient.length && !f.orient.includes(u.vk_orientation)) {
             return false;
         }
-        if (f.cond.length && !f.cond.includes(u.vk_condition)) {
+        if (f.cond.length && !f.cond.includes(u.vk_condition_id?.[0])) {
+            return false;
+        }
+        if (f.vview.length && !f.vview.includes(u.vk_view_id?.[0])) {
             return false;
         }
         if (f.areaMin && u.vk_area_total < f.areaMin) {
@@ -669,11 +718,40 @@ export class VertikaliSelector extends Component {
         }
     }
 
+    get filterGroups() {
+        return FILTER_GROUPS;
+    }
+
+    /** Gear toggle: hiding a group also drops its active filters, so a
+     *  hidden group can never keep invisibly narrowing the list. */
+    toggleFilterVis(key) {
+        const vis = this.state.filterVis;
+        vis[key] = !vis[key];
+        if (!vis[key]) {
+            if (key === "layout") {
+                this.state.filters.rooms = [];
+            } else if (key === "area") {
+                this.state.filters.areaMin = null;
+                this.state.filters.areaMax = null;
+            } else if (key === "price") {
+                this.state.filters.priceMax = null;
+            } else if (this.state.filters[key]) {
+                this.state.filters[key] = [];
+            }
+        }
+        try {
+            window.localStorage.setItem(FILTER_VIS_KEY, JSON.stringify(vis));
+        } catch {
+            // Private mode: the choice just does not survive the session.
+        }
+    }
+
     clearFilters() {
         this.state.filters.rooms = [];
         this.state.filters.status = [];
         this.state.filters.orient = [];
         this.state.filters.cond = [];
+        this.state.filters.vview = [];
         this.state.filters.areaMin = null;
         this.state.filters.areaMax = null;
         this.state.filters.priceMax = null;
@@ -682,7 +760,8 @@ export class VertikaliSelector extends Component {
     get filterActive() {
         const f = this.state.filters;
         return !!(f.rooms.length || f.status.length || f.orient.length
-                  || f.cond.length || f.areaMin || f.areaMax || f.priceMax);
+                  || f.cond.length || f.vview.length
+                  || f.areaMin || f.areaMax || f.priceMax);
     }
 
     get matchCount() {
@@ -792,7 +871,7 @@ export class VertikaliSelector extends Component {
             const [rec] = await this.orm.read(
                 "product.template", [unit.id],
                 ["vk_has_image", "write_date", "vk_orientation", "vk_rooms_detail",
-                 "vk_condition", "vk_handover", "vk_section", "vk_building",
+                 "vk_condition_id", "vk_view_id", "vk_handover", "vk_section", "vk_building",
                  "vk_rooms", "vk_floor", "vk_state", "vk_area_total",
                  "vk_area_living", "vk_area_balcony", "vk_price_sqm",
                  "list_price", "vk_layout_id"]);
@@ -919,19 +998,9 @@ export class VertikaliSelector extends Component {
         }
     }
 
-    /** Condition reads as its label, not the stored key ("white"). */
-    condLabel(v) {
-        const map = {
-            frame: "Frame",
-            white: "White frame",
-            green: "Green frame",
-            renovated: "Renovated",
-        };
-        return map[v] || v || null;
-    }
-
+    /** Condition is a configurable option now, so its name is the label. */
     get conditionLabel() {
-        return this.condLabel(this.state.card?.vk_condition);
+        return this.state.card?.vk_condition_id?.[1] || null;
     }
 
     /** Compass label for a unit's aspect. */
@@ -1064,7 +1133,7 @@ export class VertikaliSelector extends Component {
             "product.template", domain,
             ["default_code", "vk_floor", "vk_section", "vk_rooms", "vk_area_total",
              "vk_area_balcony", "vk_orientation", "list_price", "vk_price_sqm",
-             "vk_state", "vk_handover", "vk_rooms_detail", "vk_condition",
+             "vk_state", "vk_handover", "vk_rooms_detail", "vk_condition_id", "vk_view_id",
              "vk_has_image", "vk_layout_id", "write_date"],
             { order: "default_code" }
         );
@@ -1103,7 +1172,8 @@ export class VertikaliSelector extends Component {
                 "default_code", "vk_floor", "vk_section", "vk_rooms",
                 "vk_area_total", "list_price", "vk_price_sqm", "vk_state",
                 "vk_area_balcony", "vk_handover", "vk_rooms_detail",
-                "vk_condition", "vk_has_image", "vk_layout_id", "write_date",
+                "vk_condition_id", "vk_view_id", "vk_has_image", "vk_layout_id",
+                "write_date",
             ];
             const ids = zone.product_tmpl_ids || [];
             if (ids.length) {

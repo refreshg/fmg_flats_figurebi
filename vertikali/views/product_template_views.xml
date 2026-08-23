@@ -25,6 +25,7 @@
                             <field name="vk_floor"/>
                             <field name="vk_rooms"/>
                             <field name="vk_orientation"/>
+                            <field name="vk_view_id" placeholder="e.g. Courtyard, Sea, City"/>
                         </group>
                         <group string="Areas" name="vk_areas">
                             <field name="vk_area_total"/>
@@ -34,7 +35,7 @@
                         <group string="Commercial" name="vk_commercial">
                             <field name="vk_state"/>
                             <field name="vk_price_sqm"/>
-                            <field name="vk_condition"/>
+                            <field name="vk_condition_id"/>
                             <field name="vk_handover"/>
                         </group>
                     </group>
