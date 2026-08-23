@@ -112,6 +112,19 @@ class ProductTemplate(models.Model):
         string="Condition",
     )
 
+    # Extra views of the unit -- furnished render, 3D, view from the window.
+    # Our own model rather than product.image, which ships with website_sale
+    # and is not installed here.
+    vk_image_ids = fields.One2many(
+        'vertikali.unit.image', 'product_tmpl_id', string="Extra Images")
+
+    # A typical flat repeats across the tower, so its drawing is shared rather
+    # than uploaded 126 times. The unit's own image still wins when set.
+    vk_layout_id = fields.Many2one(
+        'vertikali.layout', string="Layout Type",
+        help="Shared drawing for this flat type. Used when the unit has no "
+             "image of its own.")
+
     def vk_room_lines(self):
         """Parse vk_rooms_detail into [(label, area)] for display."""
         self.ensure_one()

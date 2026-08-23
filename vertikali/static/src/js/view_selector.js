@@ -658,23 +658,38 @@ export class VertikaliSelector extends Component {
                  "vk_condition", "vk_handover", "vk_section", "vk_building",
                  "vk_rooms", "vk_floor", "vk_state", "vk_area_total",
                  "vk_area_living", "vk_area_balcony", "vk_price_sqm",
-                 "list_price"]);
+                 "list_price", "vk_layout_id"]);
             Object.assign(this.state.card, rec);
 
+            // A shared layout supplies the drawing when the unit has none of
+            // its own -- a typical flat repeats across the tower, so its plan
+            // is uploaded once rather than onto each unit.
+            const [layoutId] = rec.vk_layout_id || [];
+            let layout = null;
+            if (layoutId) {
+                [layout] = await this.orm.read(
+                    "vertikali.layout", [layoutId], ["name", "image"]);
+            }
+
+            const domain = layoutId
+                ? ["|", ["product_tmpl_id", "=", unit.id], ["layout_id", "=", layoutId]]
+                : [["product_tmpl_id", "=", unit.id]];
             const extra = await this.orm.searchRead(
-                "product.image", [["product_tmpl_id", "=", unit.id]],
-                ["name", "image_1920"], { limit: 12 });
+                "vertikali.unit.image", domain, ["name", "image"],
+                { order: "sequence, id", limit: 20 });
 
             const shots = [];
             if (rec.image_1920) {
-                shots.push({ id: 0, name: "Layout", image: rec.image_1920 });
+                shots.push({ id: "own", name: "Layout", image: rec.image_1920 });
+            } else if (layout?.image) {
+                shots.push({ id: "layout", name: layout.name, image: layout.image });
             }
             for (const img of extra) {
-                shots.push({ id: img.id, name: img.name, image: img.image_1920 });
+                shots.push({ id: img.id, name: img.name, image: img.image });
             }
             this.state.gallery = shots;
+            this.state.card.layoutName = layout?.name || null;
         } catch (e) {
-            // A missing product.image model must not stop the card opening.
             this.state.gallery = [];
         }
     }

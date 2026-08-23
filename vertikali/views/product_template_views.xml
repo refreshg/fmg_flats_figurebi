@@ -42,6 +42,26 @@
                         <field name="vk_rooms_detail" nolabel="1"
                                placeholder="One room per line, e.g.&#10;Living 20.0&#10;Bedroom 11.0&#10;Bathroom 4.2"/>
                     </group>
+
+                    <group string="Drawings" name="vk_media">
+                        <field name="vk_layout_id"
+                               options="{'no_create_edit': False}"
+                               help="Shared plan for this flat type. Used when this unit has no image of its own."/>
+                        <label for="vk_image_ids" string="Extra Images"/>
+                        <div>
+                            <field name="vk_image_ids" nolabel="1">
+                                <list editable="bottom">
+                                    <field name="sequence" widget="handle"/>
+                                    <field name="name"/>
+                                    <field name="image" widget="image" width="120"/>
+                                </list>
+                            </field>
+                            <span class="text-muted small">
+                                Extra views for this unit only. Shared ones belong
+                                on the layout type.
+                            </span>
+                        </div>
+                    </group>
                 </page>
             </xpath>
         </field>
@@ -56,6 +76,7 @@
             <xpath expr="//field[@name='default_code']" position="after">
                 <field name="vk_building" optional="show"/>
                 <field name="vk_section" optional="show"/>
+                <field name="vk_layout_id" optional="show" widget="many2one"/>
                 <field name="vk_floor" optional="show"/>
                 <field name="vk_state" optional="show" widget="badge"/>
                 <field name="vk_rooms" optional="show"/>

@@ -49,4 +49,10 @@
               action="action_vertikali_views"
               sequence="10"/>
 
+    <menuitem id="menu_vertikali_layouts"
+              name="Layout Types"
+              parent="menu_vertikali_config"
+              action="action_vertikali_layouts"
+              sequence="20"/>
+
 </odoo>

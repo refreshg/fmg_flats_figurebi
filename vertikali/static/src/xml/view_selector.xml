@@ -30,9 +30,9 @@
                             <div class="o_vk_cempty_i">▦</div>
                             <div class="o_vk_cempty_t">No layout uploaded</div>
                             <div class="o_vk_cempty_s">
-                                Add it as the product image on
-                                <b><t t-esc="state.card.default_code"/></b>,
-                                or attach extra views under Product &#8250; Images.
+                                Upload it on <b><t t-esc="state.card.default_code"/></b>,
+                                or point the unit at a Layout Type so every flat
+                                of this kind shares one drawing.
                             </div>
                             <button class="btn btn-sm btn-secondary mt-3"
                                     t-on-click="() => this.openUnitRecord(state.card)">

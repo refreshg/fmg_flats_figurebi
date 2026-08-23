@@ -1,0 +1,91 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <record id="view_vertikali_layout_list" model="ir.ui.view">
+        <field name="name">vertikali.layout.list</field>
+        <field name="model">vertikali.layout</field>
+        <field name="arch" type="xml">
+            <list string="Layout Types">
+                <field name="sequence" widget="handle"/>
+                <field name="code"/>
+                <field name="name"/>
+                <field name="rooms"/>
+                <field name="area_total"/>
+                <field name="unit_count" string="Units"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_vertikali_layout_form" model="ir.ui.view">
+        <field name="name">vertikali.layout.form</field>
+        <field name="model">vertikali.layout</field>
+        <field name="arch" type="xml">
+            <form string="Layout Type">
+                <sheet>
+                    <div class="oe_button_box" name="button_box">
+                        <button name="action_view_units" type="object"
+                                class="oe_stat_button" icon="fa-building-o">
+                            <field name="unit_count" widget="statinfo" string="Units"/>
+                        </button>
+                    </div>
+                    <field name="image" widget="image" class="oe_avatar"/>
+                    <div class="oe_title">
+                        <label for="name"/>
+                        <h1><field name="name" placeholder="e.g. 2+1 corner, 68.8 m²"/></h1>
+                    </div>
+                    <group>
+                        <group>
+                            <field name="code" placeholder="e.g. A1"/>
+                            <field name="rooms"/>
+                            <field name="area_total"/>
+                        </group>
+                        <group>
+                            <field name="sequence"/>
+                            <field name="active" widget="boolean_toggle"/>
+                        </group>
+                    </group>
+                    <notebook>
+                        <page string="Extra Images" name="images">
+                            <field name="image_ids">
+                                <list editable="bottom">
+                                    <field name="sequence" widget="handle"/>
+                                    <field name="name"/>
+                                    <field name="image" widget="image" width="120"/>
+                                </list>
+                            </field>
+                            <p class="text-muted small mt-2">
+                                Renders, 3D views, the view from the window — they
+                                appear as a gallery on every unit using this layout.
+                            </p>
+                        </page>
+                        <page string="Units" name="units">
+                            <field name="product_tmpl_ids">
+                                <list>
+                                    <field name="default_code"/>
+                                    <field name="name"/>
+                                    <field name="vk_building"/>
+                                    <field name="vk_floor"/>
+                                    <field name="vk_area_total"/>
+                                    <field name="vk_state"/>
+                                </list>
+                            </field>
+                        </page>
+                    </notebook>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_vertikali_layouts" model="ir.actions.act_window">
+        <field name="name">Layout Types</field>
+        <field name="res_model">vertikali.layout</field>
+        <field name="view_mode">list,form</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">Add a layout type</p>
+            <p>A tower repeats a handful of flat types. Upload each drawing once
+               here, then point the units at it instead of uploading the same
+               plan onto every unit.</p>
+        </field>
+    </record>
+
+</odoo>

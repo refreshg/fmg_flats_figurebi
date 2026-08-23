@@ -7,3 +7,7 @@ access_vertikali_view_salesman,vertikali.view salesman,model_vertikali_view,sale
 access_vertikali_view_manager,vertikali.view manager,model_vertikali_view,sales_team.group_sale_manager,1,1,1,1
 access_vertikali_polygon_salesman,vertikali.polygon salesman,model_vertikali_polygon,sales_team.group_sale_salesman,1,0,0,0
 access_vertikali_polygon_manager,vertikali.polygon manager,model_vertikali_polygon,sales_team.group_sale_manager,1,1,1,1
+access_vertikali_layout_salesman,vertikali.layout salesman,model_vertikali_layout,sales_team.group_sale_salesman,1,0,0,0
+access_vertikali_layout_manager,vertikali.layout manager,model_vertikali_layout,sales_team.group_sale_manager,1,1,1,1
+access_vertikali_unit_image_salesman,vertikali.unit.image salesman,model_vertikali_unit_image,sales_team.group_sale_salesman,1,0,0,0
+access_vertikali_unit_image_manager,vertikali.unit.image manager,model_vertikali_unit_image,sales_team.group_sale_manager,1,1,1,1
