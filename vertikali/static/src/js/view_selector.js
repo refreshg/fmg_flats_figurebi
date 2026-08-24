@@ -736,6 +736,39 @@ export class VertikaliSelector extends Component {
         return true;
     }
 
+    /**
+     * Counts for a facade band's hover tooltip. With filters active they
+     * describe only the units that survive them; the server-computed
+     * zone counters stand in when the unit dataset is not loaded yet.
+     */
+    zoneTipStats(zone) {
+        let pool = this.state.units.filter(
+            (u) => u.vk_floor === zone.floor
+                && (!zone.section || (u.vk_section || "") === zone.section));
+        if (!pool.length && !this.filterActive) {
+            return {
+                unit_count: zone.unit_count,
+                available: zone.available_count,
+                reserved: zone.reserved_count,
+                sold: zone.sold_count,
+                price_from: zone.price_from,
+            };
+        }
+        if (this.filterActive) {
+            pool = pool.filter((u) => this.matchesFilters(u));
+        }
+        const free = pool.filter((u) => u.vk_state === "available");
+        return {
+            unit_count: pool.length,
+            available: free.length,
+            reserved: pool.filter((u) => u.vk_state === "reserved").length,
+            sold: pool.filter((u) => u.vk_state === "sold").length,
+            price_from: free.length
+                ? free.reduce((m, u) => Math.min(m, u.list_price), Infinity)
+                : 0,
+        };
+    }
+
     /** Select the marked unit's zone on the freshly loaded floor plan. */
     selectFocusZone() {
         if (!this.state.focusUnits.size) {
@@ -1241,8 +1274,12 @@ export class VertikaliSelector extends Component {
 
     /** Status counts for the open floor, mirroring the facade band's line. */
     get floorStats() {
-        const s = { available: 0, reserved: 0, sold: 0 };
-        for (const u of this.state.floorUnits) {
+        const base = this.filterActive
+            ? this.state.floorUnits.filter((u) => this.matchesFilters(u))
+            : this.state.floorUnits;
+        const s = { available: 0, reserved: 0, sold: 0, total: base.length,
+                    grand: this.state.floorUnits.length };
+        for (const u of base) {
             if (s[u.vk_state] !== undefined) {
                 s[u.vk_state] += 1;
             }
@@ -1858,12 +1895,18 @@ export class VertikaliSelector extends Component {
      * than three zeros.
      */
     get zoneStats() {
-        const n = (s) => this.state.zoneUnits.filter((u) => u.vk_state === s).length;
+        // With filters on, the numbers describe what survives them -- the
+        // panel and the plan must tell one story.
+        const base = this.filterActive
+            ? this.state.zoneUnits.filter((u) => this.matchesFilters(u))
+            : this.state.zoneUnits;
+        const c = (st) => base.filter((u) => u.vk_state === st).length;
         return {
-            total: this.state.zoneUnits.length,
-            available: n("available"),
-            reserved: n("reserved"),
-            sold: n("sold"),
+            total: base.length,
+            grand: this.state.zoneUnits.length,
+            available: c("available"),
+            reserved: c("reserved"),
+            sold: c("sold"),
         };
     }
 

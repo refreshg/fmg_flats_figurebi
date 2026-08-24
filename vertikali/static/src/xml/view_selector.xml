@@ -867,23 +867,25 @@
                                 · Section <t t-esc="state.tip.zone.section"/>
                             </t>
                         </div>
-                        <t t-if="state.tip.zone.unit_count">
+                        <t t-set="ts" t-value="zoneTipStats(state.tip.zone)"/>
+                        <t t-if="ts.unit_count">
                             <div class="o_vk_tip_r">
                                 <span class="o_vk_tdot o_vk_td_free"></span>
-                                <t t-esc="state.tip.zone.available_count"/> available
+                                <t t-esc="ts.available"/> available
                             </div>
-                            <div class="o_vk_tip_r" t-if="state.tip.zone.reserved_count">
+                            <div class="o_vk_tip_r" t-if="ts.reserved">
                                 <span class="o_vk_tdot o_vk_td_res"></span>
-                                <t t-esc="state.tip.zone.reserved_count"/> reserved
+                                <t t-esc="ts.reserved"/> reserved
                             </div>
-                            <div class="o_vk_tip_r" t-if="state.tip.zone.sold_count">
+                            <div class="o_vk_tip_r" t-if="ts.sold">
                                 <span class="o_vk_tdot o_vk_td_sold"></span>
-                                <t t-esc="state.tip.zone.sold_count"/> sold
+                                <t t-esc="ts.sold"/> sold
                             </div>
-                            <div class="o_vk_tip_p" t-if="state.tip.zone.price_from">
-                                from <t t-esc="fmtMoney(state.tip.zone.price_from)"/>
+                            <div class="o_vk_tip_p" t-if="ts.price_from">
+                                from <t t-esc="fmtMoney(ts.price_from)"/>
                             </div>
                         </t>
+                        <div t-elif="filterActive" class="o_vk_tip_r">No units match the filters</div>
                         <div t-else="" class="o_vk_tip_r">No units linked yet</div>
                     </div>
 
@@ -1007,7 +1009,7 @@
                         </div>
 
                         <div class="o_vk_zcount">
-                            <div>Found: <b><t t-esc="state.zoneUnits.length"/></b> units</div>
+                            <div>Found: <b><t t-esc="zoneStats.total"/></b><t t-if="filterActive"> / <t t-esc="zoneStats.grand"/></t> units</div>
                             <div class="o_vk_zstat">
                                 <span><i class="o_vk_tdot o_vk_td_free"></i>
                                     <t t-esc="zoneStats.available"/> available</span>
@@ -1042,7 +1044,7 @@
                         </div>
 
                         <div class="o_vk_zcount">
-                            <div>Found: <b><t t-esc="state.floorUnits.length"/></b> units</div>
+                            <div>Found: <b><t t-esc="floorStats.total"/></b><t t-if="filterActive"> / <t t-esc="floorStats.grand"/></t> units</div>
                             <div class="o_vk_zstat">
                                 <span><i class="o_vk_tdot o_vk_td_free"></i>
                                     <t t-esc="floorStats.available"/> available</span>
@@ -1319,7 +1321,9 @@
     <!-- One unit in a side panel: plan thumbnail, price, status. Expects `u`
          from the calling t-foreach. Clicking opens the drawer card. -->
     <t t-name="vertikali.UnitRow">
-        <div class="o_vk_ucard" t-on-click="() => this.openCard(u)">
+        <div class="o_vk_ucard"
+             t-att-class="{ 'o_vk_dim': filterActive and !matchesFilters(u) }"
+             t-on-click="() => this.openCard(u)">
             <div class="d-flex align-items-start gap-2">
                 <span class="o_vk_uthumb">
                     <img t-if="unitThumb(u)" t-att-src="unitThumb(u)"
