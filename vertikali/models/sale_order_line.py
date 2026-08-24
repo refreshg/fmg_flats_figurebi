@@ -181,10 +181,8 @@ class SaleOrder(models.Model):
                     skip_backorder=True).button_validate()
             order._vk_refresh_units()
 
-    def action_cancel(self):
-        res = super().action_cancel()
-        self._vk_refresh_units()
-        return res
+    # NOTE: action_cancel is overridden above (return-on-cancel); a second
+    # definition here would silently shadow it -- that exact bug shipped once.
 
     def action_draft(self):
         res = super().action_draft()
