@@ -102,6 +102,34 @@ class SaleOrder(models.Model):
         if templates:
             templates._compute_vk_state()
 
+    def action_cancel(self):
+        # Cancelling releases the unit, full stop. Odoo's own cancel only
+        # unreserves; a delivery that was already validated (Mark Sold) keeps
+        # the quant written off, and the flat would stay off the market
+        # forever. So the units of every DONE delivery come back through a
+        # validated return transfer.
+        done_pickings = self.picking_ids.filtered(
+            lambda p: p.state == 'done'
+            and p.picking_type_id.code == 'outgoing'
+            and any(m.product_id.product_tmpl_id.vk_is_unit
+                    for m in p.move_ids))
+        res = super().action_cancel()
+        Return = self.env['stock.return.picking']
+        for picking in done_pickings:
+            wiz = Return.with_context(
+                active_id=picking.id, active_model='stock.picking').create({})
+            for line in wiz.product_return_moves:
+                is_unit = line.product_id.product_tmpl_id.vk_is_unit
+                line.quantity = line.move_id.product_uom_qty if is_unit else 0
+            action = wiz.action_create_returns()
+            ret = self.env['stock.picking'].browse(action['res_id'])
+            for move in ret.move_ids:
+                move.quantity = move.product_uom_qty
+                move.picked = True
+            ret.with_context(skip_backorder=True).button_validate()
+        self._vk_refresh_units()
+        return res
+
     def action_confirm(self):
         # The double-sale gate. Odoo happily confirms an order with no stock
         # -- the delivery just waits -- so availability is enforced here:
