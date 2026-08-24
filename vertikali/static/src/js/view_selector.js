@@ -621,6 +621,10 @@ export class VertikaliSelector extends Component {
                 this.selectFocusZone();
             }
         }
+        // The filter bar rides on the units dataset even on image views.
+        if (!this.state.units.length) {
+            await this.loadGrid();
+        }
         await this.openFocusCard();
         this._saveNav();
     }
@@ -708,6 +712,28 @@ export class VertikaliSelector extends Component {
             return;
         }
         await this.setMode(nav.mode);
+    }
+
+    /**
+     * Does the zone survive the active filters? On a floor plan the zone is
+     * one flat; a facade band passes while any unit on its storey does.
+     * Zones without units (or with no active filter) always pass.
+     */
+    zoneMatchesFilters(zone) {
+        if (!this.filterActive) {
+            return true;
+        }
+        if (this.state.mode === "floor") {
+            const unit = this.zoneUnit(zone);
+            return !unit || this.matchesFilters(unit);
+        }
+        if (this.state.mode === "facade" && zone.floor) {
+            return this.state.units.some(
+                (u) => u.vk_floor === zone.floor
+                    && (!zone.section || (u.vk_section || "") === zone.section)
+                    && this.matchesFilters(u));
+        }
+        return true;
     }
 
     /** Select the marked unit's zone on the freshly loaded floor plan. */
@@ -828,10 +854,15 @@ export class VertikaliSelector extends Component {
         ];
     }
 
-    /** Grid+ groups the same units by floor, high to low. */
+    /**
+     * Grid+ groups all units by floor, high to low. Filtered-out units fade
+     * like the grid's cells rather than disappearing -- vanishing rows made
+     * the floors look half-built.
+     */
     get plusRows() {
         const byFloor = new Map();
-        for (const u of this.filteredUnits) {
+        for (const raw of this.state.units) {
+            const u = { ...raw, dimmed: !this.matchesFilters(raw) };
             if (!byFloor.has(u.vk_floor)) {
                 byFloor.set(u.vk_floor, []);
             }
@@ -1362,6 +1393,9 @@ export class VertikaliSelector extends Component {
                 this.state.mode = "floor";
                 await this.loadView(plan.id);
                 this.selectFocusZone();
+                if (!this.state.units.length) {
+                    await this.loadGrid();
+                }
                 // The card opens along with the plan: arriving from a lead
                 // or an order, the unit's full story is the trip's point.
                 await this.openFocusCard();
@@ -1376,6 +1410,9 @@ export class VertikaliSelector extends Component {
             if (facadeId) {
                 this.state.mode = "facade";
                 await this.loadView(facadeId);
+                if (!this.state.units.length) {
+                    await this.loadGrid();
+                }
                 await this.openFocusCard();
                 return;
             }
@@ -2031,6 +2068,10 @@ export class VertikaliSelector extends Component {
 
     onZoneClick(zone) {
         if (this.state.drawing) {
+            return;
+        }
+        // A zone the filters ruled out is faded and inert outside editing.
+        if (!this.state.editing && !this.zoneMatchesFilters(zone)) {
             return;
         }
         this.state.selected = zone;

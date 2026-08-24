@@ -592,7 +592,7 @@
                             <div class="o_vk_pcards">
                                 <t t-foreach="row.units" t-as="u" t-key="u.id">
                                     <button t-attf-class="o_vk_pcard o_vk_p_{{u.vk_state}}"
-                                            t-att-class="{ 'o_vk_focusrow': isFocusUnit(u) }"
+                                            t-att-class="{ 'o_vk_focusrow': isFocusUnit(u), 'o_vk_dim': u.dimmed }"
                                             t-on-click="() => this.openCard(u)">
                                         <span class="o_vk_pc_top">
                                             <span class="o_vk_pc_r"><t t-esc="cellLabel(u)"/></span>
@@ -802,7 +802,11 @@
                 </p>
             </div>
 
-            <div t-else="" class="o_vk_body d-flex flex-grow-1 overflow-hidden">
+            <div t-else="" class="o_vk_body d-flex flex-column flex-grow-1 overflow-hidden">
+                <!-- Same filter bar as the inventory tabs: zones that fall
+                     outside the filters fade and stop taking clicks. -->
+                <t t-call="vertikali.Filters"/>
+                <div class="d-flex flex-grow-1 overflow-hidden">
 
                 <div class="o_vk_stage flex-grow-1 position-relative"
                      t-ref="stage"
@@ -837,7 +841,8 @@
                                         'o_vk_uz': zu,
                                         'o_vk_uz_free': zu and zu.vk_state === 'available',
                                         'o_vk_uz_res': zu and zu.vk_state === 'reserved',
-                                        'o_vk_uz_sold': zu and zu.vk_state === 'sold' }"
+                                        'o_vk_uz_sold': zu and zu.vk_state === 'sold',
+                                        'o_vk_zone_dimf': !zoneMatchesFilters(z) }"
                                      t-att-points="attr(z.pts)"
                                      t-on-click="() => this.onZoneClick(z)"
                                      t-on-pointerdown="(ev) => this.startDragZone(ev, z)"
@@ -890,6 +895,7 @@
                             <t t-set="zu" t-value="zoneUnit(z)"/>
                             <t t-if="zu and z.pts.length">
                                 <div t-attf-class="o_vk_pin o_vk_pin_{{zu.vk_state}}"
+                                     t-att-class="{ 'o_vk_pin_dimf': !matchesFilters(zu) }"
                                      t-attf-style="left:{{(z.pts.reduce((s,p) => s + p[0], 0) / z.pts.length) * 100}}%;top:{{(z.pts.reduce((s,p) => s + p[1], 0) / z.pts.length) * 100}}%"
                                      t-att-title="zu.default_code"
                                      t-on-click="() => this.openCard(zu)">
@@ -1175,6 +1181,7 @@
                         </button>
                     </div>
                     </t>
+                </div>
                 </div>
             </div>
 

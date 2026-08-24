@@ -44,6 +44,16 @@
         fill: rgba(32, 30, 29, .5);
         stroke: rgba(32, 30, 29, .75);
     }
+    // Ruled out by the filter bar: faded and inert.
+    .o_vk_zone.o_vk_zone_dimf {
+        opacity: .12;
+        pointer-events: none;
+    }
+    .o_vk_pin.o_vk_pin_dimf {
+        opacity: .15;
+        pointer-events: none;
+    }
+
     // Selection and the deal's outline must still beat the status fill.
     .o_vk_zone.o_vk_zone_sel { fill: rgba(236, 48, 19, .42); }
     .o_vk_zone.o_vk_zone_focus { stroke: var(--vk-accent); }
@@ -1547,6 +1557,10 @@
         }
     }
 
+    // th needs its own compound rule: .o_vk_ptable th is more specific
+    // than a lone class and kept the headers left-aligned.
+    .o_vk_ptable th.o_vk_num_c { text-align: center; }
+
     // Centred, not right-aligned: with wide columns the figures drifted to
     // the far edge and stopped reading as a column at all.
     .o_vk_num_c { text-align: center; font-variant-numeric: tabular-nums; }
@@ -1557,16 +1571,21 @@
         justify-content: flex-end;
         border-top: 1px solid rgba(32, 30, 29, .12);
         background: #fff;
+        padding-top: 8px;
+        padding-bottom: 8px;
+        font-size: 14px;
+
+        .o_vk_meta { font-size: 13.5px; font-weight: 600; }
     }
 
     .o_vk_pagebtn {
-        border: 1px solid rgba(32, 30, 29, .25);
+        border: 1px solid rgba(32, 30, 29, .3);
         background: #fff;
-        border-radius: 4px;
-        width: 28px;
-        height: 24px;
+        border-radius: 6px;
+        width: 40px;
+        height: 34px;
         line-height: 1;
-        font-size: 15px;
+        font-size: 20px;
         cursor: pointer;
 
         &:hover:not(:disabled) { border-color: var(--vk-accent); color: var(--vk-accent); }
