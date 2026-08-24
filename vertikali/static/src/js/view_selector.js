@@ -1735,6 +1735,9 @@ export class VertikaliSelector extends Component {
                 "default_code", "vk_floor", "vk_section", "vk_rooms",
                 "vk_area_total", "list_price", "vk_price_sqm", "vk_state",
                 "vk_area_balcony", "vk_handover", "vk_rooms_detail",
+                // Everything matchesFilters touches must be here, or the
+                // panel dims rows the tooltip counts as matching.
+                "vk_orientation",
                 "vk_condition_id", "vk_view_id", "vk_has_image", "vk_layout_id",
                 "write_date",
             ];
