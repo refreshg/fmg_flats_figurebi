@@ -526,12 +526,10 @@
                             title="Copy the selected zone one band lower">
                         Copy down
                     </button>
-                    <button class="btn btn-sm btn-secondary"
-                            t-on-click="autoNumberZones"
-                            t-att-disabled="!state.zones.length or state.drawing"
-                            title="Number the zones downwards from a starting floor and link each to its plan">
-                        Number floors…
-                    </button>
+                    <!-- Number floors… removed by request (2026-08-24): the
+                         team assigns storeys per zone in the side panel; the
+                         autoNumberZones method stays in the JS if it ever
+                         returns. -->
                     <button class="btn btn-sm btn-primary" t-on-click="saveShapes"
                             t-att-disabled="!state.dirty.size">
                         Save<t t-if="state.dirty.size"> (<t t-esc="state.dirty.size"/>)</t>
@@ -560,9 +558,9 @@
                 <t t-else="">
                     Trace one band with <b>+ Draw zone</b>, then <b>Copy up</b> /
                     <b>Copy down</b> to stack the facade. Give each band its
-                    storey with <b>Number floors…</b> — a zone without a floor
-                    opens nothing. Select a zone and press <b>Delete</b> to
-                    remove it. Changes save on <b>Save</b>.
+                    storey in the <b>Opens floor</b> field on the right — a
+                    zone without a floor opens nothing. Select a zone and press
+                    <b>Delete</b> to remove it. Changes save on <b>Save</b>.
                 </t>
             </div>
 
