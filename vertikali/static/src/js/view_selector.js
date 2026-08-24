@@ -1228,22 +1228,47 @@ export class VertikaliSelector extends Component {
             || null;
         this.refreshUnitTotal();
 
-        const want = unit.vk_section || false;
-        const floors = this.state.views.filter(
-            (v) => v.view_type === "floor" && v.floor === unit.vk_floor
-                && (!v.building || v.building === unit.vk_building));
-        const plan = floors.find((v) => (v.section || false) === want)
-            || floors.find((v) => !v.section) || floors[0];
-        if (plan) {
-            this.state.mode = "floor";
-            await this.loadView(plan.id);
-            this.selectFocusZone();
-            // The card opens along with the plan: arriving from a lead or an
-            // order, the unit's full story is the point of the trip.
+        // Land on the best view the project actually has switched on --
+        // a step the project disabled must not come back through a deep
+        // link. Floor plan first, then facade, then masterplan, then grid.
+        if (project.use_floorplan) {
+            const want = unit.vk_section || false;
+            const floors = this.state.views.filter(
+                (v) => v.view_type === "floor" && v.floor === unit.vk_floor
+                    && (!v.building || v.building === unit.vk_building));
+            const plan = floors.find((v) => (v.section || false) === want)
+                || floors.find((v) => !v.section) || floors[0];
+            if (plan) {
+                this.state.mode = "floor";
+                await this.loadView(plan.id);
+                this.selectFocusZone();
+                // The card opens along with the plan: arriving from a lead
+                // or an order, the unit's full story is the trip's point.
+                await this.openFocusCard();
+                return;
+            }
+        }
+        if (project.use_facade) {
+            const facadeId = this.state.block?.facade_view_id?.[0]
+                || this.state.views.find(
+                    (v) => v.view_type === "facade"
+                        && (!v.building || v.building === unit.vk_building))?.id;
+            if (facadeId) {
+                this.state.mode = "facade";
+                await this.loadView(facadeId);
+                await this.openFocusCard();
+                return;
+            }
+        }
+        if (project.use_masterplan) {
+            this.state.mode = "masterplan";
+            this.state.view = null;
+            this.state.zones = [];
             await this.openFocusCard();
             return;
         }
-        // No plan yet: the grid still shows the unit, so open its card.
+        // Grid: always available as the last resort, and the only stop
+        // when it is the project's single enabled step.
         this.state.mode = "grid";
         await this.loadGrid();
         await this.openFocusCard();
