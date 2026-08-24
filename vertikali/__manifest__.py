@@ -14,7 +14,7 @@ apartment-specific fields and the visual selector are custom.
     """,
     'author': "Vertikali",
     'category': 'Sales',
-    'version': '19.0.3.2.0',
+    'version': '19.0.3.2.1',
     'license': 'LGPL-3',
 
     # crm/sale_crm give us the opportunity -> multiple quotations flow (D6),
@@ -40,11 +40,12 @@ apartment-specific fields and the visual selector are custom.
         'views/vertikali_view_views.xml',
         'wizard/copy_plan_wizard_views.xml',
         'views/menus.xml',
-        # Sample building. Loaded as ordinary data because this database runs
-        # without demo data (base.demo is False), and it is marked noupdate so
-        # edits to the sample survive later upgrades. Remove this line once
-        # real inventory replaces it.
-        'data/demo_building_a.xml',
+        # data/demo_building_a.xml is deliberately NOT loaded any more. The
+        # demo became the real inventory and the team edits it live; keeping
+        # the file in 'data' meant every upgrade re-created records the team
+        # had deleted (noupdate only shields records that still exist -- a
+        # deleted xml_id is simply created again). The noupdate=1 records
+        # already in the database survive upgrades untouched.
     ],
 
     'assets': {
