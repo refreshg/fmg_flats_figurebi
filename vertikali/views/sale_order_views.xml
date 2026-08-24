@@ -16,6 +16,9 @@
                         string="Mark Sold" class="btn-success"
                         invisible="vk_stage not in ('reservation', 'contract')"
                         confirm="This writes the unit off stock and closes the deal. Continue?"/>
+                <button name="action_vk_show_units" type="object"
+                        string="Show on Plan"
+                        invisible="not vk_has_units"/>
                 <field name="vk_stage" widget="statusbar"
                         invisible="not vk_has_units or not vk_stage"/>
             </xpath>

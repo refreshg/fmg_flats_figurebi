@@ -14,7 +14,7 @@
                 <t t-esc="state.focusUnits.size"/> attached
             </span>
             <button class="btn btn-sm btn-primary ms-auto"
-                    t-on-click="backToLead">Done — back to opportunity</button>
+                    t-on-click="backToOrigin">Done — back to opportunity</button>
         </div>
 
         <!-- Unit card: a drawer sliding in from the right, over whichever view
@@ -168,8 +168,37 @@
                         ✓ Attached to the opportunity
                     </div>
 
-                    <button class="o_vk_cta" t-on-click="() => this.openUnitRecord(state.card)">
-                        Open in Odoo
+                    <!-- Outside pick mode the card is a starting point: open
+                         a deal on this unit, as a pipeline entry or straight
+                         as a quotation. -->
+                    <div t-if="!pickLeadId" class="o_vk_cta_row">
+                        <button class="o_vk_cta"
+                                t-on-click="() => this.createOpportunity(state.card)">
+                            Create Opportunity
+                        </button>
+                        <button class="o_vk_cta o_vk_cta2"
+                                t-on-click="() => this.createQuotation(state.card)">
+                            Create Sale Order
+                        </button>
+                    </div>
+
+                    <!-- Who is already circling this unit. -->
+                    <div t-if="state.cardLeads.length" class="o_vk_cleads">
+                        <div class="o_vk_kicker mb-1">Opportunities</div>
+                        <t t-foreach="state.cardLeads" t-as="l" t-key="l.id">
+                            <button class="o_vk_clead"
+                                    t-on-click="() => this.openLead(l)">
+                                <span class="o_vk_clead_n"><t t-esc="l.name"/></span>
+                                <span class="o_vk_clead_s" t-if="l.stage_id">
+                                    <t t-esc="l.stage_id[1]"/>
+                                </span>
+                            </button>
+                        </t>
+                    </div>
+
+                    <button class="o_vk_openlink"
+                            t-on-click="() => this.openUnitRecord(state.card)">
+                        Open in Odoo →
                     </button>
 
                     <div class="o_vk_strip" t-if="floorStrip.length">
@@ -217,6 +246,12 @@
             <div class="o_vk_steps d-flex align-items-center gap-3 px-3 pt-2 flex-wrap"
                  t-if="state.project">
                 <div class="o_vk_crumb d-flex align-items-center gap-2">
+                    <!-- Straight back to the lead or order this was opened
+                         from; the pick banner has its own Done button. -->
+                    <button t-if="origin and !pickLeadId" class="o_vk_backorig"
+                            t-on-click="backToOrigin">
+                        ← <t t-esc="origin.name"/>
+                    </button>
                     <button class="o_vk_link" t-on-click="backToProjects"
                             t-if="state.projects.length > 1">← Projects</button>
                     <span class="o_vk_crumb_n"><t t-esc="state.project.name"/></span>

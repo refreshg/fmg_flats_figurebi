@@ -20,10 +20,15 @@ class CrmLead(models.Model):
         domain=[('vk_is_unit', '=', True)],
     )
     vk_unit_count = fields.Integer(compute='_compute_vk_unit_count')
+    # Comma-joined codes for the pipeline kanban card, where looping a
+    # many2many is more machinery than the card is worth.
+    vk_unit_codes = fields.Char(compute='_compute_vk_unit_count')
 
     def _compute_vk_unit_count(self):
         for lead in self:
             lead.vk_unit_count = len(lead.vk_unit_ids)
+            lead.vk_unit_codes = ", ".join(
+                lead.vk_unit_ids.mapped('default_code'))
 
     # ------------------------------------------------------------- actions
 
@@ -43,6 +48,9 @@ class CrmLead(models.Model):
             'vk_pick_lead_id': self.id,
             'vk_pick_lead_name': self.name or '',
             'vk_focus_unit_ids': self.vk_unit_ids.ids,
+            'vk_origin_model': 'crm.lead',
+            'vk_origin_id': self.id,
+            'vk_origin_name': self.name or _("Opportunity"),
         })
 
     def action_vk_show_units(self):
@@ -52,6 +60,9 @@ class CrmLead(models.Model):
             raise UserError(_("No units attached to this opportunity yet."))
         return self._vk_selector_action({
             'vk_focus_unit_ids': self.vk_unit_ids.ids,
+            'vk_origin_model': 'crm.lead',
+            'vk_origin_id': self.id,
+            'vk_origin_name': self.name or _("Opportunity"),
         })
 
     def action_vk_reserve(self):

@@ -60,6 +60,13 @@ export class VertikaliSelector extends Component {
         this.pickLeadId = params.vk_pick_lead_id || null;
         this.pickLeadName = params.vk_pick_lead_name || "";
         this.focusUnitIds = params.vk_focus_unit_ids || [];
+        // Where the selector was opened from (a lead or an order), so a
+        // back button can return there in one click.
+        this.origin = params.vk_origin_model ? {
+            model: params.vk_origin_model,
+            id: params.vk_origin_id,
+            name: params.vk_origin_name || "",
+        } : null;
 
         this.state = useState({
             projects: [],
@@ -75,6 +82,7 @@ export class VertikaliSelector extends Component {
             unitById: {},
             unit: null,          // unit shown in the detail panel
             card: null,          // unit opened as a full card
+            cardLeads: [],       // opportunities already tied to that unit
             gallery: [],         // the card's images
             slide: 0,            // which one is showing
             zoom: false,         // the current image, full screen
@@ -877,6 +885,7 @@ export class VertikaliSelector extends Component {
         this.state.card = unit;
         this.state.slide = 0;
         this.state.gallery = [];
+        this.state.cardLeads = [];
         try {
             // The product image plus any extra images: a unit usually has a
             // layout, a furnished view and a couple of renders.
@@ -887,7 +896,8 @@ export class VertikaliSelector extends Component {
             // dozen renders no longer drags megabytes through the RPC.
             const [rec] = await this.orm.read(
                 "product.template", [unit.id],
-                ["vk_has_image", "write_date", "vk_orientation", "vk_rooms_detail",
+                ["vk_has_image", "write_date", "product_variant_id",
+                 "vk_orientation", "vk_rooms_detail",
                  "vk_condition_id", "vk_view_id", "vk_handover", "vk_section", "vk_building",
                  "vk_rooms", "vk_floor", "vk_state", "vk_area_total",
                  "vk_area_living", "vk_area_balcony", "vk_price_sqm",
@@ -935,6 +945,13 @@ export class VertikaliSelector extends Component {
             }
             this.state.gallery = shots;
             this.state.card.layoutName = layout?.name || null;
+
+            // Opportunities already circling this unit, so the card answers
+            // "who else is on it" before a second one gets created.
+            this.state.cardLeads = await this.orm.searchRead(
+                "crm.lead", [["vk_unit_ids", "in", [unit.id]]],
+                ["name", "stage_id", "partner_id"],
+                { order: "id desc", limit: 10 });
         } catch (e) {
             this.state.gallery = [];
         }
@@ -1176,12 +1193,81 @@ export class VertikaliSelector extends Component {
         }
     }
 
-    /** Back to the opportunity the picking started from. */
-    backToLead() {
+    /** Back to the record the selector was opened from (lead or order). */
+    backToOrigin() {
+        const model = this.origin?.model
+            || (this.pickLeadId ? "crm.lead" : null);
+        const resId = this.origin?.id || this.pickLeadId;
+        if (!model || !resId) {
+            return;
+        }
+        this.action.doAction({
+            type: "ir.actions.act_window",
+            res_model: model,
+            res_id: resId,
+            views: [[false, "form"]],
+            target: "current",
+        });
+    }
+
+    /**
+     * One click from the card to a pipeline entry: the opportunity is
+     * created with the unit already attached, then opened for the contact
+     * details. Named after the unit so the board reads at a glance.
+     */
+    async createOpportunity(unit) {
+        try {
+            const name = `${unit.default_code} — ${this.state.project?.name || "unit"}`;
+            const [leadId] = await this.orm.create("crm.lead", [{
+                name,
+                type: "opportunity",
+                vk_unit_ids: [[4, unit.id]],
+            }]);
+            this.action.doAction({
+                type: "ir.actions.act_window",
+                res_model: "crm.lead",
+                res_id: leadId,
+                views: [[false, "form"]],
+                target: "current",
+            });
+        } catch (e) {
+            this.notification.add(e.message || String(e), { type: "danger" });
+        }
+    }
+
+    /**
+     * Straight to a quotation with the unit already on it. Opened as a new
+     * form rather than created silently: an order needs a customer, and
+     * that is the one thing the card cannot know.
+     */
+    createQuotation(unit) {
+        const [variantId] = unit.product_variant_id || [];
+        if (!variantId) {
+            this.notification.add("This unit has no sellable variant.",
+                { type: "danger" });
+            return;
+        }
+        this.action.doAction({
+            type: "ir.actions.act_window",
+            res_model: "sale.order",
+            views: [[false, "form"]],
+            target: "current",
+            context: {
+                default_order_line: [[0, 0, {
+                    product_id: variantId,
+                    product_uom_qty: 1,
+                    price_unit: unit.list_price,
+                }]],
+            },
+        });
+    }
+
+    /** A lead row on the card opens the pipeline record itself. */
+    openLead(lead) {
         this.action.doAction({
             type: "ir.actions.act_window",
             res_model: "crm.lead",
-            res_id: this.pickLeadId,
+            res_id: lead.id,
             views: [[false, "form"]],
             target: "current",
         });

@@ -560,6 +560,90 @@
         &:hover { filter: brightness(.92); }
     }
 
+    // Two ways to start a deal, side by side and equal in weight.
+    .o_vk_cta_row {
+        display: flex;
+        gap: 8px;
+
+        .o_vk_cta { flex: 1 1 0; margin-top: 14px; padding: 12px 6px; }
+    }
+
+    .o_vk_cta2 { background: #201e1d; }
+
+    // The record form is a secondary path now, so a quiet link, not a bar.
+    .o_vk_openlink {
+        display: block;
+        width: 100%;
+        margin-top: 10px;
+        padding: 6px;
+        background: transparent;
+        border: 0;
+        font: inherit;
+        font-size: 12.5px;
+        color: #2a6ae0;
+        cursor: pointer;
+        text-align: center;
+
+        &:hover { text-decoration: underline; }
+    }
+
+    // Opportunities already tied to the unit.
+    .o_vk_cleads { margin-top: 16px; }
+
+    .o_vk_clead {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        width: 100%;
+        padding: 8px 10px;
+        margin-top: 4px;
+        background: rgba(32, 30, 29, .04);
+        border: 1px solid rgba(32, 30, 29, .12);
+        border-radius: 4px;
+        font: inherit;
+        font-size: 12.5px;
+        text-align: left;
+        cursor: pointer;
+
+        &:hover { border-color: var(--vk-accent); }
+    }
+
+    .o_vk_clead_n {
+        flex: 1 1 auto;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    .o_vk_clead_s {
+        flex: 0 0 auto;
+        font-size: 10.5px;
+        text-transform: uppercase;
+        letter-spacing: .05em;
+        background: #201e1d;
+        color: #fff;
+        border-radius: 8px;
+        padding: 2px 8px;
+    }
+
+    // The way back to the lead or order the selector was opened from.
+    .o_vk_backorig {
+        border: 1px solid rgba(32, 30, 29, .25);
+        background: #fff;
+        border-radius: 14px;
+        padding: 3px 12px;
+        font: inherit;
+        font-size: 12.5px;
+        font-weight: 600;
+        cursor: pointer;
+        max-width: 220px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+
+        &:hover { border-color: var(--vk-accent); color: var(--vk-accent); }
+    }
+
     .o_vk_attached {
         margin-top: 14px;
         padding: 10px 12px;

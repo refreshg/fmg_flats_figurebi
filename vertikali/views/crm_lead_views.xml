@@ -53,4 +53,20 @@
         </field>
     </record>
 
+    <!-- The pipeline card names the units the deal is about, so the board
+         reads "who wants which flat" without opening anything. -->
+    <record id="view_crm_lead_kanban_vertikali" model="ir.ui.view">
+        <field name="name">crm.lead.kanban.vertikali</field>
+        <field name="model">crm.lead</field>
+        <field name="inherit_id" ref="crm.crm_case_kanban_view_leads"/>
+        <field name="arch" type="xml">
+            <xpath expr="//t[@t-name='card']" position="inside">
+                <div t-if="record.vk_unit_codes.raw_value"
+                     class="o_vk_kanban_units text-muted small">
+                    ▦ <field name="vk_unit_codes"/>
+                </div>
+            </xpath>
+        </field>
+    </record>
+
 </odoo>
