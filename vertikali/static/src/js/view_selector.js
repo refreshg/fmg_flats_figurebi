@@ -44,6 +44,7 @@ function loadFilterVis() {
 
 export class VertikaliSelector extends Component {
     static template = "vertikali.Selector";
+    PAGE_SIZE = 100;
     static props = { ...Component.props, action: { type: Object, optional: true } };
 
     setup() {
@@ -102,6 +103,7 @@ export class VertikaliSelector extends Component {
             unit: null,          // unit shown in the detail panel
             card: null,          // unit opened as a full card
             cardLeads: [],       // opportunities already tied to that unit
+            cardOrders: [],      // sale orders carrying it
             gallery: [],         // the card's images
             slide: 0,            // which one is showing
             zoom: false,         // the current image, full screen
@@ -110,6 +112,7 @@ export class VertikaliSelector extends Component {
             cellTip: null,       // hovered grid cell, for the unit tooltip
             sortBy: "default_code",
             sortAsc: true,
+            page: 0,             // properties table page
             unitTotal: 0,        // count for the inventory tab badges
             zoneUnits: [],       // units behind the selected facade band
             floorPick: [],       // every unit on that storey, for ticking
@@ -775,6 +778,33 @@ export class VertikaliSelector extends Component {
             this.state.sortBy = key;
             this.state.sortAsc = true;
         }
+        this.state.page = 0;
+    }
+
+    // ------------------------------------------------ properties paging
+
+    /** One page of the table: 126 rows scroll, 500 would crawl. */
+    get pagedUnits() {
+        const start = this.state.page * this.PAGE_SIZE;
+        return this.sortedUnits.slice(start, start + this.PAGE_SIZE);
+    }
+
+    get pageInfo() {
+        const total = this.sortedUnits.length;
+        const start = this.state.page * this.PAGE_SIZE;
+        return {
+            start: total ? start + 1 : 0,
+            end: Math.min(start + this.PAGE_SIZE, total),
+            total,
+            hasPrev: this.state.page > 0,
+            hasNext: start + this.PAGE_SIZE < total,
+        };
+    }
+
+    stepPage(delta) {
+        const last = Math.max(
+            0, Math.ceil(this.sortedUnits.length / this.PAGE_SIZE) - 1);
+        this.state.page = Math.min(last, Math.max(0, this.state.page + delta));
     }
 
     /**
@@ -791,10 +821,10 @@ export class VertikaliSelector extends Component {
             { key: "vk_rooms", label: "Layout" },
             { key: "vk_building", label: "Building" },
             { key: "vk_section", label: "Section" },
-            { key: "vk_floor", label: "Floor" },
-            { key: "vk_area_total", label: "Area, m²" },
-            { key: "vk_price_sqm", label: "Price / m²" },
-            { key: "list_price", label: "Price" },
+            { key: "vk_floor", label: "Floor", num: true },
+            { key: "vk_area_total", label: "Area, m²", num: true },
+            { key: "vk_price_sqm", label: "Price / m²", num: true },
+            { key: "list_price", label: "Price", num: true },
         ];
     }
 
@@ -887,6 +917,7 @@ export class VertikaliSelector extends Component {
     }
 
     toggleFilter(kind, value) {
+        this.state.page = 0;
         const list = this.state.filters[kind];
         const i = list.indexOf(value);
         if (i >= 0) {
@@ -925,6 +956,7 @@ export class VertikaliSelector extends Component {
     }
 
     clearFilters() {
+        this.state.page = 0;
         this.state.filters.rooms = [];
         this.state.filters.status = [];
         this.state.filters.orient = [];
@@ -1039,6 +1071,7 @@ export class VertikaliSelector extends Component {
         this.state.slide = 0;
         this.state.gallery = [];
         this.state.cardLeads = [];
+        this.state.cardOrders = [];
         try {
             // The product image plus any extra images: a unit usually has a
             // layout, a furnished view and a couple of renders.
@@ -1099,12 +1132,28 @@ export class VertikaliSelector extends Component {
             this.state.gallery = shots;
             this.state.card.layoutName = layout?.name || null;
 
-            // Opportunities already circling this unit, so the card answers
-            // "who else is on it" before a second one gets created.
-            this.state.cardLeads = await this.orm.searchRead(
-                "crm.lead", [["vk_unit_ids", "in", [unit.id]]],
-                ["name", "stage_id", "partner_id"],
-                { order: "id desc", limit: 10 });
+            // Opportunities and orders already tied to this unit, so the card
+            // answers "who else is on it". Either read fails quietly for a
+            // user whose rights do not reach that model -- the section then
+            // simply is not there.
+            try {
+                this.state.cardLeads = await this.orm.searchRead(
+                    "crm.lead", [["vk_unit_ids", "in", [unit.id]]],
+                    ["name", "stage_id", "partner_id"],
+                    { order: "id desc", limit: 10 });
+            } catch {
+                this.state.cardLeads = [];
+            }
+            try {
+                this.state.cardOrders = await this.orm.searchRead(
+                    "sale.order",
+                    [["order_line.product_id.product_tmpl_id", "=", unit.id],
+                     ["state", "!=", "cancel"]],
+                    ["name", "partner_id", "state", "vk_stage"],
+                    { order: "id desc", limit: 10 });
+            } catch {
+                this.state.cardOrders = [];
+            }
         } catch (e) {
             this.state.gallery = [];
         }
@@ -1494,6 +1543,17 @@ export class VertikaliSelector extends Component {
                     price_unit: unit.list_price,
                 }]],
             },
+        });
+    }
+
+    /** An order row on the card opens the order itself. */
+    openOrder(order) {
+        this.action.doAction({
+            type: "ir.actions.act_window",
+            res_model: "sale.order",
+            res_id: order.id,
+            views: [[false, "form"]],
+            target: "current",
         });
     }
 

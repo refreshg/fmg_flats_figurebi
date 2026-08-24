@@ -1547,8 +1547,37 @@
         }
     }
 
-    .o_vk_num_c { text-align: right; font-variant-numeric: tabular-nums; }
+    // Centred, not right-aligned: with wide columns the figures drifted to
+    // the far edge and stopped reading as a column at all.
+    .o_vk_num_c { text-align: center; font-variant-numeric: tabular-nums; }
     .o_vk_sortmark { font-size: 8px; margin-left: 4px; }
+
+    .o_vk_pager {
+        flex: 0 0 auto;
+        justify-content: flex-end;
+        border-top: 1px solid rgba(32, 30, 29, .12);
+        background: #fff;
+    }
+
+    .o_vk_pagebtn {
+        border: 1px solid rgba(32, 30, 29, .25);
+        background: #fff;
+        border-radius: 4px;
+        width: 28px;
+        height: 24px;
+        line-height: 1;
+        font-size: 15px;
+        cursor: pointer;
+
+        &:hover:not(:disabled) { border-color: var(--vk-accent); color: var(--vk-accent); }
+        &:disabled { opacity: .35; cursor: default; }
+    }
+
+    // Order-stage pills on the card's Sale Orders list.
+    .o_vk_os_reservation { background: #2a6ae0; }
+    .o_vk_os_contract { background: #b97a17; }
+    .o_vk_os_sold { background: #1aa179; }
+    .o_vk_os_quote { background: #6c6864; }
 
     // ---- grid cell tooltip ----
     // Fixed, because the grid scrolls: anchored in page coordinates.

@@ -195,7 +195,8 @@
                         </button>
                     </div>
 
-                    <!-- Who is already circling this unit. -->
+                    <!-- Who is already circling this unit. Either section
+                         only exists when the user's rights reach the model. -->
                     <div t-if="state.cardLeads.length" class="o_vk_cleads">
                         <div class="o_vk_kicker mb-1">Opportunities</div>
                         <t t-foreach="state.cardLeads" t-as="l" t-key="l.id">
@@ -204,6 +205,22 @@
                                 <span class="o_vk_clead_n"><t t-esc="l.name"/></span>
                                 <span class="o_vk_clead_s" t-if="l.stage_id">
                                     <t t-esc="l.stage_id[1]"/>
+                                </span>
+                            </button>
+                        </t>
+                    </div>
+
+                    <div t-if="state.cardOrders.length" class="o_vk_cleads">
+                        <div class="o_vk_kicker mb-1">Sale Orders</div>
+                        <t t-foreach="state.cardOrders" t-as="o" t-key="o.id">
+                            <button class="o_vk_clead"
+                                    t-on-click="() => this.openOrder(o)">
+                                <span class="o_vk_clead_n">
+                                    <t t-esc="o.name"/>
+                                    <t t-if="o.partner_id"> · <t t-esc="o.partner_id[1]"/></t>
+                                </span>
+                                <span t-attf-class="o_vk_clead_s o_vk_os_{{o.vk_stage or 'quote'}}">
+                                    <t t-esc="o.vk_stage or 'quotation'"/>
                                 </span>
                             </button>
                         </t>
@@ -608,7 +625,8 @@
                         <thead>
                             <tr>
                                 <t t-foreach="tableCols" t-as="col" t-key="col.key">
-                                    <th t-on-click="() => this.toggleSort(col.key)">
+                                    <th t-att-class="{ 'o_vk_num_c': col.num }"
+                                        t-on-click="() => this.toggleSort(col.key)">
                                         <t t-esc="col.label"/>
                                         <span class="o_vk_sortmark" t-if="state.sortBy === col.key">
                                             <t t-esc="state.sortAsc ? '▲' : '▼'"/>
@@ -618,7 +636,7 @@
                             </tr>
                         </thead>
                         <tbody>
-                            <t t-foreach="sortedUnits" t-as="u" t-key="u.id">
+                            <t t-foreach="pagedUnits" t-as="u" t-key="u.id">
                                 <tr t-att-class="{ 'o_vk_focusrow': isFocusUnit(u) }"
                                     t-on-click="() => this.openCard(u)">
                                     <td>
@@ -626,8 +644,8 @@
                                         <t t-esc="u.vk_state"/>
                                     </td>
                                     <td><t t-esc="u.default_code"/></td>
-                                    <td><t t-esc="u.vk_rooms"/></td>
-                                    <td><t t-esc="u.vk_building"/></td>
+                                    <td><t t-esc="u.vk_rooms or '—'"/></td>
+                                    <td><t t-esc="u.vk_building or '—'"/></td>
                                     <td><t t-esc="u.vk_section or '—'"/></td>
                                     <td class="o_vk_num_c"><t t-esc="u.vk_floor"/></td>
                                     <td class="o_vk_num_c"><t t-esc="u.vk_area_total"/></td>
@@ -638,6 +656,20 @@
                         </tbody>
                     </table>
                     <div t-if="!sortedUnits.length" class="text-muted p-3">No units match.</div>
+                </div>
+
+                <!-- Pager: past one hundred rows the table stops scrolling
+                     and starts paging. -->
+                <div t-if="pageInfo.total > PAGE_SIZE"
+                     class="o_vk_pager d-flex align-items-center gap-2 px-3 py-1">
+                    <span class="o_vk_meta">
+                        <t t-esc="pageInfo.start"/>–<t t-esc="pageInfo.end"/>
+                        / <t t-esc="pageInfo.total"/>
+                    </span>
+                    <button class="o_vk_pagebtn" t-att-disabled="!pageInfo.hasPrev"
+                            t-on-click="() => this.stepPage(-1)">‹</button>
+                    <button class="o_vk_pagebtn" t-att-disabled="!pageInfo.hasNext"
+                            t-on-click="() => this.stepPage(1)">›</button>
                 </div>
             </div>
 
