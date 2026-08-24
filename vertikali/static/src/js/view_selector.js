@@ -1208,6 +1208,13 @@ export class VertikaliSelector extends Component {
             this.state.mode = "floor";
             await this.loadView(plan.id);
             this.selectFocusZone();
+            // The card opens along with the plan: arriving from a lead or an
+            // order, the unit's full story is the point of the trip.
+            const row = this.state.unitById[unitId]
+                || this.state.floorUnits.find((u) => u.id === unitId);
+            if (row) {
+                this.openCard(row);
+            }
             return;
         }
         // No plan yet: the grid still shows the unit, so open its card.
