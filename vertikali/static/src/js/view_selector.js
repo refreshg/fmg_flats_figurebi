@@ -1685,6 +1685,13 @@ export class VertikaliSelector extends Component {
      * zone opened nothing.
      */
     zoneUnit(zone) {
+        // Only on a floor plan does a zone stand for one flat. A facade band
+        // also carries attached units, and unitById keeps the last visited
+        // floor's rows -- resolving there painted a stray unit pin (and its
+        // status colours) onto the facade.
+        if (this.state.mode !== "floor") {
+            return null;
+        }
         const id = zone.product_tmpl_ids?.[0] || zone.product_tmpl_id?.[0];
         if (!id) {
             return null;
