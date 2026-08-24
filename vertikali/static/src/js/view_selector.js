@@ -584,6 +584,7 @@ export class VertikaliSelector extends Component {
         // Grid, Grid+ and Properties are three readings of one dataset.
         if (this.isInventoryMode) {
             await this.loadGrid();
+            await this.openFocusCard();
             return;
         }
         const views = this.modeViews;
@@ -603,6 +604,35 @@ export class VertikaliSelector extends Component {
             if (mode === "floor") {
                 this.selectFocusZone();
             }
+        }
+        await this.openFocusCard();
+    }
+
+    /**
+     * The marked unit's card greets the user on every view change: closing
+     * it only clears the current screen, and the next tab opens it again.
+     * Pick mode is exempt -- there the user is browsing, and a drawer
+     * popping open on every tab would stand in the way.
+     */
+    async openFocusCard() {
+        if (!this.state.focusUnits.size || this.pick) {
+            return;
+        }
+        const unitId = this.focusUnitIds.find(
+            (id) => this.state.focusUnits.has(id))
+            || [...this.state.focusUnits][0];
+        const row = this.state.unitById[unitId]
+            || this.state.units.find((u) => u.id === unitId)
+            || this.state.floorUnits.find((u) => u.id === unitId)
+            || (await this.orm.searchRead(
+                "product.template", [["id", "=", unitId]],
+                ["default_code", "vk_floor", "vk_section", "vk_rooms",
+                 "vk_area_total", "vk_area_balcony", "vk_orientation",
+                 "list_price", "vk_price_sqm", "vk_state", "vk_handover",
+                 "vk_condition_id", "vk_view_id", "vk_has_image",
+                 "vk_layout_id", "write_date"]))[0];
+        if (row) {
+            this.openCard(row);
         }
     }
 
@@ -1210,20 +1240,13 @@ export class VertikaliSelector extends Component {
             this.selectFocusZone();
             // The card opens along with the plan: arriving from a lead or an
             // order, the unit's full story is the point of the trip.
-            const row = this.state.unitById[unitId]
-                || this.state.floorUnits.find((u) => u.id === unitId);
-            if (row) {
-                this.openCard(row);
-            }
+            await this.openFocusCard();
             return;
         }
         // No plan yet: the grid still shows the unit, so open its card.
         this.state.mode = "grid";
         await this.loadGrid();
-        const row = this.state.units.find((u) => u.id === unitId);
-        if (row) {
-            this.openCard(row);
-        }
+        await this.openFocusCard();
     }
 
     /**
