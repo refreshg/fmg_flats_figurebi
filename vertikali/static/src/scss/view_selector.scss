@@ -28,10 +28,25 @@
     }
 
     // ---- floor plan: unit zones ----
+    // Compound selectors on purpose: the base .o_vk_zone fill is declared
+    // later in this file and, at equal specificity, later wins -- the status
+    // colours silently lost that fight and every zone painted the same.
     .o_vk_uz { stroke-width: .002; }
-    .o_vk_uz_free { fill: rgba(26, 161, 121, .32); stroke: #1aa179; }
-    .o_vk_uz_res  { fill: rgba(232, 163, 61, .34); stroke: #e8a33d; }
-    .o_vk_uz_sold { fill: rgba(32, 30, 29, .22); stroke: rgba(32, 30, 29, .5); }
+    .o_vk_zone.o_vk_uz_free {
+        fill: rgba(26, 161, 121, .3);
+        stroke: #1aa179;
+    }
+    .o_vk_zone.o_vk_uz_res {
+        fill: rgba(232, 163, 61, .55);
+        stroke: #b97a17;
+    }
+    .o_vk_zone.o_vk_uz_sold {
+        fill: rgba(32, 30, 29, .5);
+        stroke: rgba(32, 30, 29, .75);
+    }
+    // Selection and the deal's outline must still beat the status fill.
+    .o_vk_zone.o_vk_zone_sel { fill: rgba(236, 48, 19, .42); }
+    .o_vk_zone.o_vk_zone_focus { stroke: var(--vk-accent); }
 
     // HTML, not an SVG circle: the overlay stretches its viewBox, so a circle
     // drawn inside it renders as an oval.
