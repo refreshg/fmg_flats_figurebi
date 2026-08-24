@@ -55,6 +55,21 @@ draft/sent შეთავაზება ბინას **აღარ** ა�
 reservation → contract (ხელით ღილაკი) → sold / cancelled. Estate →
 Reservations მენიუ (kanban ჯგუფდება ეტაპებით, list ფერებით).
 
+**დამატებები (2026-08-24, v3.3–3.5):**
+- გაუქმება **ყოველთვის** აბრუნებს ნაშთს — done მიწოდებას ავტომატური
+  return transfer უკეთდება (`action_cancel` override)
+- reserved/sold ბინის მიბმა **იკრძალება** ლიდზეც და შეთავაზების ხაზზეც
+  (სერვერის guard-ები + ბარათზე ღილაკების დამალვა შენიშვნით)
+- pick-რეჟიმი generic-ია: სამიზნე ლიდი **ან** draft შეთავაზება
+  (`vk_pick_model/vk_pick_id`); ბარათიდან Attach ორდერზე ხაზს ქმნის
+- deep-link (`Show on Plan`) პროექტის ჩართულ საფეხურებს ემორჩილება:
+  floor → facade → masterplan → grid; მონიშნულის ბარათი ყოველ ვიუზე
+  თავიდან იხსნება (დახურვა მხოლოდ მიმდინარე ეკრანზეა); pick-ში — არა
+- ფილტრები ხუთივე ვიუზეა: floor-ზონა/პინი ქრება+ითიშება, ფასადის
+  tooltip/პანელი გაფილტრულ ციფრებს აჩვენებს (Found: X / Y), Grid+
+  აქრობს კი არა, აფერმკრთალებს; Properties — 100-იანი ფეიჯინგი
+- „Number floors…" toolbar-იდან მოხსნილია (autoNumberZones JS-ში დარჩა)
+
 ### D7 — კონფიგურირებადი ატრიბუტები `vertikali.option`-ით
 Condition და View **Selection-ებად ვერ დარჩა** — გუნდი თავად ამატებს
 მნიშვნელობებს (რემონტის პაკეტები, ხედები პროექტზეა დამოკიდებული), Selection
@@ -133,6 +148,17 @@ custom კოდი მხოლოდ მაშინ, როცა **დად
 `vk_condition_id` / `vk_view_id` → `vertikali.option` (D7).
 `vk_has_image` — computed store; სელექტორი ამით წყვეტს layout-ზე
 გადავარდნას სურათის ჩამოტვირთვის გარეშე.
+
+### `crm.lead` (გაფართოება)
+`vk_unit_ids` (m2m), `vk_unit_count`, `vk_unit_codes` (kanban-ბარათზე).
+ღილაკები: Choose Units / Show on Plan / Reserve. create/write guard —
+დაკავებული ბინის ახალი მიბმა UserError-ია.
+
+### `sale.order` / `sale.order.line` (გაფართოება)
+`vk_stage`, `vk_contract_signed`, `vk_has_units`; ღილაკები: Choose Units,
+Show on Plan, Contract Signed, Mark Sold. `action_confirm` — free_qty
+guard; `action_cancel` — done მიწოდების return; ხაზის create — დაკავებული
+ბინის guard. `stock.picking.button_validate` — vk_state refresh.
 
 ### `vertikali.option`
 კონფიგურირებადი მნიშვნელობები (`attribute`: condition / view). ACL:
@@ -283,6 +309,30 @@ CSS ვარდება** („A css error occured, using an old style"). გ�
 შეეხო; დანარჩენი 46 გვერდზე დარჩა უცვლელი. „Select all N" ბმულით უნდა
 აირჩეს სრული სია, ან API-ით გაკეთდეს.
 
+### CSS: თანაბარ specificity-ზე გვიანდელი იგებს — სამჯერ დაგვარტყა
+ერთი და იგივე დაავადება სამ ადგილას: (1) `.o_vk_zone`-ის ბაზური fill
+ფარავდა სტატუსების ფერებს; (2) `.o_vk_ptable th` ფარავდა `.o_vk_num_c`-ის
+ცენტრირებას; (3) `min(px,vw)` ცალკე ამბავია. წესი: როცა კლასი „არ ჭრის",
+ჯერ specificity/თანმიმდევრობა შეამოწმე — გამოსავალი კომპოზიტური
+სელექტორია (`.o_vk_zone.o_vk_uz_res`), არა `!important`.
+
+### ერთი კლასის ორი ერთნაირი მეთოდი — Python ჩუმად ჩრდილავს
+`SaleOrder`-ში ორი `action_cancel` აღმოჩნდა — Python ბოლოს იმახსოვრებს და
+ახალი ლოგიკა მკვდარი კოდი იყო, შეცდომის გარეშე. ახალი override-ის წინ
+`grep "def <name>"` გაუშვი იმავე ფაილზე.
+
+### `matchesFilters`-ის ველები ყველა unit-წაკითხვაში უნდა იყოს
+ფილტრი კლიენტზე ითვლის — თუ რომელიმე searchRead-ს ფილტრის ველი აკლია
+(მაგ. `vk_orientation` loadZoneUnits-ში), ის სია მთლიანად „ჩამქრალი"
+გამოდის, სხვა წყაროდან ნათვლილი ციფრები კი სწორია. ახალი ფილტრის
+დამატებისას ველი ყველა სიაში ჩაამატე.
+
+### Client action-ის params reload-ს ვერ იტანს
+Breadcrumb-ით დაბრუნება/F5 client action-ს URL-იდან აღადგენს params-ის
+გარეშე. სელექტორი კონტექსტს (focus/pick) და ნავიგაციას (project/mode/view)
+sessionStorage-ში ინახავს (`vertikali.ctx`, `vertikali.nav`); „← უკან" და
+„← Projects" ასუფთავებს.
+
 ### `noupdate="1"` წაშლილ ჩანაწერს ვერ იცავს
 noupdate მხოლოდ **არსებულ** ჩანაწერს იფარავს გადაწერისგან. თუ მომხმარებელმა
 ჩანაწერი წაშალა, მისი `ir.model.data` ბმაც ქრება და შემდეგი upgrade მას
@@ -363,7 +413,7 @@ privilege escalation იქნებოდა. `deploy.sh` გაფრთხი
 
 ## შემდეგი ნაბიჯები
 
-_(მდგომარეობა 2026-08-23, მოდული v19.0.2.0.0)_
+_(მდგომარეობა 2026-08-24, მოდული v19.0.3.5.3)_
 
 ### 1. სართულის ზედხედები და ზონები (მიმდინარე)
 21 ჩანაწერი შექმნილია, ფასადს მიბმული; გეგმის სურათები ნაწილობრივ აკლია.
@@ -378,6 +428,8 @@ _(მდგომარეობა 2026-08-23, მოდული v19.0.2.0.0)_
 - Condition — მხოლოდ 7 ბინაზეა შევსებული
 - Layout Type — ყველა 126-ს Type 1 აქვს (API-ით მასობრივად მიენიჭა);
   რეალურად ტიპები უნდა დაზუსტდეს და თითოს თავისი გეგმა აეტვირთოს
+- **A-2203 sold-ია** სატესტო S00005-ით („customer 1") — გასათავისუფლებლად
+  უბრალოდ გააუქმე ორდერი: ნაშთი თავისით დაბრუნდება (return-on-cancel)
 
 ### 3. CRM flow — ✅ დანერგილია (2026-08-24, v19.0.3.0.0)
 - `crm.lead.vk_unit_ids` + ღილაკები: Choose Units (pick-რეჟიმი),
