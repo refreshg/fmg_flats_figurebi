@@ -668,6 +668,17 @@
         z-index: 1;
     }
 
+    // Why there is no button: the flat is off the market.
+    .o_vk_unavail {
+        margin-top: 14px;
+        padding: 10px 12px;
+        background: rgba(32, 30, 29, .05);
+        border: 1px dashed rgba(32, 30, 29, .3);
+        color: rgba(32, 30, 29, .65);
+        font-size: 13px;
+        text-align: center;
+    }
+
     .o_vk_attached {
         margin-top: 14px;
         padding: 10px 12px;

@@ -21,9 +21,25 @@ class SaleOrderLine(models.Model):
         if templates:
             templates._compute_vk_state()
 
+    def _vk_check_available(self):
+        """A reserved or sold flat cannot land on a quotation -- it cannot
+        be sold twice. Checked when a unit line appears on a draft/sent
+        order; confirmed orders' own lines are left alone (their unit is
+        reserved BY them)."""
+        for line in self:
+            tmpl = line.product_id.product_tmpl_id
+            if (tmpl.vk_is_unit
+                    and line.order_id.state in ('draft', 'sent')
+                    and tmpl.vk_state != 'available'):
+                raise UserError(_(
+                    "Unit %s is reserved or sold -- it cannot be added "
+                    "to a quotation.",
+                    tmpl.default_code or tmpl.name))
+
     @api.model_create_multi
     def create(self, vals_list):
         lines = super().create(vals_list)
+        lines._vk_check_available()
         lines._vk_refresh_units(lines._vk_affected_templates())
         return lines
 
@@ -31,6 +47,8 @@ class SaleOrderLine(models.Model):
         # A line can move to another product, so refresh both sides.
         before = self._vk_affected_templates()
         res = super().write(vals)
+        if 'product_id' in vals:
+            self._vk_check_available()
         self._vk_refresh_units(before | self._vk_affected_templates())
         return res
 

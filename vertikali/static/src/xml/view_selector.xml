@@ -160,20 +160,31 @@
                         <span class="o_vk_cprice_m"><t t-esc="fmtMoney(state.card.vk_price_sqm)"/> / m²</span>
                     </div>
 
-                    <!-- Pick mode's whole point: put this unit on the lead. -->
-                    <button t-if="pick and !state.focusUnits.has(state.card.id)"
+                    <!-- Pick mode's whole point: put this unit on the target.
+                         A reserved or sold flat cannot be sold again, so it
+                         offers no attach at all. -->
+                    <button t-if="pick and state.card.vk_state === 'available' and !state.focusUnits.has(state.card.id)"
                             class="o_vk_cta o_vk_cta_attach"
                             t-on-click="() => this.attachToPick(state.card)">
-                        Attach to opportunity
+                        Attach
                     </button>
-                    <div t-elif="pick" class="o_vk_attached">
+                    <div t-elif="pick and state.focusUnits.has(state.card.id)"
+                         class="o_vk_attached">
                         ✓ Attached
+                    </div>
+                    <div t-elif="pick" class="o_vk_unavail">
+                        Reserved or sold — this unit cannot be attached.
                     </div>
 
                     <!-- Outside pick mode the card is a starting point: open
                          a deal on this unit, as a pipeline entry or straight
-                         as a quotation. -->
-                    <div t-if="!pick" class="o_vk_cta_row">
+                         as a quotation. Only an available flat starts one. -->
+                    <div t-if="!pick and state.card.vk_state !== 'available'"
+                         class="o_vk_unavail">
+                        Reserved or sold — a new deal cannot start on this unit.
+                    </div>
+                    <div t-if="!pick and state.card.vk_state === 'available'"
+                         class="o_vk_cta_row">
                         <button class="o_vk_cta"
                                 t-on-click="() => this.createOpportunity(state.card)">
                             Create Opportunity

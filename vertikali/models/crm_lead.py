@@ -1,4 +1,4 @@
-from odoo import _, fields, models
+from odoo import _, api, fields, models
 from odoo.exceptions import UserError
 
 
@@ -29,6 +29,33 @@ class CrmLead(models.Model):
             lead.vk_unit_count = len(lead.vk_unit_ids)
             lead.vk_unit_codes = ", ".join(
                 lead.vk_unit_ids.mapped('default_code'))
+
+    # A reserved or sold flat cannot be attached anywhere -- it cannot be
+    # sold again. Only NEWLY added units are checked: a lead keeps the unit
+    # its own reservation just took off the market.
+    def _vk_check_added_units(self, added):
+        taken = added.filtered(
+            lambda u: u.vk_is_unit and u.vk_state != 'available')
+        if taken:
+            raise UserError(_(
+                "Reserved or sold, cannot be attached: %s",
+                ", ".join(taken.mapped('default_code'))))
+
+    @api.model_create_multi
+    def create(self, vals_list):
+        leads = super().create(vals_list)
+        for lead in leads:
+            lead._vk_check_added_units(lead.vk_unit_ids)
+        return leads
+
+    def write(self, vals):
+        if 'vk_unit_ids' not in vals:
+            return super().write(vals)
+        before = {lead.id: lead.vk_unit_ids for lead in self}
+        res = super().write(vals)
+        for lead in self:
+            lead._vk_check_added_units(lead.vk_unit_ids - before[lead.id])
+        return res
 
     # ------------------------------------------------------------- actions
 

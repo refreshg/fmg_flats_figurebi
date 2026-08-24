@@ -215,6 +215,10 @@ export class VertikaliSelector extends Component {
                 // chooser and land on their floor plan, zones outlined.
                 if (this.focusUnitIds.length) {
                     await this.openFocusUnits();
+                } else {
+                    // A reload otherwise dumps the user back on the project
+                    // chooser -- put them back where they stood.
+                    await this.restoreNav();
                 }
             } catch (e) {
                 this.state.error = e.message || String(e);
@@ -504,6 +508,7 @@ export class VertikaliSelector extends Component {
             this.state.mode = "masterplan";
             this.state.view = null;
             this.state.zones = [];
+            this._saveNav();
             return;
         }
         const blocks = this.projectBlocks;
@@ -560,6 +565,7 @@ export class VertikaliSelector extends Component {
         this.state.view = null;
         this.state.zones = [];
         this.state.selected = null;
+        this._saveNav();
     }
 
     backToProjects() {
@@ -570,6 +576,12 @@ export class VertikaliSelector extends Component {
         this.state.unit = null;
         this.state.zones = [];
         this.state.units = [];
+        // Deliberate exit: a reload now starts at the chooser again.
+        try {
+            window.sessionStorage.removeItem("vertikali.nav");
+        } catch {
+            // Nothing stored, nothing to clear.
+        }
     }
 
     async setMode(mode) {
@@ -585,6 +597,7 @@ export class VertikaliSelector extends Component {
         if (this.isInventoryMode) {
             await this.loadGrid();
             await this.openFocusCard();
+            this._saveNav();
             return;
         }
         const views = this.modeViews;
@@ -606,6 +619,7 @@ export class VertikaliSelector extends Component {
             }
         }
         await this.openFocusCard();
+        this._saveNav();
     }
 
     /**
@@ -634,6 +648,63 @@ export class VertikaliSelector extends Component {
         if (row) {
             this.openCard(row);
         }
+    }
+
+    /**
+     * Remember where the user stands, so a reload lands on the same screen
+     * instead of the project chooser. Saved on every navigation step.
+     */
+    _saveNav() {
+        try {
+            window.sessionStorage.setItem("vertikali.nav", JSON.stringify({
+                projectId: this.state.project?.id || null,
+                blockId: this.state.block?.id || null,
+                mode: this.state.mode,
+                viewId: this.state.view?.id || null,
+            }));
+        } catch {
+            // Storage unavailable: reloads just start at the chooser.
+        }
+    }
+
+    /** Put the user back on the screen the last reload interrupted. */
+    async restoreNav() {
+        let nav = null;
+        try {
+            nav = JSON.parse(
+                window.sessionStorage.getItem("vertikali.nav") || "null");
+        } catch {
+            return;
+        }
+        if (!nav?.projectId) {
+            return;
+        }
+        const project = this.state.projects.find((p) => p.id === nav.projectId);
+        if (!project) {
+            return;
+        }
+        this.state.project = project;
+        this.state.block = this.state.blocks.find(
+            (b) => b.id === nav.blockId) || null;
+        this.refreshUnitTotal();
+        if (!nav.mode) {
+            return;
+        }
+        if (["grid", "gridplus", "properties"].includes(nav.mode)) {
+            this.state.mode = nav.mode;
+            await this.loadGrid();
+            return;
+        }
+        if (nav.mode === "masterplan") {
+            this.state.mode = "masterplan";
+            return;
+        }
+        if (nav.viewId && this.state.views.some((v) => v.id === nav.viewId)) {
+            this.state.mode = nav.mode;
+            await this.loadView(nav.viewId);
+            return;
+        }
+        await this.setMode(nav.mode);
     }
 
     /** Select the marked unit's zone on the freshly loaded floor plan. */
@@ -1314,6 +1385,12 @@ export class VertikaliSelector extends Component {
      * takes it into its unit list; a quotation takes it as an order line.
      */
     async attachToPick(unit) {
+        if (unit.vk_state !== "available") {
+            this.notification.add(
+                `${unit.default_code} is reserved or sold -- it cannot be attached.`,
+                { type: "warning" });
+            return;
+        }
         try {
             if (this.pick.model === "sale.order") {
                 const [variantId] = unit.product_variant_id || [];
@@ -1471,6 +1548,7 @@ export class VertikaliSelector extends Component {
         } finally {
             this.state.loading = false;
         }
+        this._saveNav();
     }
 
     /** Units on one floor, keyed by template id for the plan overlay. */
