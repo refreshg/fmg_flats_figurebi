@@ -1,0 +1,99 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- The unit deal's stage and its two milestones, on the order form. -->
+    <record id="view_sale_order_form_vertikali" model="ir.ui.view">
+        <field name="name">sale.order.form.vertikali</field>
+        <field name="model">sale.order</field>
+        <field name="inherit_id" ref="sale.view_order_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//header" position="inside">
+                <field name="vk_has_units" invisible="1"/>
+                <button name="action_vk_sign_contract" type="object"
+                        string="Contract Signed"
+                        invisible="vk_stage != 'reservation'"/>
+                <button name="action_vk_mark_sold" type="object"
+                        string="Mark Sold" class="btn-success"
+                        invisible="vk_stage not in ('reservation', 'contract')"
+                        confirm="This writes the unit off stock and closes the deal. Continue?"/>
+                <field name="vk_stage" widget="statusbar"
+                        invisible="not vk_has_units or not vk_stage"/>
+            </xpath>
+        </field>
+    </record>
+
+    <!-- Reservations: only orders that carry a unit stage. -->
+    <record id="view_sale_order_list_vertikali" model="ir.ui.view">
+        <field name="name">sale.order.list.vertikali</field>
+        <field name="model">sale.order</field>
+        <field name="arch" type="xml">
+            <list decoration-info="vk_stage == 'reservation'"
+                  decoration-warning="vk_stage == 'contract'"
+                  decoration-success="vk_stage == 'sold'"
+                  decoration-muted="vk_stage == 'cancelled'"
+                  create="0">
+                <field name="name"/>
+                <field name="partner_id"/>
+                <field name="opportunity_id" optional="show"/>
+                <field name="date_order"/>
+                <field name="amount_total" sum="Total"/>
+                <field name="vk_stage" widget="badge"
+                       decoration-info="vk_stage == 'reservation'"
+                       decoration-warning="vk_stage == 'contract'"
+                       decoration-success="vk_stage == 'sold'"
+                       decoration-danger="vk_stage == 'cancelled'"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_sale_order_kanban_vertikali" model="ir.ui.view">
+        <field name="name">sale.order.kanban.vertikali</field>
+        <field name="model">sale.order</field>
+        <field name="arch" type="xml">
+            <kanban default_group_by="vk_stage" quick_create="false">
+                <field name="vk_stage"/>
+                <templates>
+                    <t t-name="card">
+                        <div class="p-2">
+                            <div class="fw-bold">
+                                <field name="name"/>
+                            </div>
+                            <field name="partner_id"/>
+                            <div class="text-muted small">
+                                <field name="amount_total" widget="monetary"/>
+                            </div>
+                        </div>
+                    </t>
+                </templates>
+            </kanban>
+        </field>
+    </record>
+
+    <record id="action_vertikali_reservations" model="ir.actions.act_window">
+        <field name="name">Reservations</field>
+        <field name="res_model">sale.order</field>
+        <field name="view_mode">kanban,list,form</field>
+        <field name="domain">[('vk_stage', '!=', False)]</field>
+        <field name="view_ids" eval="[(5, 0, 0),
+            (0, 0, {'view_mode': 'kanban', 'view_id': ref('view_sale_order_kanban_vertikali')}),
+            (0, 0, {'view_mode': 'list', 'view_id': ref('view_sale_order_list_vertikali')}),
+            (0, 0, {'view_mode': 'form', 'view_id': ref('sale.view_order_form')})]"/>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">No reservations yet</p>
+            <p>Reserve a unit from its opportunity: attach units on the
+               Units tab, then press Reserve.</p>
+        </field>
+    </record>
+
+    <!-- One quant per unit, so stock arithmetic is the double-sale gate.
+         Lives in the Units list's Action menu; safe to rerun for new units. -->
+    <record id="action_vk_init_stock" model="ir.actions.server">
+        <field name="name">Set unit stock to 1</field>
+        <field name="model_id" ref="product.model_product_template"/>
+        <field name="binding_model_id" ref="product.model_product_template"/>
+        <field name="binding_view_types">list</field>
+        <field name="state">code</field>
+        <field name="code">records.action_vk_init_stock()</field>
+    </record>
+
+</odoo>

@@ -182,12 +182,18 @@ class ProductTemplate(models.Model):
     )
 
     def _compute_vk_state(self):
-        """Derive availability from the quotations and orders on the unit.
+        """Derive availability from the confirmed orders on the unit.
+
+        Only a reservation holds a unit: a confirmed order reserves the
+        quant, and a validated delivery writes it off. Draft and sent
+        quotations deliberately do NOT count -- several leads may hold
+        parallel quotations on one flat, and sending a PDF must not take
+        it off the market (user decision, 2026-08-24).
 
         Recomputed from an explicit search rather than a dependency chain:
         product.product has no sale-line one2many to depend on, and
         sale.order.line.product_template_id is a non-stored related field.
-        The sale.order.line override below re-triggers this on every change.
+        The sale.order.line override re-triggers this on every change.
         """
         units = self.filtered('vk_is_unit')
         (self - units).vk_state = 'available'
@@ -196,23 +202,52 @@ class ProductTemplate(models.Model):
 
         lines = self.env['sale.order.line'].sudo().search([
             ('product_id.product_tmpl_id', 'in', units.ids),
-            ('state', 'in', ['draft', 'sent', 'sale']),
+            ('state', '=', 'sale'),
         ])
-        states = {}
+        delivered = set()
+        reserved = set()
         for line in lines:
             tmpl_id = line.product_id.product_tmpl_id.id
-            states.setdefault(tmpl_id, set()).add(line.state)
+            if line.qty_delivered > 0:
+                delivered.add(tmpl_id)
+            else:
+                reserved.add(tmpl_id)
 
         for tmpl in units:
-            found = states.get(tmpl.id, set())
-            if 'sale' in found:
-                # A confirmed order takes the unit off the market.
+            if tmpl.id in delivered:
+                # Delivery validated: the quant is written off, deal closed.
                 tmpl.vk_state = 'sold'
-            elif found:
-                # Quoted but not confirmed: held, still winnable.
+            elif tmpl.id in reserved:
+                # Confirmed order holds the quant, contract still pending.
                 tmpl.vk_state = 'reserved'
             else:
                 tmpl.vk_state = 'available'
+
+    def action_vk_init_stock(self):
+        """Give each unit its single quant, so stock is the double-sale gate.
+
+        One flat = one piece at the main warehouse. Idempotent: units that
+        already have stock on hand, or sit on a confirmed order, are left
+        alone -- so it is safe to rerun after adding new units.
+        """
+        units = self.search([('vk_is_unit', '=', True)]) if not self else self
+        units = units.filtered(
+            lambda u: u.vk_is_unit and u.qty_available == 0
+            and u.vk_state == 'available')
+        if not units:
+            return False
+        warehouse = self.env['stock.warehouse'].search([], limit=1)
+        if not warehouse:
+            return False
+        Quant = self.env['stock.quant'].with_context(inventory_mode=True)
+        for unit in units:
+            quant = Quant.create({
+                'product_id': unit.product_variant_id.id,
+                'location_id': warehouse.lot_stock_id.id,
+                'inventory_quantity': 1,
+            })
+            quant.action_apply_inventory()
+        return True
 
     @api.depends('list_price', 'vk_area_total')
     def _compute_vk_price_sqm(self):

@@ -4,6 +4,19 @@
     <t t-name="vertikali.Selector">
         <div class="o_vk_selector d-flex flex-column h-100">
 
+        <!-- Pick mode: this session exists to choose units for one
+             opportunity, so say which one and offer the way back. -->
+        <div t-if="pickLeadId" class="o_vk_pickbar d-flex align-items-center gap-2 px-3">
+            <span class="o_vk_pickbar_t">
+                Choosing units for: <b t-esc="pickLeadName"/>
+            </span>
+            <span class="o_vk_pickbar_n" t-if="state.focusUnits.size">
+                <t t-esc="state.focusUnits.size"/> attached
+            </span>
+            <button class="btn btn-sm btn-primary ms-auto"
+                    t-on-click="backToLead">Done — back to opportunity</button>
+        </div>
+
         <!-- Unit card: a drawer sliding in from the right, over whichever view
              is open. The plan stays visible behind it, so the manager keeps
              their place instead of the card swallowing the whole screen. -->
@@ -143,6 +156,16 @@
                     <div class="o_vk_cprice">
                         <span class="o_vk_cprice_v"><t t-esc="fmtMoney(state.card.list_price)"/></span>
                         <span class="o_vk_cprice_m"><t t-esc="fmtMoney(state.card.vk_price_sqm)"/> / m²</span>
+                    </div>
+
+                    <!-- Pick mode's whole point: put this unit on the lead. -->
+                    <button t-if="pickLeadId and !state.focusUnits.has(state.card.id)"
+                            class="o_vk_cta o_vk_cta_attach"
+                            t-on-click="() => this.attachToLead(state.card)">
+                        Attach to opportunity
+                    </button>
+                    <div t-elif="pickLeadId" class="o_vk_attached">
+                        ✓ Attached to the opportunity
                     </div>
 
                     <button class="o_vk_cta" t-on-click="() => this.openUnitRecord(state.card)">
@@ -726,6 +749,7 @@
                             <polygon class="o_vk_zone"
                                      t-att-class="{
                                         'o_vk_zone_sel': state.selected and state.selected.id === z.id,
+                                        'o_vk_zone_focus': isFocusZone(z),
                                         'o_vk_zone_edit': state.editing,
                                         'o_vk_uz': zu,
                                         'o_vk_uz_free': zu and zu.vk_state === 'available',

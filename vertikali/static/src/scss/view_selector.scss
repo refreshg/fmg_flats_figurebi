@@ -534,6 +534,43 @@
 
     .o_vk_strip { margin-top: 18px; }
 
+    // Pick-mode banner: the whole session is about one opportunity, so it
+    // stays pinned above every screen of the selector.
+    .o_vk_pickbar {
+        flex: 0 0 auto;
+        padding-top: 8px;
+        padding-bottom: 8px;
+        background: #201e1d;
+        color: #fff;
+        font-size: 13px;
+    }
+
+    .o_vk_pickbar_n {
+        background: var(--vk-accent);
+        border-radius: 10px;
+        padding: 1px 9px;
+        font-size: 11.5px;
+        font-weight: 700;
+    }
+
+    // The attach action outranks "Open in Odoo", so it gets the dark fill.
+    .o_vk_cta_attach {
+        background: #1aa179;
+
+        &:hover { filter: brightness(.92); }
+    }
+
+    .o_vk_attached {
+        margin-top: 14px;
+        padding: 10px 12px;
+        background: rgba(26, 161, 121, .1);
+        border: 1px solid rgba(26, 161, 121, .45);
+        color: #10745a;
+        font-weight: 600;
+        font-size: 13px;
+        text-align: center;
+    }
+
     .o_vk_sq {
         width: 15px;
         height: 15px;
@@ -1122,6 +1159,14 @@
     .o_vk_zone_sel {
         fill: rgba(236, 48, 19, .42);
         stroke-width: .005;
+    }
+
+    // The zones an opportunity is about: a heavy accent outline that reads
+    // over any status fill, so the manager spots "their" flats instantly.
+    .o_vk_zone_focus {
+        stroke: var(--vk-accent);
+        stroke-width: .006;
+        stroke-dasharray: .015 .008;
     }
 
     .o_vk_zone_edit { cursor: move; }

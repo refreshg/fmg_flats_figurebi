@@ -14,7 +14,7 @@ apartment-specific fields and the visual selector are custom.
     """,
     'author': "Vertikali",
     'category': 'Sales',
-    'version': '19.0.2.0.0',
+    'version': '19.0.3.0.0',
     'license': 'LGPL-3',
 
     # crm/sale_crm give us the opportunity -> multiple quotations flow (D6),
@@ -34,6 +34,8 @@ apartment-specific fields and the visual selector are custom.
         'data/option_data.xml',
         'views/vertikali_option_views.xml',
         'views/product_template_views.xml',
+        'views/crm_lead_views.xml',
+        'views/sale_order_views.xml',
         'views/vertikali_layout_views.xml',
         'views/vertikali_view_views.xml',
         'wizard/copy_plan_wizard_views.xml',

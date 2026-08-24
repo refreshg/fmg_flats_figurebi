@@ -53,6 +53,14 @@ export class VertikaliSelector extends Component {
         this.frameRef = useRef("frame");
         this.stageRef = useRef("stage");
 
+        // Launched from an opportunity: pick mode adds an Attach button to
+        // the unit card, focus mode opens on the attached units' floor with
+        // their zones outlined. Plain menu launches carry no params.
+        const params = this.props.action?.params || {};
+        this.pickLeadId = params.vk_pick_lead_id || null;
+        this.pickLeadName = params.vk_pick_lead_name || "";
+        this.focusUnitIds = params.vk_focus_unit_ids || [];
+
         this.state = useState({
             projects: [],
             project: null,
@@ -88,6 +96,9 @@ export class VertikaliSelector extends Component {
             selected: null,
             loading: true,
             error: null,
+            // Units to outline on the plan (from the opportunity). A Set so
+            // attaching more units in pick mode lights them up immediately.
+            focusUnits: new Set(this.focusUnitIds),
             // editor
             editing: false,
             drawing: false,
@@ -168,6 +179,12 @@ export class VertikaliSelector extends Component {
                 // sense of where they were or how to get back out.
                 if (!this.state.projects.length && views.length) {
                     await this.loadView(views[0].id);
+                }
+
+                // Launched from an opportunity with units attached: skip the
+                // chooser and land on their floor plan, zones outlined.
+                if (this.focusUnitIds.length) {
+                    await this.openFocusUnits();
                 }
             } catch (e) {
                 this.state.error = e.message || String(e);
@@ -1075,6 +1092,96 @@ export class VertikaliSelector extends Component {
             type: "ir.actions.act_window",
             res_model: "product.template",
             res_id: unit.id,
+            views: [[false, "form"]],
+            target: "current",
+        });
+    }
+
+    // -------------------------------------------------- opportunity links
+
+    /**
+     * Deep-link from an opportunity: open the first attached unit's floor
+     * plan and select its zone; every attached unit's zone gets the focus
+     * outline. Falls back to the grid card when no plan carries the unit.
+     */
+    async openFocusUnits() {
+        const unitId = this.focusUnitIds[0];
+        const [unit] = await this.orm.read(
+            "product.template", [unitId],
+            ["vk_building", "vk_floor", "vk_section", "default_code"]);
+        if (!unit) {
+            return;
+        }
+        const project = this.state.projects.find(
+            (p) => p.building === unit.vk_building) || this.state.projects[0];
+        if (!project) {
+            return;
+        }
+        this.state.project = project;
+        this.state.block = this.state.blocks.find(
+            (b) => b.project_id?.[0] === project.id
+                && b.code === unit.vk_building)
+            || this.state.blocks.find((b) => b.code === unit.vk_building)
+            || null;
+        this.refreshUnitTotal();
+
+        const want = unit.vk_section || false;
+        const floors = this.state.views.filter(
+            (v) => v.view_type === "floor" && v.floor === unit.vk_floor
+                && (!v.building || v.building === unit.vk_building));
+        const plan = floors.find((v) => (v.section || false) === want)
+            || floors.find((v) => !v.section) || floors[0];
+        if (plan) {
+            this.state.mode = "floor";
+            await this.loadView(plan.id);
+            const zone = this.state.zones.find(
+                (z) => (z.product_tmpl_ids || []).includes(unitId)
+                    || z.product_tmpl_id?.[0] === unitId);
+            if (zone) {
+                this.state.selected = zone;
+            }
+            return;
+        }
+        // No plan yet: the grid still shows the unit, so open its card.
+        this.state.mode = "grid";
+        await this.loadGrid();
+        const row = this.state.units.find((u) => u.id === unitId);
+        if (row) {
+            this.openCard(row);
+        }
+    }
+
+    /** A zone stands for a unit the opportunity is about. */
+    isFocusZone(zone) {
+        if (!this.state.focusUnits.size) {
+            return false;
+        }
+        const ids = zone.product_tmpl_ids?.length
+            ? zone.product_tmpl_ids
+            : (zone.product_tmpl_id ? [zone.product_tmpl_id[0]] : []);
+        return ids.some((id) => this.state.focusUnits.has(id));
+    }
+
+    /** Pick mode: put this unit on the opportunity and keep browsing. */
+    async attachToLead(unit) {
+        try {
+            await this.orm.write("crm.lead", [this.pickLeadId],
+                { vk_unit_ids: [[4, unit.id]] });
+            this.state.focusUnits.add(unit.id);
+            this.notification.add(
+                `${unit.default_code} attached to the opportunity.`,
+                { type: "success" });
+        } catch (e) {
+            this.notification.add(e.message || String(e), { type: "danger" });
+        }
+    }
+
+    /** Back to the opportunity the picking started from. */
+    backToLead() {
+        this.action.doAction({
+            type: "ir.actions.act_window",
+            res_model: "crm.lead",
+            res_id: this.pickLeadId,
             views: [[false, "form"]],
             target: "current",
         });

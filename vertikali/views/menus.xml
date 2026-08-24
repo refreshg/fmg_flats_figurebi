@@ -13,6 +13,12 @@
               action="action_vertikali_selector"
               sequence="5"/>
 
+    <menuitem id="menu_vertikali_reservations"
+              name="Reservations"
+              parent="menu_vertikali_root"
+              action="action_vertikali_reservations"
+              sequence="15"/>
+
     <menuitem id="menu_vertikali_inventory"
               name="Inventory"
               parent="menu_vertikali_root"
