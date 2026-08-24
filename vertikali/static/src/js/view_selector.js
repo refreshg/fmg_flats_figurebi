@@ -57,8 +57,13 @@ export class VertikaliSelector extends Component {
         // the unit card, focus mode opens on the attached units' floor with
         // their zones outlined. Plain menu launches carry no params.
         const params = this.props.action?.params || {};
-        this.pickLeadId = params.vk_pick_lead_id || null;
-        this.pickLeadName = params.vk_pick_lead_name || "";
+        // Pick mode: chosen units land on this record -- a lead's unit list
+        // or a quotation's order lines, same flow either way.
+        this.pick = params.vk_pick_model ? {
+            model: params.vk_pick_model,
+            id: params.vk_pick_id,
+            name: params.vk_pick_name || "",
+        } : null;
         this.focusUnitIds = params.vk_focus_unit_ids || [];
         // Where the selector was opened from (a lead or an order), so a
         // back button can return there in one click.
@@ -107,6 +112,9 @@ export class VertikaliSelector extends Component {
             // Units to outline on the plan (from the opportunity). A Set so
             // attaching more units in pick mode lights them up immediately.
             focusUnits: new Set(this.focusUnitIds),
+            // Their floor/building/section, so the facade bands, masterplan
+            // blocks and grid cells can carry the outline too.
+            focusInfo: [],
             // editor
             editing: false,
             drawing: false,
@@ -1123,9 +1131,13 @@ export class VertikaliSelector extends Component {
      */
     async openFocusUnits() {
         const unitId = this.focusUnitIds[0];
-        const [unit] = await this.orm.read(
-            "product.template", [unitId],
+        // All of them, not just the first: the facade and masterplan
+        // outlines need every attached unit's floor and building.
+        const infos = await this.orm.read(
+            "product.template", this.focusUnitIds,
             ["vk_building", "vk_floor", "vk_section", "default_code"]);
+        this.state.focusInfo = infos;
+        const unit = infos.find((u) => u.id === unitId) || infos[0];
         if (!unit) {
             return;
         }
@@ -1168,7 +1180,12 @@ export class VertikaliSelector extends Component {
         }
     }
 
-    /** A zone stands for a unit the opportunity is about. */
+    /**
+     * A zone stands for (or covers) a unit the deal is about. On a floor
+     * plan zones ARE units, so only an id match counts; a facade band
+     * covers a whole storey, so it lights up when any focused unit lives
+     * on its floor (and section, where the storey is split).
+     */
     isFocusZone(zone) {
         if (!this.state.focusUnits.size) {
             return false;
@@ -1176,17 +1193,59 @@ export class VertikaliSelector extends Component {
         const ids = zone.product_tmpl_ids?.length
             ? zone.product_tmpl_ids
             : (zone.product_tmpl_id ? [zone.product_tmpl_id[0]] : []);
-        return ids.some((id) => this.state.focusUnits.has(id));
+        if (ids.some((id) => this.state.focusUnits.has(id))) {
+            return true;
+        }
+        if (this.state.mode === "facade" && zone.floor) {
+            return this.state.focusInfo.some(
+                (u) => u.vk_floor === zone.floor
+                    && (!zone.section || (u.vk_section || "") === zone.section));
+        }
+        return false;
     }
 
-    /** Pick mode: put this unit on the opportunity and keep browsing. */
-    async attachToLead(unit) {
+    /** A masterplan block holding any of the deal's units. */
+    isFocusBlock(block) {
+        return !!this.state.focusInfo.length
+            && this.state.focusInfo.some((u) => u.vk_building === block.code);
+    }
+
+    /** Focused units light their grid cells and inventory rows too. */
+    isFocusUnit(unit) {
+        return this.state.focusUnits.has(unit.id);
+    }
+
+    /**
+     * Pick mode: put this unit on the target and keep browsing. A lead
+     * takes it into its unit list; a quotation takes it as an order line.
+     */
+    async attachToPick(unit) {
         try {
-            await this.orm.write("crm.lead", [this.pickLeadId],
-                { vk_unit_ids: [[4, unit.id]] });
+            if (this.pick.model === "sale.order") {
+                const [variantId] = unit.product_variant_id || [];
+                if (!variantId) {
+                    throw new Error("This unit has no sellable variant.");
+                }
+                await this.orm.create("sale.order.line", [{
+                    order_id: this.pick.id,
+                    product_id: variantId,
+                    product_uom_qty: 1,
+                    price_unit: unit.list_price,
+                }]);
+            } else {
+                await this.orm.write("crm.lead", [this.pick.id],
+                    { vk_unit_ids: [[4, unit.id]] });
+            }
             this.state.focusUnits.add(unit.id);
+            this.state.focusInfo.push({
+                id: unit.id,
+                vk_floor: unit.vk_floor,
+                vk_building: unit.vk_building,
+                vk_section: unit.vk_section,
+                default_code: unit.default_code,
+            });
             this.notification.add(
-                `${unit.default_code} attached to the opportunity.`,
+                `${unit.default_code} attached to ${this.pick.name}.`,
                 { type: "success" });
         } catch (e) {
             this.notification.add(e.message || String(e), { type: "danger" });
@@ -1195,9 +1254,8 @@ export class VertikaliSelector extends Component {
 
     /** Back to the record the selector was opened from (lead or order). */
     backToOrigin() {
-        const model = this.origin?.model
-            || (this.pickLeadId ? "crm.lead" : null);
-        const resId = this.origin?.id || this.pickLeadId;
+        const model = this.origin?.model || this.pick?.model;
+        const resId = this.origin?.id || this.pick?.id;
         if (!model || !resId) {
             return;
         }

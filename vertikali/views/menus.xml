@@ -5,6 +5,7 @@
     <menuitem id="menu_vertikali_root"
               name="Estate"
               groups="sales_team.group_sale_salesman"
+              web_icon="vertikali,static/description/icon.png"
               sequence="15"/>
 
     <menuitem id="menu_vertikali_selector"

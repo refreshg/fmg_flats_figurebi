@@ -150,11 +150,35 @@ class SaleOrder(models.Model):
         self._vk_refresh_units()
         return res
 
+    def _vk_unit_templates(self):
+        return self.order_line.mapped(
+            'product_id.product_tmpl_id').filtered('vk_is_unit')
+
+    def action_vk_pick_units(self):
+        """Open the selector in pick mode: chosen units become order lines."""
+        self.ensure_one()
+        if self.state not in ('draft', 'sent'):
+            raise UserError(_(
+                "Units can only be added while the order is a quotation."))
+        return {
+            'type': 'ir.actions.client',
+            'tag': 'vertikali_selector',
+            'name': _("Building Selector"),
+            'params': {
+                'vk_pick_model': 'sale.order',
+                'vk_pick_id': self.id,
+                'vk_pick_name': self.name,
+                'vk_focus_unit_ids': self._vk_unit_templates().ids,
+                'vk_origin_model': 'sale.order',
+                'vk_origin_id': self.id,
+                'vk_origin_name': self.name,
+            },
+        }
+
     def action_vk_show_units(self):
         """Open the selector on this order's units, zones outlined."""
         self.ensure_one()
-        units = self.order_line.mapped(
-            'product_id.product_tmpl_id').filtered('vk_is_unit')
+        units = self._vk_unit_templates()
         if not units:
             raise UserError(_("This order carries no units."))
         return {

@@ -644,6 +644,27 @@
         &:hover { border-color: var(--vk-accent); color: var(--vk-accent); }
     }
 
+    // The same chip on the dark pick banner.
+    .o_vk_backorig_dark {
+        background: transparent;
+        border-color: rgba(255, 255, 255, .45);
+        color: #fff;
+
+        &:hover { border-color: #fff; color: #fff; }
+    }
+
+    // The deal's units, outlined wherever the inventory shows up.
+    .o_vk_cell_focus {
+        outline: 3px solid var(--vk-accent);
+        outline-offset: 1px;
+        z-index: 1;
+    }
+
+    .o_vk_focusrow {
+        outline: 2px solid var(--vk-accent);
+        outline-offset: -2px;
+    }
+
     .o_vk_attached {
         margin-top: 14px;
         padding: 10px 12px;

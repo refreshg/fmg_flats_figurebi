@@ -16,6 +16,9 @@
                         string="Mark Sold" class="btn-success"
                         invisible="vk_stage not in ('reservation', 'contract')"
                         confirm="This writes the unit off stock and closes the deal. Continue?"/>
+                <button name="action_vk_pick_units" type="object"
+                        string="Choose Units" icon="fa-building-o"
+                        invisible="state not in ('draft', 'sent')"/>
                 <button name="action_vk_show_units" type="object"
                         string="Show on Plan"
                         invisible="not vk_has_units"/>

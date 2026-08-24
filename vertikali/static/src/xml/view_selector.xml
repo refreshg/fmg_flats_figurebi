@@ -4,17 +4,19 @@
     <t t-name="vertikali.Selector">
         <div class="o_vk_selector d-flex flex-column h-100">
 
-        <!-- Pick mode: this session exists to choose units for one
-             opportunity, so say which one and offer the way back. -->
-        <div t-if="pickLeadId" class="o_vk_pickbar d-flex align-items-center gap-2 px-3">
+        <!-- Pick mode: this session exists to choose units for one record,
+             so say which one. The way back leads, not trails. -->
+        <div t-if="pick" class="o_vk_pickbar d-flex align-items-center gap-2 px-3">
+            <button class="o_vk_backorig o_vk_backorig_dark"
+                    t-on-click="backToOrigin">
+                ← <t t-esc="pick.name"/>
+            </button>
             <span class="o_vk_pickbar_t">
-                Choosing units for: <b t-esc="pickLeadName"/>
+                Choosing units for: <b t-esc="pick.name"/>
             </span>
             <span class="o_vk_pickbar_n" t-if="state.focusUnits.size">
                 <t t-esc="state.focusUnits.size"/> attached
             </span>
-            <button class="btn btn-sm btn-primary ms-auto"
-                    t-on-click="backToOrigin">Done — back to opportunity</button>
         </div>
 
         <!-- Unit card: a drawer sliding in from the right, over whichever view
@@ -159,19 +161,19 @@
                     </div>
 
                     <!-- Pick mode's whole point: put this unit on the lead. -->
-                    <button t-if="pickLeadId and !state.focusUnits.has(state.card.id)"
+                    <button t-if="pick and !state.focusUnits.has(state.card.id)"
                             class="o_vk_cta o_vk_cta_attach"
-                            t-on-click="() => this.attachToLead(state.card)">
+                            t-on-click="() => this.attachToPick(state.card)">
                         Attach to opportunity
                     </button>
-                    <div t-elif="pickLeadId" class="o_vk_attached">
-                        ✓ Attached to the opportunity
+                    <div t-elif="pick" class="o_vk_attached">
+                        ✓ Attached
                     </div>
 
                     <!-- Outside pick mode the card is a starting point: open
                          a deal on this unit, as a pipeline entry or straight
                          as a quotation. -->
-                    <div t-if="!pickLeadId" class="o_vk_cta_row">
+                    <div t-if="!pick" class="o_vk_cta_row">
                         <button class="o_vk_cta"
                                 t-on-click="() => this.createOpportunity(state.card)">
                             Create Opportunity
@@ -248,7 +250,7 @@
                 <div class="o_vk_crumb d-flex align-items-center gap-2">
                     <!-- Straight back to the lead or order this was opened
                          from; the pick banner has its own Done button. -->
-                    <button t-if="origin and !pickLeadId" class="o_vk_backorig"
+                    <button t-if="origin and !pick" class="o_vk_backorig"
                             t-on-click="backToOrigin">
                         ← <t t-esc="origin.name"/>
                     </button>
@@ -356,7 +358,7 @@
                              so they cannot be mistaken for what is being drawn. -->
                         <t t-foreach="projectBlocks" t-as="b" t-key="b.id">
                             <polygon t-if="b.points" class="o_vk_bzone"
-                                     t-att-class="{ 'o_vk_dim': state.drawing }"
+                                     t-att-class="{ 'o_vk_dim': state.drawing, 'o_vk_zone_focus': isFocusBlock(b) }"
                                      t-attf-style="fill:{{b.color}}"
                                      t-att-points="pointsAttr(b.points)"
                                      t-on-click="() => this.selectBlock(b)"/>
@@ -562,6 +564,7 @@
                             <div class="o_vk_pcards">
                                 <t t-foreach="row.units" t-as="u" t-key="u.id">
                                     <button t-attf-class="o_vk_pcard o_vk_p_{{u.vk_state}}"
+                                            t-att-class="{ 'o_vk_focusrow': isFocusUnit(u) }"
                                             t-on-click="() => this.openCard(u)">
                                         <span class="o_vk_pc_top">
                                             <span class="o_vk_pc_r"><t t-esc="cellLabel(u)"/></span>
@@ -605,7 +608,8 @@
                         </thead>
                         <tbody>
                             <t t-foreach="sortedUnits" t-as="u" t-key="u.id">
-                                <tr t-on-click="() => this.openCard(u)">
+                                <tr t-att-class="{ 'o_vk_focusrow': isFocusUnit(u) }"
+                                    t-on-click="() => this.openCard(u)">
                                     <td>
                                         <span t-attf-class="o_vk_tdot o_vk_td_{{u.vk_state === 'available' ? 'free' : (u.vk_state === 'reserved' ? 'res' : 'sold')}}"></span>
                                         <t t-esc="u.vk_state"/>
@@ -676,7 +680,8 @@
                                                                 t-on-mouseleave="hideCellTip"
                                                                 t-att-class="{
                                                                     'o_vk_dim': u.dimmed,
-                                                                    'o_vk_cell_on': state.unit and state.unit.id === u.id }"
+                                                                    'o_vk_cell_on': state.unit and state.unit.id === u.id,
+                                                                    'o_vk_cell_focus': isFocusUnit(u) }"
                                                                 t-on-click="() => this.openCard(u)"
                                                                 t-att-title="u.default_code + ' · ' + u.vk_area_total + ' m²'">
                                                             <t t-esc="cellLabel(u)"/>

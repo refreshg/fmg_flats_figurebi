@@ -45,8 +45,9 @@ class CrmLead(models.Model):
         """Open the selector in pick mode: unit cards get an Attach button."""
         self.ensure_one()
         return self._vk_selector_action({
-            'vk_pick_lead_id': self.id,
-            'vk_pick_lead_name': self.name or '',
+            'vk_pick_model': 'crm.lead',
+            'vk_pick_id': self.id,
+            'vk_pick_name': self.name or _("Opportunity"),
             'vk_focus_unit_ids': self.vk_unit_ids.ids,
             'vk_origin_model': 'crm.lead',
             'vk_origin_id': self.id,
