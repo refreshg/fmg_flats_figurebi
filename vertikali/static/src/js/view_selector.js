@@ -56,7 +56,21 @@ export class VertikaliSelector extends Component {
         // Launched from an opportunity: pick mode adds an Attach button to
         // the unit card, focus mode opens on the attached units' floor with
         // their zones outlined. Plain menu launches carry no params.
-        const params = this.props.action?.params || {};
+        // Params vanish when the action is restored from the URL (breadcrumb
+        // back, reload), so a launch that has them stashes the context and a
+        // launch that lacks them recovers it. backToOrigin clears the stash.
+        let params = this.props.action?.params || {};
+        try {
+            if (params.vk_focus_unit_ids?.length || params.vk_pick_model) {
+                window.sessionStorage.setItem(
+                    "vertikali.ctx", JSON.stringify(params));
+            } else {
+                params = JSON.parse(
+                    window.sessionStorage.getItem("vertikali.ctx") || "{}");
+            }
+        } catch {
+            // Storage unavailable: deep links just do not survive a reload.
+        }
         // Pick mode: chosen units land on this record -- a lead's unit list
         // or a quotation's order lines, same flow either way.
         this.pick = params.vk_pick_model ? {
@@ -573,8 +587,38 @@ export class VertikaliSelector extends Component {
             return;
         }
         const views = this.modeViews;
-        if (views.length) {
-            await this.loadView(views[0].id);
+        let target = views[0];
+        // With a deal's units marked, the Floors tab opens THEIR storey --
+        // landing on the first floor of the list read as the marks vanishing.
+        if (mode === "floor" && this.state.focusInfo.length) {
+            const f = this.state.focusInfo[0];
+            const want = f.vk_section || false;
+            target = views.find(
+                (v) => v.floor === f.vk_floor && (v.section || false) === want)
+                || views.find((v) => v.floor === f.vk_floor)
+                || target;
+        }
+        if (target) {
+            await this.loadView(target.id);
+            if (mode === "floor") {
+                this.selectFocusZone();
+            }
+        }
+    }
+
+    /** Select the marked unit's zone on the freshly loaded floor plan. */
+    selectFocusZone() {
+        if (!this.state.focusUnits.size) {
+            return;
+        }
+        const zone = this.state.zones.find((z) => {
+            const ids = z.product_tmpl_ids?.length
+                ? z.product_tmpl_ids
+                : (z.product_tmpl_id ? [z.product_tmpl_id[0]] : []);
+            return ids.some((id) => this.state.focusUnits.has(id));
+        });
+        if (zone) {
+            this.state.selected = zone;
         }
     }
 
@@ -1163,12 +1207,7 @@ export class VertikaliSelector extends Component {
         if (plan) {
             this.state.mode = "floor";
             await this.loadView(plan.id);
-            const zone = this.state.zones.find(
-                (z) => (z.product_tmpl_ids || []).includes(unitId)
-                    || z.product_tmpl_id?.[0] === unitId);
-            if (zone) {
-                this.state.selected = zone;
-            }
+            this.selectFocusZone();
             return;
         }
         // No plan yet: the grid still shows the unit, so open its card.
@@ -1258,6 +1297,12 @@ export class VertikaliSelector extends Component {
         const resId = this.origin?.id || this.pick?.id;
         if (!model || !resId) {
             return;
+        }
+        // The session is over; a later menu launch starts clean.
+        try {
+            window.sessionStorage.removeItem("vertikali.ctx");
+        } catch {
+            // Nothing stashed, nothing lost.
         }
         this.action.doAction({
             type: "ir.actions.act_window",

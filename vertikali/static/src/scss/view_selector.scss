@@ -661,8 +661,11 @@
     }
 
     .o_vk_focusrow {
-        outline: 2px solid var(--vk-accent);
-        outline-offset: -2px;
+        outline: 3px solid var(--vk-accent);
+        outline-offset: 1px;
+        box-shadow: 0 0 0 6px rgba(236, 48, 19, .18);
+        position: relative;
+        z-index: 1;
     }
 
     .o_vk_attached {
