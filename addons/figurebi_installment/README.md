@@ -1,4 +1,4 @@
-<!-- last-synced: 2026-09-03, commit: 6f3b0f2 -->
+<!-- last-synced: 2026-09-03, commit: 345d4d9 -->
 # FIGUREBI გადახდის კალკულატორი (figurebi_installment)
 
 Real-estate installment calculator on quotations: payment schedule generation with

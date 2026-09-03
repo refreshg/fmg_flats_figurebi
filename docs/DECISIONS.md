@@ -1,4 +1,4 @@
-<!-- last-synced: 2026-09-03, commit: 6f3b0f2 -->
+<!-- last-synced: 2026-09-03, commit: 345d4d9 -->
 # Architecture Decision Records
 
 ### D-1: Calculator lives on sale.order, not crm.lead
@@ -37,3 +37,15 @@ Date: 2026-09-03 (user answers) · Decision: local repo, no remote yet; all cred
 
 ### D-12: History pushed to the company repo as branch `figurebi` (supersedes "no remote" in D-11)
 Date: 2026-09-03 (user request, same day) · Context: refreshg/fmg_flats_figurebi holds the vertikali flats module at repo root with its own CLAUDE.md/research/deploy scripts; merging two workspaces into main would collide. Decision: our full history lives on branch `figurebi` of that repo; main untouched. Consequence: the two lines can be merged later only after agreeing a shared layout; the repo is currently public — recommended to make private.
+
+### D-13: 4 decimal places on all calculator % and $ fields; real money stays at cents
+Date: 2026-09-03 (user request: "ყველგან 4 ციფრი წერტილის მერე, პროცენტისაც და თანხებისაც") · Decision: `digits=(16,4)` on every calculator input/display field, sync math rounds to 4. Deliberately kept at 2: schedule rows, invoices, loan amount, PMT, amount_total, snapshot signature (real payments have no sub-cent). x_bank_rate left untouched (14.0000 would be noise).
+
+### D-14: A schedule installment in the balloon's month is folded away
+Date: 2026-09-03 (user rule) · Context: schedule Dec 13 + balloon Dec 15 made the client pay twice in the final month. Decision: `_installment_vals` drops the colliding installment; remaining ones grow to cover the same schedule amount. Rejected: merging it into the balloon (old Excel-era behavior). Consequence: with spread N, the actual installment count can be N−1.
+
+### D-15: Dates display numeric with the year always visible
+Date: 2026-09-03 (user request) · Context: Odoo 19's humanized date display omits the current year ("Oct 5"). Decision: `options="{'numeric': true}"` on all 7 date fields → "10/05/2026". Rejected: custom widget for "Oct 5, 2026" style (offered; not requested so far).
+
+### D-16: Sales are VAT-free (Excel parity)
+Date: 2026-09-03 · Context: flats carried the default 15% tax; x_final_total (tax-incl.) diverged from the Excel reference. Decision: taxes cleared on all 126 flat products + open quote lines (RPC); the user then zeroed the default tax record itself (account.tax id=1 → "0%"/0.0), so new products stay harmless. Consequence: restore that record to 15 if real VAT is ever needed.

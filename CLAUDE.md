@@ -566,7 +566,10 @@ oddo-თი წაუკითხავია — ყველაფერს su
   `pscp -pw <ssh-pwd> <local> oddo@192.168.100.71:/home/oddo/figurebi_installment/...`
 - Install into addons + restart:
   `plink oddo@192.168.100.71 "echo <ssh-pwd> | sudo -S sh -c 'cp -r /home/oddo/figurebi_installment /opt/odoo/custom-addons/ && chown -R odoo:odoo /opt/odoo/custom-addons/figurebi_installment && systemctl restart odoo'"`
-- Upgrade module: JSON-RPC `ir.module.module.button_immediate_upgrade [[1449]]` (db `odoo`, uid 2, API key as password)
+- Upgrade module: JSON-RPC `ir.module.module.button_immediate_upgrade [[1449]]` (db `odoo`, uid 2, API key as password);
+  ALWAYS read back `latest_version` afterwards — "UPGRADE OK" also passes when the file never reached the server
+- SSH: only LAN `192.168.100.71:22` works; public `46.233.53.183:2222` accepts TCP but is NOT SSH
+  (closes on handshake — tested 2026-09-04). On LAN dropouts: retry, transient.
 - Logs: `plink ... "echo <ssh-pwd> | sudo -S tail -50 /var/log/odoo/odoo.log"`
 - Odoo shell (debugging): `sudo -u odoo /opt/odoo/odoo-19/venv/bin/python /opt/odoo/odoo-19/odoo-bin shell -c /etc/odoo/odoo.conf -d odoo --no-http < script.py`
 - Tests: none automated — user tests functionally in the UI after each deploy

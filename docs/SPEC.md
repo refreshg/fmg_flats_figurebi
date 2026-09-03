@@ -1,7 +1,9 @@
-<!-- last-synced: 2026-09-03, commit: 6f3b0f2 -->
+<!-- last-synced: 2026-09-03, commit: 345d4d9 -->
 # Technical spec — figurebi_installment (Odoo 19)
 
-Module `figurebi_installment` v19.0.2.1.2, depends: `sale_management`, `crm`.
+Module `figurebi_installment` v19.0.2.3.2, depends: `sale_management`, `crm`.
+All calculator % and $ input/display fields carry `digits=(16, 4)` (user rule: 4 decimals
+everywhere on the tab); real money — schedule rows, invoices, PMT, amount_total — stays at cents.
 Field/model names keep the `x_` prefix for parity with the manual (RPC-built) staging setup.
 
 ## Data model
@@ -47,7 +49,7 @@ Computed fields:
 | x_final_total | `_compute_final_total` + inverse | yes, readonly=False | editable; reverse-computes % |
 | x_schedule_pct, x_schedule_amount | `_compute_schedule_part` | no | remainder 100 − tranche% − balloon% |
 | x_bank_loan_amount, x_bank_pmt_reference | `_compute_bank` | no | loan principal, annuity PMT |
-| x_schedule_end_date | `_compute_schedule_end` | no | max(line dates) or forecast from start+months |
+| x_schedule_end_date | `_compute_schedule_end` | no | max(line dates) **excluding the balloon row**, or forecast from start+months |
 | x_has_weekend, x_schedule_stale, x_installment_invoice_count | own computes | no | |
 
 Key helpers: `_figurebi_main_line` (first non-display line), `_figurebi_unit_area`
@@ -70,6 +72,7 @@ Key helpers: `_figurebi_main_line` (first non-display line), `_figurebi_unit_are
 | discount 5-way sync | onchange x_discount_pct / per_m2 / total / final_m2 / final_total; inverses on the two final fields (RPC-safe) | derive pct (round 6), write all sync fields + every line's `discount`; skip when target already reached (±0.011) | AC-3 |
 | pct ≤ 100 guard | `_apply_discount_pct` | UserError above 100% | AC-3 |
 | schedule generation | button → `action_generate_schedule` | tranche row + n equal rows (last schedule row absorbs cents) + balloon row on its date; saves snapshot; bank_loan → 2 rows; full_payment → 1 row | AC-1, AC-8 |
+| balloon-month fold | inside `_installment_vals` | a schedule installment landing in the balloon's own month is dropped; remaining installments grow to cover the schedule amount (one payment per final month) | user rule 2026-09-03, no AC yet |
 | weekend marking | compute on x_date | red decoration | AC-4 |
 | weekend autofix | button → `action_fix_weekends` | Sat+2/Sun+1, sets x_auto_fixed (purple) with ctx figurebi_autofix | AC-4 |
 | weekend guard | `sale.order.write` on state→sent/sale; also inside invoice generation | UserError listing red dates | AC-4 |
@@ -84,7 +87,7 @@ Key helpers: `_figurebi_main_line` (first non-display line), `_figurebi_unit_are
 ## Views / UI
 | view | type | xml id | notes |
 |---|---|---|---|
-| Quotation tab „გადახდის კალკულატორი" | form inherit sale.view_order_form | `figurebi_installment.view_order_form_installment` | header/info cards (inline styles), discount row, payments section, buttons (generate / fix weekends / invoices), schedule list with decorations (danger=weekend, primary=auto_fixed), smart button, stale alert |
+| Quotation tab „გადახდის კალკულატორი" | form inherit sale.view_order_form | `figurebi_installment.view_order_form_installment` | header/info cards (inline styles), discount row, payments section, buttons (generate / fix weekends / invoices), schedule list with decorations (danger=weekend, primary=auto_fixed), smart button, stale alert; all 7 date fields use `options="{'numeric': true}"` so the year is always shown (Odoo 19 hides the current year otherwise) |
 | Product form area field | form inherit | `figurebi_installment.product_template_form_area` | x_area on product.template |
 | Settings FIGUREBI section | form inherit | `figurebi_installment.res_config_settings_view_form` | two manager fields |
 | PDF report | qweb template + report action | `figurebi_installment.report_installment`, `figurebi_installment.action_report_installment` | qweb-pdf on sale.order Print menu |
@@ -120,6 +123,9 @@ PDF via wkhtmltopdf. Ops-level: deployment/upgrade over SSH + JSON-RPC (see CLAU
 | AC-8 | bank_loan 20% → 2 rows, PMT on loan amount |
 | AC-9 | pick product → qty = area immediately |
 | AC-10 | change % after generation → yellow alert; regenerate → gone |
+| (no AC) balloon-month | balloon on 12/13, last installment would be 12/05 → that row is dropped, remaining rows grow, sum exact |
+| (no AC) 4 decimals | type 10.7896% or 1,762.4340$ → stored/shown unchanged |
+| (no AC) years | all date cards and the schedule date column show the year (e.g. 10/05/2026) |
 
 ## Traceability
 | AC | models/fields | verified |
