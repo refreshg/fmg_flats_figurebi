@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="field_pt_import_test" model="ir.model.fields">
+        <field name="model_id" ref="product.model_product_template"/>
+        <field name="name">x_figurebi_import_test</field>
+        <field name="field_description">FIGUREBI Import Test</field>
+        <field name="ttype">char</field>
+        <field name="state">manual</field>
+    </record>
+</odoo>

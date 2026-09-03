@@ -1,0 +1,20 @@
+{
+    "name": "FIGUREBI გადახდის კალკულატორი",
+    "summary": "განვადების გრაფიკი, ინვოისები და CRM-განაწილება (data-მოდული, Import Module-თვის)",
+    "version": "19.0.2.0.0",
+    "author": "FIGUREBI",
+    "license": "LGPL-3",
+    "category": "Sales",
+    "application": True,
+    "depends": ["sale_management", "crm", "base_automation"],
+    "data": [
+        "data/10_models.xml",
+        "data/15_access.xml",
+        "data/20_defaults.xml",
+        "data/30_actions.xml",
+        "data/40_automations.xml",
+        "data/50_views.xml",
+        "data/60_report.xml",
+        "data/70_mail.xml",
+    ],
+}

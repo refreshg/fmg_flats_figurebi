@@ -1,0 +1,264 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- 1. % -> $ (also refresh when the order total changes) -->
+    <record id="auto_pct_to_amount" model="base.automation">
+        <field name="name">FIGUREBI: სინქრონი % -> $</field>
+        <field name="model_id" ref="sale.model_sale_order"/>
+        <field name="trigger">on_create_or_write</field>
+        <field name="trigger_field_ids" eval="[(6, 0, [ref('field_so_first_tranche_pct'), ref('field_so_final_balloon_pct'), ref('sale.field_sale_order__amount_total')])]"/>
+    </record>
+    <record id="auto_pct_to_amount_action" model="ir.actions.server">
+        <field name="name">FIGUREBI: სინქრონი %->$ მოქმედება</field>
+        <field name="model_id" ref="sale.model_sale_order"/>
+        <field name="state">code</field>
+        <field name="usage">base_automation</field>
+        <field name="base_automation_id" ref="auto_pct_to_amount"/>
+        <field name="code"><![CDATA[
+if not env.context.get('figurebi_sync'):
+    for order in records:
+        total = order.amount_total or 0.0
+        order.with_context(figurebi_sync=True).write({
+            'x_first_tranche_amount': round(total * (order.x_first_tranche_pct or 0.0) / 100.0, 2),
+            'x_final_balloon_amount': round(total * (order.x_final_balloon_pct or 0.0) / 100.0, 2),
+        })
+]]></field>
+    </record>
+
+    <!-- 2. $ -> % -->
+    <record id="auto_amount_to_pct" model="base.automation">
+        <field name="name">FIGUREBI: სინქრონი $ -> %</field>
+        <field name="model_id" ref="sale.model_sale_order"/>
+        <field name="trigger">on_create_or_write</field>
+        <field name="trigger_field_ids" eval="[(6, 0, [ref('field_so_first_tranche_amount'), ref('field_so_final_balloon_amount')])]"/>
+    </record>
+    <record id="auto_amount_to_pct_action" model="ir.actions.server">
+        <field name="name">FIGUREBI: სინქრონი $->% მოქმედება</field>
+        <field name="model_id" ref="sale.model_sale_order"/>
+        <field name="state">code</field>
+        <field name="usage">base_automation</field>
+        <field name="base_automation_id" ref="auto_amount_to_pct"/>
+        <field name="code"><![CDATA[
+if not env.context.get('figurebi_sync'):
+    for order in records:
+        total = order.amount_total or 0.0
+        if total:
+            order.with_context(figurebi_sync=True).write({
+                'x_first_tranche_pct': round((order.x_first_tranche_amount or 0.0) / total * 100.0, 4),
+                'x_final_balloon_pct': round((order.x_final_balloon_amount or 0.0) / total * 100.0, 4),
+            })
+]]></field>
+    </record>
+
+    <!-- 3. discount: per-m2 master -->
+    <record id="auto_disc_per_m2" model="base.automation">
+        <field name="name">FIGUREBI: ფასდაკლების სინქრონი (კვ.მ)</field>
+        <field name="model_id" ref="sale.model_sale_order"/>
+        <field name="trigger">on_create_or_write</field>
+        <field name="trigger_field_ids" eval="[(6, 0, [ref('field_so_discount_per_m2')])]"/>
+    </record>
+    <record id="auto_disc_per_m2_action" model="ir.actions.server">
+        <field name="name">FIGUREBI: ფასდაკლების სინქრონი (კვ.მ) მოქმედება</field>
+        <field name="model_id" ref="sale.model_sale_order"/>
+        <field name="state">code</field>
+        <field name="usage">base_automation</field>
+        <field name="base_automation_id" ref="auto_disc_per_m2"/>
+        <field name="code"><![CDATA[
+if not env.context.get('figurebi_disc'):
+    for order in records:
+        line = order.order_line.filtered(lambda l: not l.display_type)[:1]
+        if not line or not line.price_unit or not line.product_uom_qty:
+            continue
+        per_m2 = order.x_discount_per_m2 or 0.0
+        total_d = round(per_m2 * line.product_uom_qty, 2)
+        pct = round(per_m2 / line.price_unit * 100.0, 4)
+        if pct > 100:
+            raise UserError("ფასდაკლება მთლიან ფასს ვერ გადააჭარბებს.")
+        line.write({'discount': pct})
+        order.with_context(figurebi_disc=True).write({'x_discount_total': total_d, 'x_discount_pct': pct})
+]]></field>
+    </record>
+
+    <!-- 4. discount: total master -->
+    <record id="auto_disc_total" model="base.automation">
+        <field name="name">FIGUREBI: ფასდაკლების სინქრონი (სრული)</field>
+        <field name="model_id" ref="sale.model_sale_order"/>
+        <field name="trigger">on_create_or_write</field>
+        <field name="trigger_field_ids" eval="[(6, 0, [ref('field_so_discount_total')])]"/>
+    </record>
+    <record id="auto_disc_total_action" model="ir.actions.server">
+        <field name="name">FIGUREBI: ფასდაკლების სინქრონი (სრული) მოქმედება</field>
+        <field name="model_id" ref="sale.model_sale_order"/>
+        <field name="state">code</field>
+        <field name="usage">base_automation</field>
+        <field name="base_automation_id" ref="auto_disc_total"/>
+        <field name="code"><![CDATA[
+if not env.context.get('figurebi_disc'):
+    for order in records:
+        line = order.order_line.filtered(lambda l: not l.display_type)[:1]
+        if not line or not line.price_unit or not line.product_uom_qty:
+            continue
+        gross = line.price_unit * line.product_uom_qty
+        total_d = order.x_discount_total or 0.0
+        per_m2 = round(total_d / line.product_uom_qty, 2)
+        pct = round(total_d / gross * 100.0, 4) if gross else 0.0
+        if pct > 100:
+            raise UserError("ფასდაკლება მთლიან ფასს ვერ გადააჭარბებს.")
+        line.write({'discount': pct})
+        order.with_context(figurebi_disc=True).write({'x_discount_per_m2': per_m2, 'x_discount_pct': pct})
+]]></field>
+    </record>
+
+    <!-- 5. discount: percent master -->
+    <record id="auto_disc_pct" model="base.automation">
+        <field name="name">FIGUREBI: ფასდაკლების %-ის სინქრონი</field>
+        <field name="model_id" ref="sale.model_sale_order"/>
+        <field name="trigger">on_create_or_write</field>
+        <field name="trigger_field_ids" eval="[(6, 0, [ref('field_so_discount_pct')])]"/>
+    </record>
+    <record id="auto_disc_pct_action" model="ir.actions.server">
+        <field name="name">FIGUREBI: ფასდაკლების %-ის სინქრონის მოქმედება</field>
+        <field name="model_id" ref="sale.model_sale_order"/>
+        <field name="state">code</field>
+        <field name="usage">base_automation</field>
+        <field name="base_automation_id" ref="auto_disc_pct"/>
+        <field name="code"><![CDATA[
+if not env.context.get('figurebi_disc'):
+    for order in records:
+        line = order.order_line.filtered(lambda l: not l.display_type)[:1]
+        if not line or not line.price_unit or not line.product_uom_qty:
+            continue
+        pct = order.x_discount_pct or 0.0
+        if pct > 100:
+            raise UserError("ფასდაკლება 100%-ს ვერ გადააჭარბებს (მინუსი = ფასნამატი).")
+        gross = line.price_unit * line.product_uom_qty
+        total_d = round(gross * pct / 100.0, 2)
+        per_m2 = round(line.price_unit * pct / 100.0, 2)
+        line.write({'discount': pct})
+        order.with_context(figurebi_disc=True).write({'x_discount_per_m2': per_m2, 'x_discount_total': total_d})
+]]></field>
+    </record>
+
+    <!-- 6. spread params -> final payment date -->
+    <record id="auto_final_date" model="base.automation">
+        <field name="name">FIGUREBI: ბოლო გადახდის თარიღის სინქრონი</field>
+        <field name="model_id" ref="sale.model_sale_order"/>
+        <field name="trigger">on_create_or_write</field>
+        <field name="trigger_field_ids" eval="[(6, 0, [ref('field_so_schedule_months'), ref('field_so_schedule_start_date'), ref('field_so_periodicity')])]"/>
+    </record>
+    <record id="auto_final_date_action" model="ir.actions.server">
+        <field name="name">FIGUREBI: ბოლო გადახდის თარიღის სინქრონის მოქმედება</field>
+        <field name="model_id" ref="sale.model_sale_order"/>
+        <field name="state">code</field>
+        <field name="usage">base_automation</field>
+        <field name="base_automation_id" ref="auto_final_date"/>
+        <field name="code"><![CDATA[
+if not env.context.get('figurebi_final_sync'):
+    for order in records:
+        if (order.x_payment_type or 'installment') != 'installment':
+            continue
+        months = int(order.x_schedule_months or 0)
+        if months > 0 and order.x_schedule_start_date:
+            interval = int(order.x_periodicity or 1)
+            count = max(1, months // interval)
+            new_date = order.x_schedule_start_date + dateutil.relativedelta.relativedelta(months=count * interval)
+            if order.x_final_payment_date != new_date:
+                order.with_context(figurebi_final_sync=True).write({'x_final_payment_date': new_date})
+]]></field>
+    </record>
+
+    <!-- 7. weekend guard on Send/Confirm -->
+    <record id="auto_weekend_guard" model="base.automation">
+        <field name="name">FIGUREBI: შაბ-კვ თარიღების დაცვა</field>
+        <field name="model_id" ref="sale.model_sale_order"/>
+        <field name="trigger">on_create_or_write</field>
+        <field name="trigger_field_ids" eval="[(6, 0, [ref('sale.field_sale_order__state')])]"/>
+    </record>
+    <record id="auto_weekend_guard_action" model="ir.actions.server">
+        <field name="name">FIGUREBI: შაბ-კვ დაცვის მოქმედება</field>
+        <field name="model_id" ref="sale.model_sale_order"/>
+        <field name="state">code</field>
+        <field name="usage">base_automation</field>
+        <field name="base_automation_id" ref="auto_weekend_guard"/>
+        <field name="code"><![CDATA[
+for order in records:
+    if order.state in ('sent', 'sale'):
+        bad = order.x_installment_line_ids.filtered(lambda l: l.x_is_weekend)
+        if bad:
+            raise UserError("შემდეგ ეტაპზე გადასვლა შეუძლებელია: გრაფიკში შაბათ-კვირის (წითელი) თარიღებია: %s. ჯერ შეასწორეთ (ღილაკით ან ხელით)." % ', '.join([str(d) for d in bad.mapped('x_date')]))
+]]></field>
+    </record>
+
+    <!-- 8. manual date edit clears the purple mark -->
+    <record id="auto_clear_purple" model="base.automation">
+        <field name="name">FIGUREBI: ხელით შესწორებაზე იასამნისფრის მოხსნა</field>
+        <field name="model_id" ref="model_x_figurebi_installment_line"/>
+        <field name="trigger">on_create_or_write</field>
+        <field name="trigger_field_ids" eval="[(6, 0, [ref('field_line_date')])]"/>
+    </record>
+    <record id="auto_clear_purple_action" model="ir.actions.server">
+        <field name="name">FIGUREBI: იასამნისფრის მოხსნის მოქმედება</field>
+        <field name="model_id" ref="model_x_figurebi_installment_line"/>
+        <field name="state">code</field>
+        <field name="usage">base_automation</field>
+        <field name="base_automation_id" ref="auto_clear_purple"/>
+        <field name="code"><![CDATA[
+if not env.context.get('figurebi_autofix'):
+    for line in records:
+        if line.x_auto_fixed:
+            line.with_context(figurebi_autofix=True).write({'x_auto_fixed': False})
+]]></field>
+    </record>
+
+    <!-- 9. apartment area auto-fills the quantity -->
+    <record id="auto_area_qty" model="base.automation">
+        <field name="name">FIGUREBI: ფართის ავტომატური ჩასმა</field>
+        <field name="model_id" ref="sale.model_sale_order_line"/>
+        <field name="trigger">on_create_or_write</field>
+        <field name="trigger_field_ids" eval="[(6, 0, [ref('sale.field_sale_order_line__product_id')])]"/>
+    </record>
+    <record id="auto_area_qty_action" model="ir.actions.server">
+        <field name="name">FIGUREBI: ფართი -> რაოდენობა</field>
+        <field name="model_id" ref="sale.model_sale_order_line"/>
+        <field name="state">code</field>
+        <field name="usage">base_automation</field>
+        <field name="base_automation_id" ref="auto_area_qty"/>
+        <field name="code"><![CDATA[
+for line in records:
+    area = line.product_id.product_tmpl_id.x_area
+    if area:
+        line['product_uom_qty'] = area
+]]></field>
+    </record>
+
+    <!-- 10. CRM: assign leads by language (managers set in System Parameters:
+         figurebi.en_manager_id / figurebi.ka_manager_id = user ids) -->
+    <record id="auto_crm_lang" model="base.automation">
+        <field name="name">FIGUREBI: ლიდის ენით განაწილება</field>
+        <field name="model_id" ref="crm.model_crm_lead"/>
+        <field name="trigger">on_create_or_write</field>
+        <field name="trigger_field_ids" eval="[(6, 0, [ref('crm.field_crm_lead__lang_id')])]"/>
+    </record>
+    <record id="auto_crm_lang_action" model="ir.actions.server">
+        <field name="name">FIGUREBI: ლიდის ენით განაწილების მოქმედება</field>
+        <field name="model_id" ref="crm.model_crm_lead"/>
+        <field name="state">code</field>
+        <field name="usage">base_automation</field>
+        <field name="base_automation_id" ref="auto_crm_lang"/>
+        <field name="code"><![CDATA[
+if not env.context.get('figurebi_crm_assign'):
+    params = env['ir.config_parameter'].sudo()
+    en_id = int(params.get_param('figurebi.en_manager_id') or 0)
+    ka_id = int(params.get_param('figurebi.ka_manager_id') or 0)
+    if en_id and ka_id:
+        en_user = env['res.users'].browse(en_id)
+        ka_user = env['res.users'].browse(ka_id)
+        for lead in records:
+            if lead.user_id and lead.user_id.id != env.uid and lead.user_id.id not in (en_id, ka_id):
+                continue
+            code = (lead.lang_id.code or '') if lead.lang_id else ''
+            target = en_user if code.startswith('en') else ka_user
+            if lead.user_id.id != target.id:
+                lead.with_context(figurebi_crm_assign=True).write({'user_id': target.id})
+]]></field>
+    </record>
+</odoo>

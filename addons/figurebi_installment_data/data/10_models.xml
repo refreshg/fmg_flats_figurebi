@@ -1,0 +1,456 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- ==================== installment line model ==================== -->
+    <record id="model_x_figurebi_installment_line" model="ir.model">
+        <field name="name">FIGUREBI Installment Line</field>
+        <field name="model">x_figurebi_installment_line</field>
+        <field name="state">manual</field>
+    </record>
+
+    <record id="field_line_order_id" model="ir.model.fields">
+        <field name="model_id" ref="model_x_figurebi_installment_line"/>
+        <field name="name">x_order_id</field>
+        <field name="field_description">შეკვეთა</field>
+        <field name="ttype">many2one</field>
+        <field name="relation">sale.order</field>
+        <field name="required" eval="True"/>
+        <field name="on_delete">cascade</field>
+        <field name="index" eval="True"/>
+        <field name="state">manual</field>
+    </record>
+    <record id="field_line_number" model="ir.model.fields">
+        <field name="model_id" ref="model_x_figurebi_installment_line"/>
+        <field name="name">x_number</field>
+        <field name="field_description">N</field>
+        <field name="ttype">integer</field>
+        <field name="state">manual</field>
+    </record>
+    <record id="field_line_date" model="ir.model.fields">
+        <field name="model_id" ref="model_x_figurebi_installment_line"/>
+        <field name="name">x_date</field>
+        <field name="field_description">თარიღი</field>
+        <field name="ttype">date</field>
+        <field name="required" eval="True"/>
+        <field name="state">manual</field>
+    </record>
+    <record id="field_line_amount" model="ir.model.fields">
+        <field name="model_id" ref="model_x_figurebi_installment_line"/>
+        <field name="name">x_amount</field>
+        <field name="field_description">თანხა</field>
+        <field name="ttype">float</field>
+        <field name="state">manual</field>
+    </record>
+    <record id="field_line_is_weekend" model="ir.model.fields">
+        <field name="model_id" ref="model_x_figurebi_installment_line"/>
+        <field name="name">x_is_weekend</field>
+        <field name="field_description">შაბათ-კვირა</field>
+        <field name="ttype">boolean</field>
+        <field name="store" eval="False"/>
+        <field name="depends">x_date</field>
+        <field name="compute"><![CDATA[for r in self:
+    r['x_is_weekend'] = bool(r.x_date) and r.x_date.weekday() >= 5]]></field>
+        <field name="state">manual</field>
+    </record>
+    <record id="field_line_auto_fixed" model="ir.model.fields">
+        <field name="model_id" ref="model_x_figurebi_installment_line"/>
+        <field name="name">x_auto_fixed</field>
+        <field name="field_description">ავტო-გასწორებული</field>
+        <field name="ttype">boolean</field>
+        <field name="state">manual</field>
+    </record>
+    <record id="field_line_balance" model="ir.model.fields">
+        <field name="model_id" ref="model_x_figurebi_installment_line"/>
+        <field name="name">x_balance</field>
+        <field name="field_description">ნაშთი</field>
+        <field name="ttype">float</field>
+        <field name="store" eval="False"/>
+        <field name="depends">x_amount,x_number,x_order_id.x_installment_line_ids.x_amount,x_order_id.amount_total</field>
+        <field name="compute"><![CDATA[for r in self:
+    order = r.x_order_id
+    paid = sum(l.x_amount or 0.0 for l in order.x_installment_line_ids if (l.x_number or 0) <= (r.x_number or 0))
+    r['x_balance'] = round((order.amount_total or 0.0) - paid, 2)]]></field>
+        <field name="state">manual</field>
+    </record>
+
+    <!-- ==================== sale.order fields ==================== -->
+    <record id="field_so_payment_type" model="ir.model.fields">
+        <field name="model_id" ref="sale.model_sale_order"/>
+        <field name="name">x_payment_type</field>
+        <field name="field_description">გადახდის ტიპი</field>
+        <field name="ttype">selection</field>
+        <field name="state">manual</field>
+    </record>
+    <record id="sel_pt_installment" model="ir.model.fields.selection">
+        <field name="field_id" ref="field_so_payment_type"/>
+        <field name="value">installment</field>
+        <field name="name">შიდა განვადება</field>
+        <field name="sequence">1</field>
+    </record>
+    <record id="sel_pt_bank" model="ir.model.fields.selection">
+        <field name="field_id" ref="field_so_payment_type"/>
+        <field name="value">bank_loan</field>
+        <field name="name">ბანკის სესხი</field>
+        <field name="sequence">2</field>
+    </record>
+    <record id="sel_pt_full" model="ir.model.fields.selection">
+        <field name="field_id" ref="field_so_payment_type"/>
+        <field name="value">full_payment</field>
+        <field name="name">ერთიანი გადახდა</field>
+        <field name="sequence">3</field>
+    </record>
+
+    <record id="field_so_periodicity" model="ir.model.fields">
+        <field name="model_id" ref="sale.model_sale_order"/>
+        <field name="name">x_periodicity</field>
+        <field name="field_description">გადახდის პერიოდულობა</field>
+        <field name="ttype">selection</field>
+        <field name="state">manual</field>
+    </record>
+    <record id="sel_per_1" model="ir.model.fields.selection">
+        <field name="field_id" ref="field_so_periodicity"/>
+        <field name="value">1</field>
+        <field name="name">თვეში ერთხელ</field>
+        <field name="sequence">1</field>
+    </record>
+    <record id="sel_per_2" model="ir.model.fields.selection">
+        <field name="field_id" ref="field_so_periodicity"/>
+        <field name="value">2</field>
+        <field name="name">ორ თვეში ერთხელ</field>
+        <field name="sequence">2</field>
+    </record>
+    <record id="sel_per_3" model="ir.model.fields.selection">
+        <field name="field_id" ref="field_so_periodicity"/>
+        <field name="value">3</field>
+        <field name="name">სამ თვეში ერთხელ</field>
+        <field name="sequence">3</field>
+    </record>
+    <record id="sel_per_6" model="ir.model.fields.selection">
+        <field name="field_id" ref="field_so_periodicity"/>
+        <field name="value">6</field>
+        <field name="name">ექვს თვეში ერთხელ</field>
+        <field name="sequence">4</field>
+    </record>
+    <record id="sel_per_12" model="ir.model.fields.selection">
+        <field name="field_id" ref="field_so_periodicity"/>
+        <field name="value">12</field>
+        <field name="name">წელიწადში ერთხელ</field>
+        <field name="sequence">5</field>
+    </record>
+
+    <record id="field_so_schedule_interval" model="ir.model.fields">
+        <field name="model_id" ref="sale.model_sale_order"/>
+        <field name="name">x_schedule_interval</field>
+        <field name="field_description">გრაფიკის ინტერვალი (legacy)</field>
+        <field name="ttype">integer</field>
+        <field name="state">manual</field>
+    </record>
+    <record id="field_so_schedule_months" model="ir.model.fields">
+        <field name="model_id" ref="sale.model_sale_order"/>
+        <field name="name">x_schedule_months</field>
+        <field name="field_description">გადანაწილების ვადა (თვე)</field>
+        <field name="ttype">integer</field>
+        <field name="state">manual</field>
+    </record>
+    <record id="field_so_first_payment_date" model="ir.model.fields">
+        <field name="model_id" ref="sale.model_sale_order"/>
+        <field name="name">x_first_payment_date</field>
+        <field name="field_description">პირველადი შენატანის თარიღი</field>
+        <field name="ttype">date</field>
+        <field name="state">manual</field>
+    </record>
+    <record id="field_so_schedule_start_date" model="ir.model.fields">
+        <field name="model_id" ref="sale.model_sale_order"/>
+        <field name="name">x_schedule_start_date</field>
+        <field name="field_description">განვადების დაწყების თარიღი</field>
+        <field name="ttype">date</field>
+        <field name="state">manual</field>
+    </record>
+    <record id="field_so_final_payment_date" model="ir.model.fields">
+        <field name="model_id" ref="sale.model_sale_order"/>
+        <field name="name">x_final_payment_date</field>
+        <field name="field_description">ბოლო გადახდის თარიღი</field>
+        <field name="ttype">date</field>
+        <field name="state">manual</field>
+    </record>
+    <record id="field_so_project_end_date" model="ir.model.fields">
+        <field name="model_id" ref="sale.model_sale_order"/>
+        <field name="name">x_project_end_date</field>
+        <field name="field_description">პროექტის დასრულების თარიღი</field>
+        <field name="ttype">date</field>
+        <field name="state">manual</field>
+    </record>
+    <record id="field_so_bank_transfer_date" model="ir.model.fields">
+        <field name="model_id" ref="sale.model_sale_order"/>
+        <field name="name">x_bank_transfer_date</field>
+        <field name="field_description">სესხის ჩარიცხვის თარიღი</field>
+        <field name="ttype">date</field>
+        <field name="state">manual</field>
+    </record>
+
+    <record id="field_so_first_tranche_pct" model="ir.model.fields">
+        <field name="model_id" ref="sale.model_sale_order"/>
+        <field name="name">x_first_tranche_pct</field>
+        <field name="field_description">პირველადი შენატანი (%)</field>
+        <field name="ttype">float</field>
+        <field name="state">manual</field>
+    </record>
+    <record id="field_so_first_tranche_amount" model="ir.model.fields">
+        <field name="model_id" ref="sale.model_sale_order"/>
+        <field name="name">x_first_tranche_amount</field>
+        <field name="field_description">პირველადი შენატანი ($)</field>
+        <field name="ttype">float</field>
+        <field name="state">manual</field>
+    </record>
+    <record id="field_so_final_balloon_pct" model="ir.model.fields">
+        <field name="model_id" ref="sale.model_sale_order"/>
+        <field name="name">x_final_balloon_pct</field>
+        <field name="field_description">ბოლო შენატანი (%)</field>
+        <field name="ttype">float</field>
+        <field name="state">manual</field>
+    </record>
+    <record id="field_so_final_balloon_amount" model="ir.model.fields">
+        <field name="model_id" ref="sale.model_sale_order"/>
+        <field name="name">x_final_balloon_amount</field>
+        <field name="field_description">ბოლო შენატანი ($)</field>
+        <field name="ttype">float</field>
+        <field name="state">manual</field>
+    </record>
+
+    <record id="field_so_discount_pct" model="ir.model.fields">
+        <field name="model_id" ref="sale.model_sale_order"/>
+        <field name="name">x_discount_pct</field>
+        <field name="field_description">ფასდაკლება / ფასნამატი (%)</field>
+        <field name="ttype">float</field>
+        <field name="state">manual</field>
+    </record>
+    <record id="field_so_discount_per_m2" model="ir.model.fields">
+        <field name="model_id" ref="sale.model_sale_order"/>
+        <field name="name">x_discount_per_m2</field>
+        <field name="field_description">ფასდაკლება / ფასნამატი კვ.მ ($)</field>
+        <field name="ttype">float</field>
+        <field name="state">manual</field>
+    </record>
+    <record id="field_so_discount_total" model="ir.model.fields">
+        <field name="model_id" ref="sale.model_sale_order"/>
+        <field name="name">x_discount_total</field>
+        <field name="field_description">ფასდაკლება / ფასნამატი სრული ($)</field>
+        <field name="ttype">float</field>
+        <field name="state">manual</field>
+    </record>
+
+    <record id="field_so_bank_rate" model="ir.model.fields">
+        <field name="model_id" ref="sale.model_sale_order"/>
+        <field name="name">x_bank_rate</field>
+        <field name="field_description">საბანკო განაკვეთი %</field>
+        <field name="ttype">float</field>
+        <field name="state">manual</field>
+    </record>
+    <record id="field_so_bank_term_months" model="ir.model.fields">
+        <field name="model_id" ref="sale.model_sale_order"/>
+        <field name="name">x_bank_term_months</field>
+        <field name="field_description">სესხის ვადა (თვე)</field>
+        <field name="ttype">integer</field>
+        <field name="state">manual</field>
+    </record>
+    <record id="field_so_schedule_snapshot" model="ir.model.fields">
+        <field name="model_id" ref="sale.model_sale_order"/>
+        <field name="name">x_schedule_snapshot</field>
+        <field name="field_description">გრაფიკის snapshot</field>
+        <field name="ttype">char</field>
+        <field name="state">manual</field>
+    </record>
+    <record id="field_so_installment_line_ids" model="ir.model.fields">
+        <field name="model_id" ref="sale.model_sale_order"/>
+        <field name="name">x_installment_line_ids</field>
+        <field name="field_description">გადახდის გრაფიკი</field>
+        <field name="ttype">one2many</field>
+        <field name="relation">x_figurebi_installment_line</field>
+        <field name="relation_field">x_order_id</field>
+        <field name="copied" eval="False"/>
+        <field name="state">manual</field>
+    </record>
+
+    <!-- computed sale.order fields -->
+    <record id="field_so_object_ref" model="ir.model.fields">
+        <field name="model_id" ref="sale.model_sale_order"/>
+        <field name="name">x_object_ref</field>
+        <field name="field_description">უძრავი ქონების № / მ²</field>
+        <field name="ttype">char</field>
+        <field name="store" eval="False"/>
+        <field name="depends">order_line.product_id,order_line.product_uom_qty</field>
+        <field name="compute"><![CDATA[for r in self:
+    line = r.order_line.filtered(lambda l: not l.display_type)[:1]
+    if line and line.product_id:
+        r['x_object_ref'] = '%s / %g მ²' % (line.product_id.default_code or line.product_id.name, line.product_uom_qty)
+    else:
+        r['x_object_ref'] = '']]></field>
+        <field name="state">manual</field>
+    </record>
+    <record id="field_so_price_per_m2" model="ir.model.fields">
+        <field name="model_id" ref="sale.model_sale_order"/>
+        <field name="name">x_price_per_m2</field>
+        <field name="field_description">საწყისი კვ.მ ღირებულება</field>
+        <field name="ttype">float</field>
+        <field name="store" eval="False"/>
+        <field name="depends">order_line.price_unit</field>
+        <field name="compute"><![CDATA[for r in self:
+    line = r.order_line.filtered(lambda l: not l.display_type)[:1]
+    r['x_price_per_m2'] = line.price_unit if line else 0.0]]></field>
+        <field name="state">manual</field>
+    </record>
+    <record id="field_so_initial_total" model="ir.model.fields">
+        <field name="model_id" ref="sale.model_sale_order"/>
+        <field name="name">x_initial_total</field>
+        <field name="field_description">საწყისი ჯამური ღირებულება</field>
+        <field name="ttype">float</field>
+        <field name="store" eval="False"/>
+        <field name="depends">order_line.price_unit,order_line.product_uom_qty</field>
+        <field name="compute"><![CDATA[for r in self:
+    r['x_initial_total'] = round(sum((l.price_unit or 0.0) * (l.product_uom_qty or 0.0) for l in r.order_line.filtered(lambda l: not l.display_type)), 2)]]></field>
+        <field name="state">manual</field>
+    </record>
+    <record id="field_so_final_price_per_m2" model="ir.model.fields">
+        <field name="model_id" ref="sale.model_sale_order"/>
+        <field name="name">x_final_price_per_m2</field>
+        <field name="field_description">საბოლოო კვ.მ ფასი</field>
+        <field name="ttype">float</field>
+        <field name="store" eval="False"/>
+        <field name="depends">order_line.price_unit,order_line.discount</field>
+        <field name="compute"><![CDATA[for r in self:
+    line = r.order_line.filtered(lambda l: not l.display_type)[:1]
+    r['x_final_price_per_m2'] = round(line.price_unit * (1 - (line.discount or 0.0) / 100.0), 2) if line else 0.0]]></field>
+        <field name="state">manual</field>
+    </record>
+    <record id="field_so_schedule_pct" model="ir.model.fields">
+        <field name="model_id" ref="sale.model_sale_order"/>
+        <field name="name">x_schedule_pct</field>
+        <field name="field_description">გრაფიკით გადაიხდის %</field>
+        <field name="ttype">float</field>
+        <field name="store" eval="False"/>
+        <field name="depends">x_first_tranche_pct,x_final_balloon_pct</field>
+        <field name="compute"><![CDATA[for r in self:
+    r['x_schedule_pct'] = round(max(0.0, 100.0 - (r.x_first_tranche_pct or 0.0) - (r.x_final_balloon_pct or 0.0)), 4)]]></field>
+        <field name="state">manual</field>
+    </record>
+    <record id="field_so_schedule_amount" model="ir.model.fields">
+        <field name="model_id" ref="sale.model_sale_order"/>
+        <field name="name">x_schedule_amount</field>
+        <field name="field_description">გრაფიკით გადაიხდის ($)</field>
+        <field name="ttype">float</field>
+        <field name="store" eval="False"/>
+        <field name="depends">amount_total,x_first_tranche_amount,x_final_balloon_amount</field>
+        <field name="compute"><![CDATA[for r in self:
+    r['x_schedule_amount'] = round((r.amount_total or 0.0) - (r.x_first_tranche_amount or 0.0) - (r.x_final_balloon_amount or 0.0), 2)]]></field>
+        <field name="state">manual</field>
+    </record>
+    <record id="field_so_bank_loan_amount" model="ir.model.fields">
+        <field name="model_id" ref="sale.model_sale_order"/>
+        <field name="name">x_bank_loan_amount</field>
+        <field name="field_description">სესხის თანხა</field>
+        <field name="ttype">float</field>
+        <field name="store" eval="False"/>
+        <field name="depends">amount_total,x_first_tranche_amount,x_payment_type</field>
+        <field name="compute"><![CDATA[for r in self:
+    r['x_bank_loan_amount'] = round((r.amount_total or 0.0) - (r.x_first_tranche_amount or 0.0), 2) if (r.x_payment_type or '') == 'bank_loan' else 0.0]]></field>
+        <field name="state">manual</field>
+    </record>
+    <record id="field_so_bank_pmt_reference" model="ir.model.fields">
+        <field name="model_id" ref="sale.model_sale_order"/>
+        <field name="name">x_bank_pmt_reference</field>
+        <field name="field_description">საბანკო შენატანი (საცნობარო)</field>
+        <field name="ttype">float</field>
+        <field name="store" eval="False"/>
+        <field name="depends">amount_total,x_payment_type,x_first_tranche_amount,x_final_balloon_amount,x_bank_rate,x_bank_term_months</field>
+        <field name="compute"><![CDATA[for r in self:
+    total = r.amount_total or 0.0
+    if (r.x_payment_type or '') == 'bank_loan':
+        p = total - (r.x_first_tranche_amount or 0.0)
+    else:
+        p = r.x_final_balloon_amount or 0.0
+    m = r.x_bank_term_months or 0
+    rate = (r.x_bank_rate or 0.0) / 100.0 / 12.0
+    if p <= 0 or m <= 0:
+        r['x_bank_pmt_reference'] = 0.0
+    elif rate:
+        r['x_bank_pmt_reference'] = round(p * rate / (1 - (1 + rate) ** -m), 2)
+    else:
+        r['x_bank_pmt_reference'] = round(p / m, 2)]]></field>
+        <field name="state">manual</field>
+    </record>
+    <record id="field_so_schedule_end_date" model="ir.model.fields">
+        <field name="model_id" ref="sale.model_sale_order"/>
+        <field name="name">x_schedule_end_date</field>
+        <field name="field_description">გრაფიკის ბოლო შენატანი (ავტო)</field>
+        <field name="ttype">date</field>
+        <field name="store" eval="False"/>
+        <field name="depends">x_installment_line_ids.x_date,x_schedule_start_date,x_schedule_months,x_periodicity</field>
+        <field name="compute"><![CDATA[for r in self:
+    dates = [d for d in r.x_installment_line_ids.mapped('x_date') if d]
+    if dates:
+        r['x_schedule_end_date'] = max(dates)
+    elif r.x_schedule_start_date and int(r.x_schedule_months or 0) > 0:
+        interval = int(r.x_periodicity or 1)
+        count = max(1, int(r.x_schedule_months) // interval)
+        r['x_schedule_end_date'] = r.x_schedule_start_date + dateutil.relativedelta.relativedelta(months=(count - 1) * interval)
+    else:
+        r['x_schedule_end_date'] = False]]></field>
+        <field name="state">manual</field>
+    </record>
+    <record id="field_so_has_weekend" model="ir.model.fields">
+        <field name="model_id" ref="sale.model_sale_order"/>
+        <field name="name">x_has_weekend</field>
+        <field name="field_description">აქვს შაბ-კვ თარიღები</field>
+        <field name="ttype">boolean</field>
+        <field name="store" eval="False"/>
+        <field name="depends">x_installment_line_ids.x_date</field>
+        <field name="compute"><![CDATA[for r in self:
+    r['x_has_weekend'] = bool(r.x_installment_line_ids.filtered(lambda l: l.x_date and l.x_date.weekday() >= 5))]]></field>
+        <field name="state">manual</field>
+    </record>
+    <record id="field_so_schedule_stale" model="ir.model.fields">
+        <field name="model_id" ref="sale.model_sale_order"/>
+        <field name="name">x_schedule_stale</field>
+        <field name="field_description">გრაფიკი მოძველებულია</field>
+        <field name="ttype">boolean</field>
+        <field name="store" eval="False"/>
+        <field name="depends">x_payment_type,x_first_tranche_amount,x_final_balloon_amount,x_first_payment_date,x_schedule_start_date,x_periodicity,x_schedule_months,x_final_payment_date,x_bank_transfer_date,x_project_end_date,amount_total,x_schedule_snapshot,x_installment_line_ids.x_amount</field>
+        <field name="compute"><![CDATA[for r in self:
+    sig = '|'.join([
+        str(r.x_payment_type or ''),
+        str(round(r.x_first_tranche_amount or 0.0, 2)),
+        str(round(r.x_final_balloon_amount or 0.0, 2)),
+        str(r.x_first_payment_date or ''),
+        str(r.x_schedule_start_date or ''),
+        str(r.x_periodicity or r.x_schedule_interval or 1),
+        str(r.x_schedule_months or 0),
+        str(r.x_final_payment_date or ''),
+        str(r.x_bank_transfer_date or ''),
+        str(r.x_project_end_date or ''),
+        str(round(r.amount_total or 0.0, 2)),
+    ])
+    lines = r.x_installment_line_ids
+    mismatch = bool(lines) and abs(sum(lines.mapped('x_amount')) - (r.amount_total or 0.0)) > 0.01
+    r['x_schedule_stale'] = bool(lines) and ((r.x_schedule_snapshot or '') != sig or mismatch)]]></field>
+        <field name="state">manual</field>
+    </record>
+    <record id="field_so_installment_invoice_count" model="ir.model.fields">
+        <field name="model_id" ref="sale.model_sale_order"/>
+        <field name="name">x_installment_invoice_count</field>
+        <field name="field_description">განვადების ინვოისები</field>
+        <field name="ttype">integer</field>
+        <field name="store" eval="False"/>
+        <field name="depends">name</field>
+        <field name="compute"><![CDATA[for r in self:
+    r['x_installment_invoice_count'] = self.env['account.move'].search_count([('invoice_origin', '=', r.name), ('move_type', '=', 'out_invoice'), ('state', '!=', 'cancel')]) if r.name else 0]]></field>
+        <field name="state">manual</field>
+    </record>
+
+    <!-- ==================== product.template ==================== -->
+    <record id="field_pt_area" model="ir.model.fields">
+        <field name="model_id" ref="product.model_product_template"/>
+        <field name="name">x_area</field>
+        <field name="field_description">ფართი (მ²)</field>
+        <field name="ttype">float</field>
+        <field name="state">manual</field>
+    </record>
+</odoo>

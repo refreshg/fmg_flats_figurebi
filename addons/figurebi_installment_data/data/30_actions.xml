@@ -1,0 +1,185 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="action_generate_schedule" model="ir.actions.server">
+        <field name="name">FIGUREBI: გრაფიკის გენერაცია</field>
+        <field name="model_id" ref="sale.model_sale_order"/>
+        <field name="state">code</field>
+        <field name="code"><![CDATA[
+# Generates the installment schedule: first tranche + equal installments of the
+# remainder + final payment on its own date (empty = 15th of completion month).
+# Bank loan = co-participation + loan amount. Weekend dates stay red.
+for order in records:
+    total = order.amount_total
+    if total <= 0:
+        raise UserError("ჯამური ფასი უნდა იყოს 0-ზე მეტი — ჯერ დაამატეთ ობიექტი შეკვეთის ხაზებში.")
+    if not order.x_first_payment_date:
+        raise UserError("შეავსეთ პირველადი შენატანის თარიღი.")
+    ptype = order.x_payment_type or 'installment'
+    order.x_installment_line_ids.unlink()
+    vals_list = []
+    if ptype == 'full_payment':
+        vals_list.append({'x_order_id': order.id, 'x_number': 1, 'x_date': order.x_first_payment_date, 'x_amount': total})
+    elif ptype == 'bank_loan':
+        first_amt = round(order.x_first_tranche_amount or 0.0, 2)
+        if first_amt < 0 or first_amt > total:
+            raise UserError("თანამონაწილეობა 0-სა და ჯამურ ფასს შორის უნდა იყოს.")
+        loan = round(total - first_amt, 2)
+        num = 1
+        if first_amt > 0.005:
+            vals_list.append({'x_order_id': order.id, 'x_number': num, 'x_date': order.x_first_payment_date, 'x_amount': first_amt})
+            num += 1
+        if loan > 0.005:
+            vals_list.append({'x_order_id': order.id, 'x_number': num, 'x_date': order.x_bank_transfer_date or order.x_first_payment_date, 'x_amount': loan})
+    else:
+        first_amt = round(order.x_first_tranche_amount or 0.0, 2)
+        balloon_amt = round(order.x_final_balloon_amount or 0.0, 2)
+        if first_amt < 0 or balloon_amt < 0:
+            raise UserError("თანხები უარყოფითი ვერ იქნება.")
+        sched_amt = round(total - first_amt - balloon_amt, 2)
+        if sched_amt < -0.01:
+            raise UserError("პირველადი შენატანი + ბოლო გადახდა ჯამურ ფასს აჭარბებს.")
+        if not order.x_schedule_start_date or not order.x_project_end_date:
+            raise UserError("შეავსეთ განვადების დაწყებისა და პროექტის დასრულების თარიღები.")
+        if order.x_schedule_start_date > order.x_project_end_date:
+            raise UserError("განვადების დაწყების თარიღი პროექტის დასრულებაზე გვიან ვერ იქნება.")
+        interval = int(order.x_periodicity or order.x_schedule_interval or 1)
+        if interval < 1:
+            raise UserError("გადახდის პერიოდულობა არასწორია.")
+        cap = datetime.date(order.x_project_end_date.year, order.x_project_end_date.month, 15)
+        bdate = order.x_final_payment_date or cap
+        if bdate > order.x_project_end_date:
+            raise UserError("ბოლო გადახდის თარიღი (%s) პროექტის დასრულების თარიღზე (%s) გვიან ვერ იქნება." % (bdate, order.x_project_end_date))
+        vals_list.append({'x_order_id': order.id, 'x_number': 1, 'x_date': order.x_first_payment_date, 'x_amount': first_amt})
+        months = int(order.x_schedule_months or 0)
+        dates = []
+        if months > 0:
+            count = max(1, months // interval)
+            for k in range(count):
+                dates.append(order.x_schedule_start_date + dateutil.relativedelta.relativedelta(months=k * interval))
+            if dates[-1] > order.x_project_end_date:
+                raise UserError("გადანაწილების ვადა (%s თვე) სცდება პროექტის დასრულებას." % months)
+        else:
+            k = 0
+            while True:
+                d = order.x_schedule_start_date + dateutil.relativedelta.relativedelta(months=k * interval)
+                if d > order.x_project_end_date or d >= cap:
+                    break
+                dates.append(d)
+                k += 1
+        if balloon_amt > 0.005 and dates and bdate <= dates[-1]:
+            raise UserError("ბოლო გადახდის თარიღი (%s) გრაფიკის ბოლო შენატანზე (%s) გვიან უნდა იყოს." % (bdate, dates[-1]))
+        n = len(dates)
+        if sched_amt > 0.005:
+            if n < 1:
+                raise UserError("თარიღების მიხედვით გრაფიკში შენატანი ვერ თავსდება — შეამოწმეთ თარიღები/პერიოდულობა.")
+            per = round(sched_amt / n, 2)
+            acc = 0.0
+            i = 0
+            for d in dates:
+                amt = per if i < n - 1 else round(sched_amt - acc, 2)
+                acc = round(acc + amt, 2)
+                vals_list.append({'x_order_id': order.id, 'x_number': i + 2, 'x_date': d, 'x_amount': amt})
+                i += 1
+        if balloon_amt > 0.005:
+            vals_list.append({'x_order_id': order.id, 'x_number': len(vals_list) + 1, 'x_date': bdate, 'x_amount': balloon_amt})
+    env['x_figurebi_installment_line'].create(vals_list)
+    sig = '|'.join([
+        str(order.x_payment_type or ''),
+        str(round(order.x_first_tranche_amount or 0.0, 2)),
+        str(round(order.x_final_balloon_amount or 0.0, 2)),
+        str(order.x_first_payment_date or ''),
+        str(order.x_schedule_start_date or ''),
+        str(order.x_periodicity or order.x_schedule_interval or 1),
+        str(order.x_schedule_months or 0),
+        str(order.x_final_payment_date or ''),
+        str(order.x_bank_transfer_date or ''),
+        str(order.x_project_end_date or ''),
+        str(round(order.amount_total or 0.0, 2)),
+    ])
+    order['x_schedule_snapshot'] = sig
+]]></field>
+    </record>
+
+    <record id="action_fix_weekends" model="ir.actions.server">
+        <field name="name">FIGUREBI: შაბ-კვ თარიღების გასწორება</field>
+        <field name="model_id" ref="sale.model_sale_order"/>
+        <field name="state">code</field>
+        <field name="code"><![CDATA[
+# Shifts every weekend schedule date to the following Monday (Sat +2, Sun +1)
+# and marks the row purple (auto-fixed).
+for order in records:
+    bad = order.x_installment_line_ids.filtered(lambda l: l.x_is_weekend)
+    if not bad:
+        raise UserError("წითელი (შაბათ-კვირის) თარიღები არ არის — გასასწორებელი არაფერია.")
+    for line in bad:
+        d = line.x_date
+        shift = 2 if d.weekday() == 5 else 1
+        line.with_context(figurebi_autofix=True).write({
+            'x_date': d + datetime.timedelta(days=shift),
+            'x_auto_fixed': True,
+        })
+]]></field>
+    </record>
+
+    <record id="action_generate_invoices" model="ir.actions.server">
+        <field name="name">FIGUREBI: ინვოისების გენერაცია</field>
+        <field name="model_id" ref="sale.model_sale_order"/>
+        <field name="state">code</field>
+        <field name="code"><![CDATA[
+# One draft customer invoice per installment line (due date = line date).
+for order in records:
+    if order.state != 'sale':
+        raise UserError("ინვოისების გენერაცია მხოლოდ დადასტურებულ შეკვეთაზეა შესაძლებელი — ჯერ დაადასტურეთ (Confirm) შეთავაზება.")
+    lines = order.x_installment_line_ids.sorted(key=lambda l: l.x_number)
+    if not lines:
+        raise UserError("ჯერ დააგენერირეთ გადახდის გრაფიკი.")
+    bad = lines.filtered(lambda l: l.x_is_weekend)
+    if bad:
+        raise UserError("გრაფიკში შაბათ-კვირის (წითელი) თარიღებია: %s. ჯერ შეასწორეთ და მერე გამოწერეთ ინვოისები." % ', '.join([str(d) for d in bad.mapped('x_date')]))
+    existing = env['account.move'].search_count([
+        ('invoice_origin', '=', order.name),
+        ('move_type', '=', 'out_invoice'),
+        ('state', '!=', 'cancel'),
+    ])
+    if existing:
+        raise UserError("ამ შეკვეთაზე ინვოისები უკვე არსებობს (%s ცალი). ჯერ გააუქმეთ/წაშალეთ ისინი Accounting-ში." % existing)
+    product = env['product.product'].search([('default_code', '=', 'INSTALLMENT-FEE')], limit=1)
+    if not product:
+        raise UserError("ვერ მოიძებნა პროდუქტი INSTALLMENT-FEE — მიმართეთ ადმინისტრატორს.")
+    total_count = len(lines)
+    for line in lines:
+        env['account.move'].create({
+            'move_type': 'out_invoice',
+            'partner_id': order.partner_id.id,
+            'currency_id': order.currency_id.id,
+            'invoice_origin': order.name,
+            'invoice_date_due': line.x_date,
+            'invoice_payment_term_id': False,
+            'invoice_user_id': order.user_id.id,
+            'invoice_line_ids': [(0, 0, {
+                'product_id': product.id,
+                'name': "განვადების შენატანი %s/%s — %s" % (line.x_number, total_count, order.name),
+                'quantity': 1,
+                'price_unit': line.x_amount,
+                'tax_ids': [(6, 0, [])],
+            })],
+        })
+]]></field>
+    </record>
+
+    <record id="action_view_installment_invoices" model="ir.actions.server">
+        <field name="name">FIGUREBI: განვადების ინვოისების ნახვა</field>
+        <field name="model_id" ref="sale.model_sale_order"/>
+        <field name="state">code</field>
+        <field name="code"><![CDATA[
+if record:
+    action = {
+        'type': 'ir.actions.act_window',
+        'name': 'განვადების ინვოისები',
+        'res_model': 'account.move',
+        'view_mode': 'list,form',
+        'domain': [('invoice_origin', '=', record.name), ('move_type', '=', 'out_invoice')],
+    }
+]]></field>
+    </record>
+</odoo>
