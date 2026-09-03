@@ -14,7 +14,7 @@ Real-estate installment calculator for developer sales:
 - Apartment area auto-fills the ordered quantity
 - CRM leads auto-assigned to managers by language (configurable in Settings)
     """,
-    "version": "19.0.2.3.2",
+    "version": "19.0.2.4.0",
     "author": "FIGUREBI",
     "license": "LGPL-3",
     "category": "Sales",
@@ -32,6 +32,7 @@ Real-estate installment calculator for developer sales:
     "assets": {
         "web.assets_backend": [
             "figurebi_installment/static/src/scss/figurebi.scss",
+            "figurebi_installment/static/src/js/figurebi_date_field.js",
         ],
     },
 }
