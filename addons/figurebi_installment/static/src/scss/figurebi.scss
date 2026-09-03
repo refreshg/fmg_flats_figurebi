@@ -1,0 +1,10 @@
+/* FIGUREBI: auto-fixed (purple) installment rows — bold dark purple on light
+   purple bg; weekend (red) rows bold too. */
+div[name="x_installment_line_ids"] tr.text-primary td {
+    background-color: #f0dcff !important;
+    color: #6a1b9a !important;
+    font-weight: 700;
+}
+div[name="x_installment_line_ids"] tr.text-danger td {
+    font-weight: 700;
+}

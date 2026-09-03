@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="res_config_settings_view_form" model="ir.ui.view">
+        <field name="name">res.config.settings.figurebi</field>
+        <field name="model">res.config.settings</field>
+        <field name="inherit_id" ref="crm.res_config_settings_view_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//form" position="inside">
+                <app string="FIGUREBI" name="figurebi_installment">
+                    <block title="ლიდების ენით განაწილება">
+                        <setting string="ინგლისურენოვანი ლიდების მენეჯერი"
+                                 help="en* ენის ლიდები ავტომატურად ამ მენეჯერს მიენიჭება">
+                            <field name="figurebi_en_manager_id"/>
+                        </setting>
+                        <setting string="ქართულენოვანი ლიდების მენეჯერი (default)"
+                                 help="ქართული, ცარიელი ან სხვა ენის ლიდები ამ მენეჯერს მიენიჭება">
+                            <field name="figurebi_ka_manager_id"/>
+                        </setting>
+                    </block>
+                </app>
+            </xpath>
+        </field>
+    </record>
+</odoo>

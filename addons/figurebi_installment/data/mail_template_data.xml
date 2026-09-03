@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Georgian commercial-offer text for the standard "Send Quotation" email;
+         the installment schedule PDF is attached alongside the quotation. -->
+    <record id="sale.email_template_edi_sale" model="mail.template">
+        <field name="subject">კომერციული შეთავაზება № {{ object.name }}</field>
+        <field name="report_template_ids" eval="[(4, ref('figurebi_installment.action_report_installment'))]"/>
+        <field name="body_html" type="html">
+<div style="margin:0px; padding:0px; font-size:13px;">
+    <p>გამარჯობა,</p>
+    <p>
+        გიგზავნით კომერციულ შეთავაზებას № <t t-out="object.name"/><t t-if="object.order_line.filtered(lambda l: not l.display_type)[:1].product_id">,
+        <t t-out="object.order_line.filtered(lambda l: not l.display_type)[:1].product_id.name"/>-ის შეძენასთან დაკავშირებით</t>.
+    </p>
+    <p>
+        გთხოვთ, გაეცნოთ თანდართულ დოკუმენტს. შეთავაზების პირობებზე თანხმობის შემთხვევაში,
+        გთხოვთ, დაგვიდასტუროთ პასუხად.
+    </p>
+    <p>
+        დამატებითი კითხვების შემთხვევაში, მზად ვართ მოგაწოდოთ დეტალური ინფორმაცია.
+    </p>
+    <p>
+        პატივისცემით,<br/>
+        <t t-out="object.user_id.name or ''"/><br/>
+        <t t-out="object.company_id.name or ''"/>
+    </p>
+</div>
+        </field>
+    </record>
+</odoo>
