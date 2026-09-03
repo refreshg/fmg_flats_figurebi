@@ -47,15 +47,15 @@ class SaleOrder(models.Model):
     )
 
     # tranche / balloon: both $ and % enterable, kept in sync
-    x_first_tranche_pct = fields.Float(string="პირველადი შენატანი (%)", default=10.0)
-    x_first_tranche_amount = fields.Float(string="პირველადი შენატანი ($)")
-    x_final_balloon_pct = fields.Float(string="ბოლო შენატანი (%)", default=80.0)
-    x_final_balloon_amount = fields.Float(string="ბოლო შენატანი ($)")
+    x_first_tranche_pct = fields.Float(string="პირველადი შენატანი (%)", default=10.0, digits=(16, 4))
+    x_first_tranche_amount = fields.Float(string="პირველადი შენატანი ($)", digits=(16, 4))
+    x_final_balloon_pct = fields.Float(string="ბოლო შენატანი (%)", default=80.0, digits=(16, 4))
+    x_final_balloon_amount = fields.Float(string="ბოლო შენატანი ($)", digits=(16, 4))
 
     # discount / markup: %, $ per m2 or total $, synced to the line's Disc.%
     x_discount_pct = fields.Float(string="ფასდაკლება / ფასნამატი (%)", digits=(16, 4))
-    x_discount_per_m2 = fields.Float(string="ფასდაკლება / ფასნამატი კვ.მ ($)")
-    x_discount_total = fields.Float(string="ფასდაკლება / ფასნამატი სრული ($)")
+    x_discount_per_m2 = fields.Float(string="ფასდაკლება / ფასნამატი კვ.მ ($)", digits=(16, 4))
+    x_discount_total = fields.Float(string="ფასდაკლება / ფასნამატი სრული ($)", digits=(16, 4))
 
     # bank reference
     x_bank_rate = fields.Float(string="საბანკო განაკვეთი %", default=14.0)
@@ -68,14 +68,15 @@ class SaleOrder(models.Model):
 
     # ---------------------------------------------------------------- computed
     x_object_ref = fields.Char(string="უძრავი ქონების № / მ²", compute="_compute_header")
-    x_price_per_m2 = fields.Float(string="საწყისი კვ.მ ღირებულება", compute="_compute_header")
-    x_initial_total = fields.Float(string="საწყისი ჯამური ღირებულება", compute="_compute_header")
+    x_price_per_m2 = fields.Float(string="საწყისი კვ.მ ღირებულება", compute="_compute_header", digits=(16, 4))
+    x_initial_total = fields.Float(string="საწყისი ჯამური ღირებულება", compute="_compute_header", digits=(16, 4))
     x_final_price_per_m2 = fields.Float(
         string="საბოლოო კვ.მ ფასი",
         compute="_compute_final_price_per_m2",
         inverse="_inverse_final_price_per_m2",
         store=True,
         readonly=False,
+        digits=(16, 4),
     )
     x_final_total = fields.Float(
         string="საბოლოო ფასი ($)",
@@ -83,9 +84,10 @@ class SaleOrder(models.Model):
         inverse="_inverse_final_total",
         store=True,
         readonly=False,
+        digits=(16, 4),
     )
-    x_schedule_pct = fields.Float(string="გრაფიკით გადაიხდის %", compute="_compute_schedule_part")
-    x_schedule_amount = fields.Float(string="გრაფიკით გადაიხდის ($)", compute="_compute_schedule_part")
+    x_schedule_pct = fields.Float(string="გრაფიკით გადაიხდის %", compute="_compute_schedule_part", digits=(16, 4))
+    x_schedule_amount = fields.Float(string="გრაფიკით გადაიხდის ($)", compute="_compute_schedule_part", digits=(16, 4))
     x_bank_loan_amount = fields.Float(string="სესხის თანხა", compute="_compute_bank")
     x_bank_pmt_reference = fields.Float(
         string="საბანკო შენატანი (საცნობარო)",
@@ -135,7 +137,7 @@ class SaleOrder(models.Model):
             return 0.0
         area = self._figurebi_unit_area(line)
         gross = (line.price_unit or 0.0) * (line.product_uom_qty or 0.0)
-        return round(gross / area, 2) if area else (line.price_unit or 0.0)
+        return round(gross / area, 4) if area else (line.price_unit or 0.0)
 
     def _figurebi_gross(self):
         """Asking price of the whole order: before discount, before tax."""
@@ -214,14 +216,14 @@ class SaleOrder(models.Model):
             order.x_initial_total = round(sum(
                 (l.price_unit or 0.0) * (l.product_uom_qty or 0.0)
                 for l in order.order_line.filtered(lambda l: not l.display_type)
-            ), 2)
+            ), 4)
 
     @api.depends("order_line.price_unit", "order_line.discount")
     def _compute_final_price_per_m2(self):
         for order in self:
             line = order._figurebi_main_line()
             order.x_final_price_per_m2 = round(
-                order._figurebi_price_per_m2(line) * (1 - (line.discount or 0.0) / 100.0), 2
+                order._figurebi_price_per_m2(line) * (1 - (line.discount or 0.0) / 100.0), 4
             ) if line else 0.0
 
     @api.depends("amount_total")
@@ -233,8 +235,8 @@ class SaleOrder(models.Model):
         # keep all discount cards in sync and push pct to the order lines;
         # the total is the whole order's, the per-m2 figure the main unit's
         self.x_discount_pct = pct
-        self.x_discount_per_m2 = round(self._figurebi_price_per_m2(line) * pct / 100.0, 2)
-        self.x_discount_total = round(self._figurebi_gross() * pct / 100.0, 2)
+        self.x_discount_per_m2 = round(self._figurebi_price_per_m2(line) * pct / 100.0, 4)
+        self.x_discount_total = round(self._figurebi_gross() * pct / 100.0, 4)
         self._apply_discount_pct(pct)
 
     def _inverse_final_price_per_m2(self):
@@ -343,8 +345,8 @@ class SaleOrder(models.Model):
     @api.onchange("x_first_tranche_pct", "x_final_balloon_pct", "order_line")
     def _onchange_pcts(self):
         total = self.amount_total or 0.0
-        self.x_first_tranche_amount = round(total * (self.x_first_tranche_pct or 0.0) / 100.0, 2)
-        self.x_final_balloon_amount = round(total * (self.x_final_balloon_pct or 0.0) / 100.0, 2)
+        self.x_first_tranche_amount = round(total * (self.x_first_tranche_pct or 0.0) / 100.0, 4)
+        self.x_final_balloon_amount = round(total * (self.x_final_balloon_pct or 0.0) / 100.0, 4)
 
     @api.onchange("x_first_tranche_amount")
     def _onchange_first_amount(self):
@@ -370,8 +372,8 @@ class SaleOrder(models.Model):
         if not line or not line.price_unit or not line.product_uom_qty:
             return
         pct = self.x_discount_pct or 0.0
-        self.x_discount_total = round(self._figurebi_gross() * pct / 100.0, 2)
-        self.x_discount_per_m2 = round(self._figurebi_price_per_m2(line) * pct / 100.0, 2)
+        self.x_discount_total = round(self._figurebi_gross() * pct / 100.0, 4)
+        self.x_discount_per_m2 = round(self._figurebi_price_per_m2(line) * pct / 100.0, 4)
         self._apply_discount_pct(pct)
 
     @api.onchange("x_discount_per_m2")
@@ -384,7 +386,7 @@ class SaleOrder(models.Model):
         if not price_per_m2:
             return
         pct = round(per_m2 / price_per_m2 * 100.0, 6)
-        self.x_discount_total = round(self._figurebi_gross() * pct / 100.0, 2)
+        self.x_discount_total = round(self._figurebi_gross() * pct / 100.0, 4)
         self.x_discount_pct = pct
         self._apply_discount_pct(pct)
 
@@ -396,7 +398,7 @@ class SaleOrder(models.Model):
         total_d = self.x_discount_total or 0.0
         gross = self._figurebi_gross()
         pct = round(total_d / gross * 100.0, 6) if gross else 0.0
-        self.x_discount_per_m2 = round(self._figurebi_price_per_m2(line) * pct / 100.0, 2)
+        self.x_discount_per_m2 = round(self._figurebi_price_per_m2(line) * pct / 100.0, 4)
         self.x_discount_pct = pct
         self._apply_discount_pct(pct)
 
