@@ -34,3 +34,6 @@ Date: 2026-09-01 · Decision: real Python module for on-premise/odoo.sh + XML/CS
 
 ### D-11: Local-only git; secrets externalized
 Date: 2026-09-03 (user answers) · Decision: local repo, no remote yet; all credentials only in git-ignored SECRETS.local.md; scripts read `$env:FIGUREBI_STAGING_KEY`; zips git-ignored (rebuilt on Linux — Windows zips carry backslash paths).
+
+### D-12: History pushed to the company repo as branch `figurebi` (supersedes "no remote" in D-11)
+Date: 2026-09-03 (user request, same day) · Context: refreshg/fmg_flats_figurebi holds the vertikali flats module at repo root with its own CLAUDE.md/research/deploy scripts; merging two workspaces into main would collide. Decision: our full history lives on branch `figurebi` of that repo; main untouched. Consequence: the two lines can be merged later only after agreeing a shared layout; the repo is currently public — recommended to make private.
