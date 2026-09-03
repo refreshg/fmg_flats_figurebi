@@ -528,6 +528,11 @@ class SaleOrder(models.Model):
                     break
                 dates.append(d)
                 k += 1
+        # a schedule installment in the balloon's own month is folded away: the
+        # client must not pay twice in the final month, the remaining
+        # installments grow to cover the same schedule amount (user rule)
+        if balloon_amt > 0.005 and dates and (dates[-1].year, dates[-1].month) == (bdate.year, bdate.month):
+            dates.pop()
         if balloon_amt > 0.005 and dates and bdate <= dates[-1]:
             raise UserError(
                 "ბოლო გადახდის თარიღი (%s) გრაფიკის ბოლო შენატანზე (%s) გვიან უნდა იყოს."
