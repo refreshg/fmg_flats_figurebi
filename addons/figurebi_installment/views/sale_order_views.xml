@@ -82,7 +82,7 @@
                     <div class="figurebi_header" style="display: flex; gap: 14px; flex-wrap: wrap; margin-bottom: 16px;">
                         <div class="figurebi_card" style="flex: 1 1 180px; background: #ffffff; border: 1px solid #d9defc; border-radius: 10px; padding: 10px 14px;">
                             <div class="figurebi_label" style="font-size: 11px; color: #6b7280; margin-bottom: 4px;">პირველადი შენატანის თარიღი</div>
-                            <div class="figurebi_value" style="font-weight: 700; font-size: 15px; color: #2743a6;"><field name="x_first_payment_date" nolabel="1"/></div>
+                            <div class="figurebi_value" style="font-weight: 700; font-size: 15px; color: #2743a6;"><field name="x_first_payment_date" nolabel="1" options="{'numeric': true}"/></div>
                         </div>
                         <div class="figurebi_card" style="flex: 1 1 180px; background: #ffffff; border: 1px solid #d9defc; border-radius: 10px; padding: 10px 14px;" invisible="x_payment_type != 'installment'">
                             <div class="figurebi_label" style="font-size: 11px; color: #6b7280; margin-bottom: 4px;">პირველადი შენატანი ($)</div>
@@ -94,7 +94,7 @@
                         </div>
                         <div class="figurebi_card" style="flex: 1 1 180px; background: #ffffff; border: 1px solid #d9defc; border-radius: 10px; padding: 10px 14px;" invisible="x_payment_type != 'installment'">
                             <div class="figurebi_label" style="font-size: 11px; color: #6b7280; margin-bottom: 4px;">განვადების დაწყების თარიღი</div>
-                            <div class="figurebi_value" style="font-weight: 700; font-size: 15px; color: #2743a6;"><field name="x_schedule_start_date" nolabel="1"/></div>
+                            <div class="figurebi_value" style="font-weight: 700; font-size: 15px; color: #2743a6;"><field name="x_schedule_start_date" nolabel="1" options="{'numeric': true}"/></div>
                         </div>
                     </div>
                     <!-- bank loan row -->
@@ -113,14 +113,14 @@
                         </div>
                         <div class="figurebi_card" style="flex: 1 1 180px; background: #ffffff; border: 1px solid #d9defc; border-radius: 10px; padding: 10px 14px;">
                             <div class="figurebi_label" style="font-size: 11px; color: #6b7280; margin-bottom: 4px;">სესხის ჩარიცხვის თარიღი</div>
-                            <div class="figurebi_value" style="font-weight: 700; font-size: 15px; color: #2743a6;"><field name="x_bank_transfer_date" nolabel="1" placeholder="ცარიელი = იმავე დღეს"/></div>
+                            <div class="figurebi_value" style="font-weight: 700; font-size: 15px; color: #2743a6;"><field name="x_bank_transfer_date" nolabel="1" placeholder="ცარიელი = იმავე დღეს" options="{'numeric': true}"/></div>
                         </div>
                     </div>
                     <!-- final payment row -->
                     <div class="figurebi_header" style="display: flex; gap: 14px; flex-wrap: wrap; margin-bottom: 16px;" invisible="x_payment_type != 'installment'">
                         <div class="figurebi_card" style="flex: 1 1 180px; background: #ffffff; border: 1px solid #d9defc; border-radius: 10px; padding: 10px 14px;">
                             <div class="figurebi_label" style="font-size: 11px; color: #6b7280; margin-bottom: 4px;">გრაფიკის ბოლო შენატანი (ავტო)</div>
-                            <div class="figurebi_value" style="font-weight: 700; font-size: 15px; color: #2743a6;"><field name="x_schedule_end_date" readonly="1" nolabel="1"/></div>
+                            <div class="figurebi_value" style="font-weight: 700; font-size: 15px; color: #2743a6;"><field name="x_schedule_end_date" readonly="1" nolabel="1" options="{'numeric': true}"/></div>
                         </div>
                         <div class="figurebi_card" style="flex: 1 1 180px; background: #ffffff; border: 1px solid #d9defc; border-radius: 10px; padding: 10px 14px;">
                             <div class="figurebi_label" style="font-size: 11px; color: #6b7280; margin-bottom: 4px;">ბოლო შენატანი ($)</div>
@@ -132,13 +132,13 @@
                         </div>
                         <div class="figurebi_card" style="flex: 1 1 180px; background: #ffffff; border: 1px solid #d9defc; border-radius: 10px; padding: 10px 14px;">
                             <div class="figurebi_label" style="font-size: 11px; color: #6b7280; margin-bottom: 4px;">ბოლო გადახდის თარიღი</div>
-                            <div class="figurebi_value" style="font-weight: 700; font-size: 15px; color: #2743a6;"><field name="x_final_payment_date" nolabel="1" placeholder="ცარიელი = დასრულების თვის 15"/></div>
+                            <div class="figurebi_value" style="font-weight: 700; font-size: 15px; color: #2743a6;"><field name="x_final_payment_date" nolabel="1" placeholder="ცარიელი = დასრულების თვის 15" options="{'numeric': true}"/></div>
                         </div>
                     </div>
                     <div class="figurebi_header" style="display: flex; gap: 14px; flex-wrap: wrap; margin-bottom: 16px;" invisible="x_payment_type != 'installment'">
                         <div class="figurebi_card" style="flex: 0 1 calc(25% - 11px); background: #ffffff; border: 1px solid #d9defc; border-radius: 10px; padding: 10px 14px;">
                             <div class="figurebi_label" style="font-size: 11px; color: #6b7280; margin-bottom: 4px;">პროექტის დასრულების თარიღი</div>
-                            <div class="figurebi_value" style="font-weight: 700; font-size: 15px; color: #2743a6;"><field name="x_project_end_date" nolabel="1"/></div>
+                            <div class="figurebi_value" style="font-weight: 700; font-size: 15px; color: #2743a6;"><field name="x_project_end_date" nolabel="1" options="{'numeric': true}"/></div>
                         </div>
                     </div>
                     <group>
@@ -166,7 +166,7 @@
                     <field name="x_installment_line_ids" nolabel="1">
                         <list editable="bottom" decoration-danger="x_is_weekend" decoration-primary="x_auto_fixed and not x_is_weekend" create="false">
                             <field name="x_number" readonly="1"/>
-                            <field name="x_date"/>
+                            <field name="x_date" options="{'numeric': true}"/>
                             <field name="x_amount" sum="ჯამი"/>
                             <field name="x_balance" readonly="1"/>
                             <field name="x_is_weekend" column_invisible="1"/>
