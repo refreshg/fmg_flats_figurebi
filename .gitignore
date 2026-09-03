@@ -1,0 +1,11 @@
+# secrets — never commit
+SECRETS.local.md
+.claude/
+
+# build artifacts (zips are rebuilt from addons/)
+*.zip
+
+# backups & temp
+*.bak
+__pycache__/
+*.pyc
