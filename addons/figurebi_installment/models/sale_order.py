@@ -295,10 +295,17 @@ class SaleOrder(models.Model):
                 order.x_bank_pmt_reference = round(principal / months, 2)
 
     @api.depends("x_installment_line_ids.x_date", "x_schedule_start_date",
-                 "x_schedule_months", "x_periodicity")
+                 "x_schedule_months", "x_periodicity", "x_payment_type",
+                 "x_final_balloon_amount")
     def _compute_schedule_end(self):
         for order in self:
-            dates = [d for d in order.x_installment_line_ids.mapped("x_date") if d]
+            lines = order.x_installment_line_ids.sorted(key=lambda l: l.x_number or 0)
+            # the balloon payment is the last row but not a schedule installment
+            if (lines and len(lines) > 1
+                    and (order.x_payment_type or "installment") == "installment"
+                    and (order.x_final_balloon_amount or 0.0) > 0.005):
+                lines = lines[:-1]
+            dates = [d for d in lines.mapped("x_date") if d]
             if dates:
                 order.x_schedule_end_date = max(dates)
             elif order.x_schedule_start_date and (order.x_schedule_months or 0) > 0:
