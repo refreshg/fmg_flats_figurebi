@@ -563,8 +563,9 @@ One task at a time; standard Odoo solution checked before custom code (standard-
 
 ## Git
 - Remote `origin`: https://github.com/refreshg/fmg_flats_figurebi.git (company repo; vertikali lives on `main`)
-- Our work: local branch `master` → remote branch **`figurebi`** — NEVER push to `main`
-- Push needs legacy creds: `git -c credential.helper=wincred push` (PAT backup in SECRETS.local.md)
+- Our work: branch **`figurebi`** (local = remote name) — NEVER push to `main`
+- Routine: `git pull` BEFORE starting work → commit → `git push` (plain commands work;
+  credential.helper=wincred is set in repo config, PAT backup in SECRETS.local.md)
 - ⚠️ repo is currently public — no secrets in tracked files, ever
 
 ## Docs map
