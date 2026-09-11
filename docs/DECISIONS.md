@@ -1,4 +1,4 @@
-<!-- last-synced: 2026-09-03, commit: 345d4d9 -->
+<!-- last-synced: 2026-09-03, commit: 1dd67a2 -->
 # Architecture Decision Records
 
 ### D-1: Calculator lives on sale.order, not crm.lead
@@ -44,8 +44,8 @@ Date: 2026-09-03 (user request: "ყველგან 4 ციფრი წე�
 ### D-14: A schedule installment in the balloon's month is folded away
 Date: 2026-09-03 (user rule) · Context: schedule Dec 13 + balloon Dec 15 made the client pay twice in the final month. Decision: `_installment_vals` drops the colliding installment; remaining ones grow to cover the same schedule amount. Rejected: merging it into the balloon (old Excel-era behavior). Consequence: with spread N, the actual installment count can be N−1.
 
-### D-15: Dates display numeric with the year always visible
-Date: 2026-09-03 (user request) · Context: Odoo 19's humanized date display omits the current year ("Oct 5"). Decision: `options="{'numeric': true}"` on all 7 date fields → "10/05/2026". Rejected: custom widget for "Oct 5, 2026" style (offered; not requested so far).
+### D-15: Dates display a worded month with the year always visible (custom widget)
+Date: 2026-09-03, revised same day · Context: Odoo 19's humanized date display omits the current year ("Oct 5"); the numeric option ("10/05/2026") shows the year but the user then asked for a worded month too. Decision: custom field widget `figurebi_date` (extends web's DateTimeField, `getFormattedValue` → luxon DATE_MED without the current-year omission) on all 7 date fields → "Oct 5, 2026". Supersedes the interim numeric option (v19.0.2.3.1 → v19.0.2.4.0).
 
 ### D-16: Sales are VAT-free (Excel parity)
 Date: 2026-09-03 · Context: flats carried the default 15% tax; x_final_total (tax-incl.) diverged from the Excel reference. Decision: taxes cleared on all 126 flat products + open quote lines (RPC); the user then zeroed the default tax record itself (account.tax id=1 → "0%"/0.0), so new products stay harmless. Consequence: restore that record to 15 if real VAT is ever needed.

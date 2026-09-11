@@ -1,7 +1,7 @@
-<!-- last-synced: 2026-09-03, commit: 345d4d9 -->
+<!-- last-synced: 2026-09-03, commit: 1dd67a2 -->
 # Technical spec — figurebi_installment (Odoo 19)
 
-Module `figurebi_installment` v19.0.2.3.2, depends: `sale_management`, `crm`.
+Module `figurebi_installment` v19.0.2.4.0, depends: `sale_management`, `crm`.
 All calculator % and $ input/display fields carry `digits=(16, 4)` (user rule: 4 decimals
 everywhere on the tab); real money — schedule rows, invoices, PMT, amount_total — stays at cents.
 Field/model names keep the `x_` prefix for parity with the manual (RPC-built) staging setup.
@@ -87,7 +87,7 @@ Key helpers: `_figurebi_main_line` (first non-display line), `_figurebi_unit_are
 ## Views / UI
 | view | type | xml id | notes |
 |---|---|---|---|
-| Quotation tab „გადახდის კალკულატორი" | form inherit sale.view_order_form | `figurebi_installment.view_order_form_installment` | header/info cards (inline styles), discount row, payments section, buttons (generate / fix weekends / invoices), schedule list with decorations (danger=weekend, primary=auto_fixed), smart button, stale alert; all 7 date fields use `options="{'numeric': true}"` so the year is always shown (Odoo 19 hides the current year otherwise) |
+| Quotation tab „გადახდის კალკულატორი" | form inherit sale.view_order_form | `figurebi_installment.view_order_form_installment` | header/info cards (inline styles), discount row, payments section, buttons (generate / fix weekends / invoices), schedule list with decorations (danger=weekend, primary=auto_fixed), smart button, stale alert; all 7 date fields use `widget="figurebi_date"` (custom, `static/src/js/figurebi_date_field.js` in web.assets_backend): worded month with the year always visible, e.g. "Oct 5, 2026" — stock Odoo 19 either hides the current year or is fully numeric |
 | Product form area field | form inherit | `figurebi_installment.product_template_form_area` | x_area on product.template |
 | Settings FIGUREBI section | form inherit | `figurebi_installment.res_config_settings_view_form` | two manager fields |
 | PDF report | qweb template + report action | `figurebi_installment.report_installment`, `figurebi_installment.action_report_installment` | qweb-pdf on sale.order Print menu |
