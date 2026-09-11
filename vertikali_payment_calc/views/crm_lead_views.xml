@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- The calculator, reached from the deal it belongs to. A header button
+         opens a fresh one; the smart button lists those already made, with
+         the real schedule named on it. -->
+    <record id="view_crm_lead_form_payment_calc" model="ir.ui.view">
+        <field name="name">crm.lead.form.payment.calc</field>
+        <field name="model">crm.lead</field>
+        <field name="inherit_id" ref="crm.crm_lead_view_form"/>
+        <field name="arch" type="xml">
+
+            <xpath expr="//header" position="inside">
+                <field name="type" invisible="1"/>
+                <button name="action_vk_calculator" type="object"
+                        string="განვადების კალკულატორი" icon="fa-calculator"
+                        invisible="type != 'opportunity'"/>
+            </xpath>
+
+            <xpath expr="//div[@name='button_box']" position="inside">
+                <field name="vk_calc_count" invisible="1"/>
+                <field name="vk_schedule_id" invisible="1"/>
+                <button name="action_vk_open_calcs" type="object"
+                        class="oe_stat_button" icon="fa-calculator"
+                        invisible="vk_calc_count == 0">
+                    <div class="o_stat_info">
+                        <span class="o_stat_value"><field name="vk_calc_count"/></span>
+                        <span class="o_stat_text">კალკულაცია</span>
+                    </div>
+                </button>
+            </xpath>
+
+        </field>
+    </record>
+
+</odoo>

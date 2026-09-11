@@ -1,0 +1,309 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- ===================== schedule types ===================== -->
+    <record id="view_payment_plan_list" model="ir.ui.view">
+        <field name="name">vertikali.payment.plan.list</field>
+        <field name="model">vertikali.payment.plan</field>
+        <field name="arch" type="xml">
+            <list string="გრაფიკის ტიპები">
+                <field name="sequence" widget="handle"/>
+                <field name="name"/>
+                <field name="first_pct"/>
+                <field name="mid_pct"/>
+                <field name="last_pct"/>
+                <field name="adjust_kind"/>
+                <field name="adjust_base"/>
+                <field name="adjust_value"/>
+                <field name="note" optional="hide"/>
+                <field name="active" widget="boolean_toggle"/>
+            </list>
+        </field>
+    </record>
+
+    <!-- A page of its own for writing one, rather than a row typed inline:
+         a type carries three shares that must add to a hundred and a discount
+         quoted one of four ways, which is more than a list row explains. -->
+    <record id="view_payment_plan_form" model="ir.ui.view">
+        <field name="name">vertikali.payment.plan.form</field>
+        <field name="model">vertikali.payment.plan</field>
+        <field name="arch" type="xml">
+            <form string="გრაფიკის ტიპი" class="o_vk_calcform">
+                <sheet>
+                    <widget name="web_ribbon" title="არააქტიური" bg_color="text-bg-danger"
+                            invisible="active"/>
+                    <div class="oe_title">
+                        <label for="name" string="დასახელება"/>
+                        <h1><field name="name" placeholder="10 / 20 / 70"/></h1>
+                    </div>
+                    <group>
+                        <group string="გადახდის პირობები">
+                            <field name="first_pct"/>
+                            <field name="mid_pct"/>
+                            <field name="last_pct"/>
+                        </group>
+                        <group string="ფასდაკლება">
+                            <field name="adjust_kind"/>
+                            <field name="adjust_base"/>
+                            <field name="adjust_value"/>
+                        </group>
+                        <group string="სხვა">
+                            <field name="sequence"/>
+                            <field name="active" widget="boolean_toggle"/>
+                            <field name="note" placeholder="შენიშვნა"/>
+                        </group>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="view_payment_plan_search" model="ir.ui.view">
+        <field name="name">vertikali.payment.plan.search</field>
+        <field name="model">vertikali.payment.plan</field>
+        <field name="arch" type="xml">
+            <search string="გრაფიკის ტიპები">
+                <field name="name"/>
+                <filter name="active" string="აქტიური"
+                        domain="[('active', '=', True)]"/>
+                <filter name="inactive" string="არააქტიური"
+                        domain="[('active', '=', False)]"/>
+            </search>
+        </field>
+    </record>
+
+    <record id="action_payment_plan" model="ir.actions.act_window">
+        <field name="name">გრაფიკის ტიპები</field>
+        <field name="res_model">vertikali.payment.plan</field>
+        <field name="view_mode">list,form</field>
+        <field name="search_view_id" ref="view_payment_plan_search"/>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smart_button">
+                აღწერეთ გადახდის სქემა ისე, როგორც გუნდი ამბობს — 10/20/70.
+            </p>
+            <p>
+                სამი წილი 100%-ს უნდა ჯამდებოდეს: პირველადი შენატანი,
+                განვადებაზე გაწილებული ნაწილი და ბოლო შენატანი.
+            </p>
+        </field>
+    </record>
+
+    <!-- ===================== calculations ======================= -->
+    <record id="view_payment_calc_form" model="ir.ui.view">
+        <field name="name">vertikali.payment.calc.form</field>
+        <field name="model">vertikali.payment.calc</field>
+        <field name="arch" type="xml">
+            <form string="განვადების კალკულაცია" class="o_vk_calcform">
+                <!-- No header buttons: the dialog's own footer already
+                     carries გამოთვლა and the two savings, and repeating them
+                     at the top only asks which pair is the real one. -->
+                <sheet>
+                    <field name="is_schedule" invisible="1"/>
+                    <widget name="web_ribbon" title="რეალური გრაფიკი"
+                            invisible="not is_schedule"/>
+                    <!-- The record's name is the flat and the type, both of
+                         which the form states outright a few lines down.
+                         Printed at the top as well it is a headline repeating
+                         its own article. -->
+                    <field name="name" invisible="1"/>
+                    <group>
+                        <group string="უძრავი ქონება">
+                            <!-- Read-only, so the calculation cannot quietly
+                                 be moved to another deal, but still a link:
+                                 readonly renders a many2one as one. -->
+                            <field name="lead_id" readonly="1"/>
+                            <!-- The flat is what the whole calculation rests
+                                 on: its price, its area, the schedule built
+                                 from both. Swapping it here would rewrite the
+                                 answer under a record already saved as a
+                                 quote, so it locks once saved, and at once
+                                 when the lead hands over its single flat.
+                                 A lead with several flats offers just those. -->
+                            <field name="unit_id"
+                                   readonly="id or context.get('vk_unit_locked')"
+                                   domain="[('id', 'in', context.get('vk_unit_ids', []))] if context.get('vk_unit_ids') else []"
+                                   options="{'no_create': True}"/>
+                            <field name="currency_id" invisible="1"/>
+                        </group>
+                        <group string="პირობები">
+                            <field name="kind" widget="radio"
+                                   options="{'horizontal': True}"/>
+                            <field name="plan_id" invisible="kind != 'standard'"
+                                   required="kind == 'standard'"
+                                   options="{'no_create': True}"/>
+                            <field name="periodicity"/>
+                        </group>
+
+                        <!-- Every block stays half the sheet. Run full width,
+                             four columns spread to the far edges and leave a
+                             hand's width of nothing between the pairs. -->
+                        <group string="გადახდის პირობები" col="4">
+                            <field name="first_pct"/>
+                            <field name="first_amount"/>
+                            <field name="mid_pct"/>
+                            <field name="mid_amount"/>
+                            <field name="last_pct"/>
+                            <field name="last_amount"/>
+                        </group>
+
+                        <!-- Its own block. A percentage or a flat sum, against
+                             the metre or the whole flat: the team quotes all
+                             four ways and none is a rewording of another. -->
+                        <!-- One to a line rather than paired: the type is a
+                             dropdown, and put in a four-column row it had a
+                             quarter of the sheet to render a word in. -->
+                        <group string="ფასდაკლება">
+                            <field name="adjust_kind"/>
+                            <field name="adjust_base"/>
+                            <field name="adjust_value"/>
+                            <field name="adjust_amount"/>
+                        </group>
+
+                    </group>
+
+                    <!-- Dates and the answer are laid out by hand rather than
+                         through <group>. Four to a row is what the team wants
+                         and what a group gives is four columns stretched to
+                         the far edges of the sheet, with the label of one pair
+                         a hand's width from its own figure.
+
+                         In the order the money moves: the deposit, the
+                         instalment window, then the balloon that closes it.
+                         numeric, because the humanised format drops the year
+                         on dates in the current one and a schedule is read
+                         across years. -->
+                    <div class="o_vk_striph">თარიღები</div>
+                    <div class="o_vk_strip">
+                        <div class="o_vk_cell">
+                            <span class="o_vk_cell_l">პირველადი შენატანი</span>
+                            <div class="o_row">
+                                <field name="first_date" options="{'numeric': True}"/>
+                                <span class="fa fa-calendar o_vk_cal"/>
+                            </div>
+                        </div>
+                        <div class="o_vk_cell">
+                            <span class="o_vk_cell_l">განვადების დაწყება</span>
+                            <div class="o_row">
+                                <field name="start_date" options="{'numeric': True}"/>
+                                <span class="fa fa-calendar o_vk_cal"/>
+                            </div>
+                        </div>
+                        <div class="o_vk_cell">
+                            <span class="o_vk_cell_l">განვადების დასრულება</span>
+                            <div class="o_row">
+                                <field name="end_date" options="{'numeric': True}"/>
+                                <span class="fa fa-calendar o_vk_cal"/>
+                            </div>
+                        </div>
+                        <div class="o_vk_cell">
+                            <span class="o_vk_cell_l">ბოლო შენატანი</span>
+                            <div class="o_row">
+                                <field name="last_date" options="{'numeric': True}"/>
+                                <span class="fa fa-calendar o_vk_cal"/>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- The answer, closing the form. Asking price beside it,
+                         so a discount reads as a difference rather than as a
+                         claim. -->
+                    <div class="o_vk_strip o_vk_res">
+                        <div class="o_vk_cell">
+                            <span class="o_vk_cell_l">საწყისი კვ.მ</span>
+                            <field name="base_sqm"/>
+                        </div>
+                        <div class="o_vk_cell">
+                            <span class="o_vk_cell_l">საბოლოო კვ.მ</span>
+                            <field name="final_sqm"/>
+                        </div>
+                        <div class="o_vk_cell">
+                            <span class="o_vk_cell_l">საწყისი ფასი</span>
+                            <field name="base_price"/>
+                        </div>
+                        <div class="o_vk_cell">
+                            <span class="o_vk_cell_l">საბოლოო ფასი</span>
+                            <field name="final_price"/>
+                        </div>
+                    </div>
+                    <notebook>
+                        <page string="გრაფიკი" name="lines">
+                            <field name="line_ids" readonly="1">
+                                <!-- numeric on the date, or Odoo drops the
+                                     year off the rows in the current year and
+                                     the column reads as two formats at once. -->
+                                <list decoration-danger="vk_weekend">
+                                    <field name="name" string="#" width="140"/>
+                                    <field name="date" width="150"
+                                           options="{'numeric': True}"/>
+                                    <field name="amount" sum="ჯამი" width="150"/>
+                                    <field name="remaining" width="150"/>
+                                    <field name="currency_id" column_invisible="1"/>
+                                    <field name="vk_weekend" column_invisible="1"/>
+                                </list>
+                            </field>
+                        </page>
+                    </notebook>
+                </sheet>
+                <!-- Rendered only when the form opens as a dialog, which is
+                     how the lead opens it. The two savings the team asked for
+                     are named as they say them. -->
+                <footer>
+                    <button string="გამოთვლა" name="action_generate" type="object"
+                            class="btn-primary"/>
+                    <!-- Neither saving appears until there is a schedule to
+                         save. Before that the record is a set of inputs with
+                         no answer in it, and keeping one would file an empty
+                         quote against the deal. -->
+                    <button string="კალკულაციის შენახვა" special="save"
+                            class="btn-secondary" invisible="not line_ids"/>
+                    <button string="გრაფიკის შენახვა" name="action_set_schedule"
+                            type="object" class="btn-secondary"
+                            invisible="not line_ids"/>
+                    <button string="დახურვა" special="cancel"
+                            class="btn-secondary"/>
+                </footer>
+            </form>
+        </field>
+    </record>
+
+    <record id="view_payment_calc_list" model="ir.ui.view">
+        <field name="name">vertikali.payment.calc.list</field>
+        <field name="model">vertikali.payment.calc</field>
+        <field name="arch" type="xml">
+            <list string="კალკულაციები" decoration-bf="is_schedule">
+                <field name="name"/>
+                <field name="lead_id" optional="show"/>
+                <field name="unit_id"/>
+                <field name="plan_id"/>
+                <field name="final_price"/>
+                <field name="line_count" string="შენატანები"/>
+                <field name="is_schedule" widget="boolean_toggle"/>
+                <field name="currency_id" column_invisible="1"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="action_payment_calc" model="ir.actions.act_window">
+        <field name="name">განვადების კალკულაციები</field>
+        <field name="res_model">vertikali.payment.calc</field>
+        <field name="view_mode">list,form</field>
+    </record>
+
+    <!-- ===================== menus ==============================
+         Under CRM, which every database that can install this module has.
+         A deployment with an estate menu of its own moves them there by
+         rewriting parent_id, the way vertikali_crm_config does.
+    -->
+    <menuitem id="menu_payment_plan"
+              name="გრაფიკის ტიპები"
+              parent="crm.crm_menu_config"
+              action="action_payment_plan"
+              sequence="50"/>
+
+    <menuitem id="menu_payment_calc"
+              name="განვადების კალკულაციები"
+              parent="crm.crm_menu_root"
+              action="action_payment_calc"
+              sequence="30"/>
+
+</odoo>

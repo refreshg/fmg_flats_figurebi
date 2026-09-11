@@ -1,0 +1,7 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_vertikali_payment_plan_user,vertikali.payment.plan salesman,model_vertikali_payment_plan,sales_team.group_sale_salesman,1,0,0,0
+access_vertikali_payment_plan_manager,vertikali.payment.plan manager,model_vertikali_payment_plan,sales_team.group_sale_manager,1,1,1,1
+access_vertikali_payment_calc_user,vertikali.payment.calc salesman,model_vertikali_payment_calc,sales_team.group_sale_salesman,1,1,1,1
+access_vertikali_payment_calc_manager,vertikali.payment.calc manager,model_vertikali_payment_calc,sales_team.group_sale_manager,1,1,1,1
+access_vertikali_payment_calc_line_user,vertikali.payment.calc.line salesman,model_vertikali_payment_calc_line,sales_team.group_sale_salesman,1,1,1,1
+access_vertikali_payment_calc_line_manager,vertikali.payment.calc.line manager,model_vertikali_payment_calc_line,sales_team.group_sale_manager,1,1,1,1

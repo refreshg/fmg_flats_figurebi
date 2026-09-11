@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!--
+        The calculator is written in dollars, because the contract is. Flat
+        prices stay in the company currency and are converted on the way in,
+        so there is still one price of record per flat.
+
+        noupdate: the rate is a figure the team maintains, and an upgrade must
+        not put it back to what it was on the day this was written.
+    -->
+    <data noupdate="1">
+
+        <record id="base.USD" model="res.currency">
+            <field name="active" eval="True"/>
+        </record>
+
+        <record id="vk_nbg_usd" model="ir.config_parameter">
+            <field name="key">vertikali_payment_calc.nbg_usd</field>
+            <field name="value">2.7178</field>
+        </record>
+
+    </data>
+</odoo>

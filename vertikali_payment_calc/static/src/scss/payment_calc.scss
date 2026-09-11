@@ -1,0 +1,312 @@
+// The instalment calculator, given a shape.
+//
+// Scoped to .o_vk_calcform, which the form arch puts on the view root, so
+// nothing here reaches another form. Odoo's own spacing is kept; what changes
+// is that each block reads as a block, every control is a box you can see
+// before you click it, and every figure sits in a frame of its own.
+
+.o_vk_calcform {
+
+    // Two greys, one accent. Named here so the palette is in one place.
+    $vk-line: #e0dce6;
+    $vk-chip: #f7f5fa;
+    $vk-ink: #2b2233;
+    $vk-mute: #706a78;
+    $vk-accent: #4b2f56;
+    $vk-accent-line: #9b7aa8;
+    $vk-accent-bg: #f2eaf6;
+
+    // --- section titles -------------------------------------------------
+    // The frame does the separating now, so the rule under the title goes.
+    // text-transform is turned off deliberately: Georgian Mkhedruli is
+    // unicase, and uppercasing it produces Mtavruli -- different letterforms,
+    // not capitals, and not what the team wrote.
+    .o_horizontal_separator {
+        border: 0;
+        margin: 0 0 0.7rem;
+        padding: 0;
+        text-transform: none;
+        letter-spacing: 0;
+        font-size: 0.8125rem;
+        font-weight: 600;
+        color: #6d6178;
+    }
+
+    // --- blocks ---------------------------------------------------------
+    // Do NOT redeclare the outer .o_group grid. Odoo lays the label and value
+    // cells of every inner group out on it, so replacing its columns collapses
+    // the whole form into slivers. height:100% is the safe way to ask two
+    // blocks in a row to end level: a no-op wherever it cannot apply.
+    .o_inner_group {
+        height: 100%;
+        background-color: #ffffff;
+        border: 1px solid $vk-line;
+        border-radius: 0.5rem;
+        padding: 0.9rem 1rem 0.85rem;
+        margin-bottom: 0.85rem;
+    }
+
+    // --- labels ---------------------------------------------------------
+    .o_form_label {
+        font-weight: 400;
+        color: $vk-mute;
+    }
+
+    // --- anything you can type in or pick from --------------------------
+    // Given an edge, so a control looks like a control before it is clicked.
+    // Odoo leaves these borderless until focus, which on a form that is
+    // mostly figures makes it hard to see what is yours to change.
+    // One width and one height for every control, so a short word and a long
+    // one leave the same box behind and the column has a single right edge.
+    $vk-ctl: 16rem;
+    $vk-row: 2.1rem;
+
+    .o_field_widget input.o_input,
+    .o_field_widget select.o_input,
+    .o_field_many2one input {
+        border: 1px solid #d8d4de;
+        border-radius: 0.375rem;
+        background-color: #ffffff;
+        padding: 0.25rem 0.55rem;
+        width: 100%;
+        max-width: $vk-ctl;
+        height: $vk-row;
+    }
+
+    .o_field_widget input.o_input:focus,
+    .o_field_widget select.o_input:focus,
+    .o_field_many2one input:focus {
+        border-color: $vk-accent-line;
+        box-shadow: 0 0 0 2px rgba(155, 122, 168, 0.18);
+        outline: 0;
+    }
+
+    // --- figures --------------------------------------------------------
+    // Tabular figures so a column of money lines up digit under digit, and a
+    // frame around the ones that are worked out rather than typed, so the
+    // form says plainly which numbers answer to which.
+    .o_field_monetary,
+    .o_field_float,
+    .o_field_percentage {
+        font-variant-numeric: tabular-nums;
+        font-weight: 600;
+        color: $vk-ink;
+    }
+
+    .o_field_monetary input,
+    .o_field_float input {
+        font-variant-numeric: tabular-nums;
+        font-weight: 600;
+        text-align: right;
+    }
+
+    .o_field_monetary:not(:has(input)) {
+        display: inline-flex;
+        align-items: center;
+        justify-content: flex-end;
+        width: 100%;
+        max-width: $vk-ctl;
+        height: $vk-row;
+        padding: 0 0.6rem;
+        border: 1px solid $vk-line;
+        border-radius: 0.375rem;
+        background-color: $vk-chip;
+    }
+
+    // Labels sit on the same baseline grid, so a label that wraps onto two
+    // lines does not push its own row taller than the one beside it.
+    .o_form_label {
+        display: inline-flex;
+        align-items: center;
+        min-height: $vk-row;
+    }
+
+    // --- the two kinds --------------------------------------------------
+    // Two cards to pick between rather than a stack of radio dots. Stacked,
+    // the pair reads as the start of a list; side by side and framed, it
+    // reads as the choice it is.
+    //
+    // The dot is hidden only where there is a label to carry the click, so if
+    // the markup ever changes the control degrades to a plain radio instead
+    // of disappearing.
+    .o_field_radio {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 0.4rem;
+        width: 100%;
+        max-width: $vk-ctl;
+
+        // Odoo may wrap the items in a container of its own. display:contents
+        // hands them to the grid above rather than laying them out itself,
+        // which is why they were stacking whatever the horizontal option said.
+        > div:not(.o_radio_item) {
+            display: contents;
+        }
+
+        .o_radio_item {
+            position: relative;
+            display: flex;
+            margin: 0;
+        }
+
+        .o_radio_item:has(> label) > input {
+            position: absolute;
+            width: 1px;
+            height: 1px;
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        // Both cards the same width, whichever word is longer, and each word
+        // on one line: "არასტანდარტული" is long enough to break in two at the
+        // body size, which left one card twice the height of the other.
+        .o_radio_item > label {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 100%;
+            height: $vk-row;
+            margin: 0;
+            padding: 0 0.35rem;
+            border: 1px solid #ddd8e3;
+            border-radius: 0.5rem;
+            background-color: #fbfafc;
+            color: $vk-mute;
+            font-size: 0.75rem;
+            font-weight: 500;
+            white-space: nowrap;
+            text-align: center;
+            cursor: pointer;
+        }
+
+        .o_radio_item > label:hover {
+            border-color: #bfb2ca;
+        }
+
+        .o_radio_item > input:checked + label {
+            background-color: $vk-accent-bg;
+            border-color: $vk-accent-line;
+            color: $vk-accent;
+            font-weight: 600;
+        }
+    }
+
+    // --- dates ----------------------------------------------------------
+    // The calendar beside each date is a real element in the arch, not a
+    // pseudo-element: positioning one against Odoo's own field wrapper put it
+    // in the wrong place and boxed in the picker.
+    .o_field_date input {
+        font-variant-numeric: tabular-nums;
+    }
+
+    .o_vk_cal {
+        margin-left: 0.4rem;
+        color: #9b95a3;
+        font-size: 0.8rem;
+    }
+
+    // --- the strips -----------------------------------------------------
+    // Four cards to a row, laid out here rather than by <group>: a group's
+    // four columns stretch to the edges of the sheet and leave each label a
+    // hand's width from its own figure.
+    .o_vk_striph {
+        margin: 0.85rem 0 0.7rem;
+        font-size: 0.8125rem;
+        font-weight: 600;
+        color: #6d6178;
+    }
+
+    .o_vk_strip {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 0.6rem;
+        margin-bottom: 0.9rem;
+    }
+
+    // Two to a row before the cards are too narrow to hold a date.
+    @media (max-width: 992px) {
+        .o_vk_strip {
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+    }
+
+    .o_vk_cell {
+        background-color: #ffffff;
+        border: 1px solid $vk-line;
+        border-radius: 0.5rem;
+        padding: 0.6rem 0.75rem 0.65rem;
+        min-width: 0;
+    }
+
+    .o_vk_cell_l {
+        display: block;
+        margin-bottom: 0.3rem;
+        font-size: 0.75rem;
+        font-weight: 400;
+        color: $vk-mute;
+    }
+
+    // The card is the frame; a chip inside it would be a box in a box.
+    .o_vk_cell .o_field_monetary:not(:has(input)) {
+        display: flex;
+        justify-content: flex-start;
+        width: 100%;
+        max-width: none;
+        min-width: 0;
+        padding: 0;
+        border: 0;
+        background-color: transparent;
+    }
+
+    .o_vk_cell .o_field_date input {
+        width: 100%;
+        max-width: none;
+        min-width: 0;
+    }
+
+    // --- the answer -----------------------------------------------------
+    // Tinted, because these four are what the rest of the form is for.
+    .o_vk_res .o_vk_cell {
+        background-color: #f7f3f9;
+        border-color: #ddd1e3;
+
+        .o_vk_cell_l {
+            color: #5d4a66;
+        }
+
+        .o_field_monetary {
+            font-size: 1.0625rem;
+            font-weight: 700;
+            color: $vk-accent;
+        }
+    }
+
+    // --- the schedule ---------------------------------------------------
+    .o_field_x2many .o_list_table {
+        font-variant-numeric: tabular-nums;
+
+        thead th {
+            background-color: #f5f3f7;
+            color: #6d6178;
+            font-weight: 600;
+        }
+
+        // The first payment and the balloon are named rows rather than
+        // numbered ones; letting them stand out saves counting.
+        tbody tr:first-child td,
+        tbody tr:last-child td {
+            font-weight: 600;
+        }
+
+        // A weekend payment is red, and red is enough: the row is already the
+        // only coloured thing on the page.
+        tbody tr.text-danger td {
+            font-weight: 400;
+        }
+    }
+
+    // --- footer ---------------------------------------------------------
+    footer .btn {
+        border-radius: 0.375rem;
+    }
+}

@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!--
+        Starting vocabulary, so the calculator has something to pick on day
+        one. noupdate: the team renames, edits and adds to these from
+        Configuration, and an upgrade must not undo that.
+    -->
+    <data noupdate="1">
+
+        <record id="plan_10_10_80" model="vertikali.payment.plan">
+            <field name="name">10 / 10 / 80</field>
+            <field name="sequence">10</field>
+            <field name="first_pct">10</field>
+            <field name="mid_pct">10</field>
+            <field name="last_pct">80</field>
+        </record>
+
+        <record id="plan_10_20_70" model="vertikali.payment.plan">
+            <field name="name">10 / 20 / 70</field>
+            <field name="sequence">20</field>
+            <field name="first_pct">10</field>
+            <field name="mid_pct">20</field>
+            <field name="last_pct">70</field>
+        </record>
+
+        <record id="plan_20_30_50" model="vertikali.payment.plan">
+            <field name="name">20 / 30 / 50</field>
+            <field name="sequence">30</field>
+            <field name="first_pct">20</field>
+            <field name="mid_pct">30</field>
+            <field name="last_pct">50</field>
+        </record>
+
+        <record id="plan_30_70_0" model="vertikali.payment.plan">
+            <field name="name">30 / 70 / 0</field>
+            <field name="sequence">40</field>
+            <field name="first_pct">30</field>
+            <field name="mid_pct">70</field>
+            <field name="last_pct">0</field>
+        </record>
+
+        <record id="plan_full" model="vertikali.payment.plan">
+            <field name="name">სრული გადახდა</field>
+            <field name="sequence">50</field>
+            <field name="first_pct">100</field>
+            <field name="mid_pct">0</field>
+            <field name="last_pct">0</field>
+            <field name="note">ერთიანი გადახდა; ფასდაკლება ტიპზე იწერება.</field>
+        </record>
+
+    </data>
+</odoo>
