@@ -545,6 +545,21 @@ oddo-თი წაუკითხავია — ყველაფერს su
 - ⚠️ 2026-09-11-ის ქსელი: TCP 22 იხსნებოდა, მაგრამ sshd banner არ მოდიოდა — plink
   „Software caused connection abort"-ს იძახდა; ამიერიდან ლოდინი banner-ზეა და არა პორტზე
 
+## ბინის სვეტი გაყიდვების სიაში (2026-09-15, manual — SSH მკვდარი იყო)
+
+- **ფილტრი ბინის ნომრით სტანდარტულად არსებობს**: Quotations/Orders სიის ძებნაში აკრიფე
+  ბინის კოდი (მაგ. A-1805) და ჩამოსაშლელში აირჩიე **„Product"** — sale-ის search-ვიუს
+  აქვს `('order_line.product_id','ilike',self)` (გადამოწმებულია RPC-თ)
+- **სვეტი დაემატა manual ir.ui.view-ებით** (SSH 4 დღეა banner-ს არ იძლევა, ფაილი ვერ ავიდა):
+  id=**2448** (inherit sale.view_quotation_tree, 944) და id=**2449** (inherit
+  sale.view_order_tree, 942) — `x_object_ref` optional="show" სვეტი „უძრავი ქონება"
+  partner_id-ის მერე; get_views-ით ორივე დადასტურდა ✓
+- ⚠️ **SSH-ის გაცოცხლებისას**: იგივე სვეტი მოდულის views/sale_order_views.xml-ში ჩაჯდეს
+  და manual 2448/2449 **წაიშალოს** დეპლოის წინ (თორემ გაორმაგდება)
+- ⚠️ **დაუსრულებელი დეპლოი**: vertikali_payment_calc v19.0.1.2.0 (ბალონის თვის წესი)
+  სერვერზე ჯერ კიდევ არაა — v19.0.1.1.0 დგას; ბლოკერი: sshd TCP-ს იღებს, banner არ მოდის
+  (სავარაუდოდ fail2ban/გაჭედილი sshd) — საჭიროა კონსოლიდან `systemctl restart ssh` + fail2ban
+
 ## შემდეგი ნაბიჯები (2026-09-02 სესიის ბოლოს)
 
 1. **CRM მენეჯერები** ახალ სერვერზე: Settings → CRM → FIGUREBI — რეალური მენეჯერების არჩევა
