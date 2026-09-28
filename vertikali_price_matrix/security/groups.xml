@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo noupdate="1">
+
+    <!-- Read the matrix (the app on the home screen). -->
+    <record id="group_price_matrix_user" model="res.groups">
+        <field name="name">Price Matrix: User</field>
+        <field name="implied_ids" eval="[(4, ref('base.group_user'))]"/>
+    </record>
+
+    <!-- Edit quantities, prices and types. The administrator is seeded so
+         the app is usable the moment it is installed. -->
+    <record id="group_price_matrix_manager" model="res.groups">
+        <field name="name">Price Matrix: Manager</field>
+        <field name="implied_ids" eval="[(4, ref('group_price_matrix_user'))]"/>
+        <field name="user_ids" eval="[(4, ref('base.user_admin'))]"/>
+    </record>
+
+</odoo>

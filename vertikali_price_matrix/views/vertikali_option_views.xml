@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- The matrix code (WS, BS, ORD) beside each view value in
+         Estate > Configuration > Views. -->
+    <record id="vk_option_view_list_matrix" model="ir.ui.view">
+        <field name="name">vertikali.option.list.matrix.code</field>
+        <field name="model">vertikali.option</field>
+        <field name="inherit_id" ref="vertikali.view_vertikali_option_list"/>
+        <field name="arch" type="xml">
+            <xpath expr="//field[@name='name']" position="after">
+                <field name="vk_matrix_code" optional="show"/>
+            </xpath>
+        </field>
+    </record>
+
+</odoo>

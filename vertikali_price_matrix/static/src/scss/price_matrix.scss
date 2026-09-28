@@ -1,0 +1,195 @@
+// The matrix table: every header fully readable (wrapping onto two lines
+// when needed), columns as wide as their content, and the table scrolling
+// sideways instead of squeezing.  Scoped to .o_vk_matrix_lines, set on the
+// list roots in views/price_matrix_views.xml.
+
+.o_vk_matrix_lines {
+    .o_list_renderer {
+        overflow-x: auto;
+    }
+
+    .o_list_table {
+        table-layout: auto !important;
+        width: max-content !important;
+        min-width: 100%;
+
+        thead th {
+            white-space: normal !important;
+            vertical-align: bottom;
+            line-height: 1.15;
+            min-width: 4.5rem;
+            padding-top: .4rem;
+            padding-bottom: .4rem;
+
+            // Odoo truncates header labels with text-truncate; let them wrap
+            .o_list_header_text,
+            span.text-truncate,
+            .text-truncate {
+                white-space: normal !important;
+                overflow: visible !important;
+                text-overflow: clip !important;
+            }
+        }
+
+        th, td {
+            width: auto !important;
+            max-width: none !important;
+        }
+
+        td.o_data_cell {
+            white-space: nowrap;
+        }
+
+        // three parts of the table: the counts, the state of the type
+        // (tinted, stage choice included) and the stage plan, each part
+        // behind a strong border
+        th[data-name="stage_label"], td[name="stage_label"],
+        th[data-name="price_current"], td[name="price_current"],
+        th[data-name="qty_to_next"], td[name="qty_to_next"],
+        th[data-name="stage_manual"], td[name="stage_manual"] {
+            background-color: rgba(23, 162, 184, .07);
+        }
+        th[data-name="stage_label"], td[name="stage_label"],
+        th[data-name="qty_1"], td[name="qty_1"] {
+            border-left: 3px solid #6d3d7c !important;
+        }
+        th[data-name="qty_1"]::before {
+            content: "ეტაპების გეგმა → ";
+            font-weight: 400;
+            color: #6d3d7c;
+            display: block;
+            font-size: .75em;
+        }
+        th[data-name="stage_label"]::before {
+            content: "მდგომარეობა → ";
+            font-weight: 400;
+            color: #17a2b8;
+            display: block;
+            font-size: .75em;
+        }
+    }
+}
+
+// The matrix card's header: a small caption over the name, what the matrix
+// covers as chips, and the last formation (when / who / why) as three cards.
+// Bootstrap variables keep it readable in the dark theme too.
+
+.o_vk_matrix_head {
+    .o_vk_caption {
+        font-size: .8rem;
+        font-weight: 500;
+        text-transform: uppercase;
+        letter-spacing: .04em;
+        color: var(--bs-secondary-color) !important;
+    }
+
+    h1 {
+        margin-bottom: .5rem;
+    }
+
+    .o_vk_chips {
+        display: flex;
+        flex-wrap: wrap;
+        gap: .5rem;
+    }
+
+    .o_vk_chip {
+        display: inline-flex;
+        align-items: center;
+        gap: .4rem;
+        padding: .25rem .75rem;
+        border-radius: 999px;
+        font-size: .9rem;
+        background-color: var(--bs-tertiary-bg);
+        border: 1px solid var(--bs-border-color);
+        color: var(--bs-body-color);
+
+        .fa {
+            color: var(--bs-secondary-color);
+        }
+    }
+
+    .o_vk_chip_main {
+        background-color: rgba(109, 61, 124, .08);
+        border-color: rgba(109, 61, 124, .3);
+        font-weight: 500;
+
+        .fa {
+            color: #6d3d7c;
+        }
+    }
+}
+
+.o_vk_last_run {
+    display: flex;
+    flex-wrap: wrap;
+    gap: .75rem;
+    margin: .75rem 0 1.25rem;
+
+    .o_vk_card {
+        flex: 0 1 auto;
+        min-width: 11rem;
+        padding: .6rem .9rem;
+        border-radius: .5rem;
+        background-color: var(--bs-tertiary-bg);
+        border: 1px solid var(--bs-border-color);
+        border-left: 3px solid #6d3d7c;
+    }
+
+    .o_vk_card_wide {
+        flex: 1 1 18rem;
+    }
+
+    .o_vk_card_label {
+        font-size: .75rem;
+        text-transform: uppercase;
+        letter-spacing: .03em;
+        color: var(--bs-secondary-color);
+        margin-bottom: .2rem;
+
+        .fa {
+            margin-right: .25rem;
+        }
+    }
+
+    .o_vk_card_value {
+        display: block;
+        font-size: 1rem;
+        font-weight: 500;
+        color: var(--bs-body-color);
+
+        // many2one_avatar: keep the name on the avatar's line, not a link
+        a {
+            color: inherit;
+        }
+    }
+}
+
+// "ეტაპის დამატება" strip above the type table: the switch, the number of
+// stages to add and the two buttons on one line, quiet until switched on.
+.o_vk_add_stage {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: .5rem;
+    margin-bottom: .5rem;
+    padding: .4rem .6rem;
+    border-radius: .5rem;
+    background-color: var(--bs-tertiary-bg);
+    border: 1px solid var(--bs-border-color);
+
+    .o_vk_add_stage_label {
+        font-weight: 500;
+    }
+
+    .o_vk_add_stage_form {
+        display: inline-flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: .5rem;
+    }
+
+    .o_field_widget {
+        margin: 0;
+    }
+}

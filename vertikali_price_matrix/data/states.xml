@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo noupdate="1">
+    <!-- The unit states the popup filters on; codes = product.template.vk_state. -->
+    <record id="state_available" model="vertikali.price.matrix.state">
+        <field name="name">თავისუფალი</field>
+        <field name="code">available</field>
+        <field name="sequence">10</field>
+    </record>
+    <record id="state_reserved" model="vertikali.price.matrix.state">
+        <field name="name">დაჯავშნილი</field>
+        <field name="code">reserved</field>
+        <field name="sequence">20</field>
+    </record>
+    <record id="state_sold" model="vertikali.price.matrix.state">
+        <field name="name">გაყიდული</field>
+        <field name="code">sold</field>
+        <field name="sequence">30</field>
+    </record>
+    <record id="state_notforsale" model="vertikali.price.matrix.state">
+        <field name="name">არ იყიდება</field>
+        <field name="code">notforsale</field>
+        <field name="sequence">40</field>
+    </record>
+</odoo>

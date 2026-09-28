@@ -1,0 +1,427 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- ====================== the matrix: the table, and nothing above it ====================== -->
+    <!-- No formation button here (D-48): the work is the table and the
+         "ეტაპის დამატება" switch. Building a new table from the units lives
+         in the ⚙ Actions menu, through vk_price_matrix_wizard_action. -->
+    <record id="vk_price_matrix_view_form" model="ir.ui.view">
+        <field name="name">vertikali.price.matrix.form</field>
+        <field name="model">vertikali.price.matrix</field>
+        <field name="arch" type="xml">
+            <form string="ფასების მატრიცა">
+                <!-- switch the matrix on and off from the card (D-70): the standard
+                     archive, as buttons instead of the Actions menu -->
+                <header>
+                    <button name="action_archive" type="object" string="გამორთვა" icon="fa-power-off"
+                            invisible="not active or not id"
+                            groups="vertikali_price_matrix.group_price_matrix_manager"
+                            confirm="მატრიცა გამოირთვება და სიიდან გაქრება (ფილტრით „გამორთული“ მოიძებნება). ფასები ბინებზე აღარ ჩაიწერება. გავაგრძელოთ?"/>
+                    <button name="action_unarchive" type="object" string="გააქტიურება" icon="fa-play"
+                            class="btn-primary" invisible="active"
+                            groups="vertikali_price_matrix.group_price_matrix_manager"/>
+                </header>
+                <sheet>
+                    <widget name="web_ribbon" title="გამორთული" bg_color="text-bg-danger" invisible="active"/>
+                    <div class="oe_button_box" name="button_box">
+                        <button name="action_open_history" type="object" class="oe_stat_button" icon="fa-history">
+                            <field name="history_count" widget="statinfo" string="ცვლილება"/>
+                        </button>
+                    </div>
+                    <!-- title, what the matrix covers, and the last formation as three cards -->
+                    <div class="oe_title o_vk_matrix_head">
+                        <label for="name" class="o_vk_caption"/>
+                        <h1><field name="name" placeholder="მაგ. ფიგურები 2026"/></h1>
+                        <!-- a new matrix: the project lays out its types, stage I at 0 (D-67);
+                             once saved, the table is re-formed from the Actions popup -->
+                        <div class="o_vk_new_project" invisible="id">
+                            <label for="project_id" string="პროექტი"/>
+                            <field name="project_id" options="{'no_create': True, 'no_open': True}"
+                                   placeholder="აირჩიე პროექტი - ტიპები თვითონ ჩაისმება"/>
+                        </div>
+                        <div class="o_vk_chips">
+                            <span class="o_vk_chip o_vk_chip_main" invisible="not filter_summary">
+                                <i class="fa fa-building-o" title="ფორმირება"/>
+                                <field name="filter_summary" readonly="1" nolabel="1" class="d-inline"/>
+                            </span>
+                            <span class="o_vk_chip" invisible="not line_count">
+                                <i class="fa fa-th-list" title="ტიპები"/>
+                                <field name="line_count" readonly="1" nolabel="1" class="d-inline"/> ტიპი
+                            </span>
+                        </div>
+                    </div>
+                    <!-- the matrix writes its current prices onto the free units (D-69) -->
+                    <div class="o_vk_add_stage" groups="vertikali_price_matrix.group_price_matrix_manager">
+                        <field name="sync_prices" widget="boolean_toggle" nolabel="1"/>
+                        <span class="o_vk_add_stage_label">ფასები ბინებზე</span>
+                        <span class="text-muted" invisible="sync_prices">
+                            გამორთულია - ეტაპის ფასი ბინებზე, CRM-სა და გაყიდვებში არ იწერება.</span>
+                        <span class="text-muted" invisible="not sync_prices">
+                            თავისუფალ ბინებს ფასი ტიპის მიმდინარე ეტაპს მიჰყვება (სხვაობა × ფართი).
+                            გაყიდული და დაჯავშნილი ბინები თავის ფასზე რჩება.</span>
+                    </div>
+                    <div class="o_vk_last_run" invisible="not last_generated">
+                        <div class="o_vk_card">
+                            <div class="o_vk_card_label"><i class="fa fa-clock-o" title="ბოლო ფორმირება"/> ბოლო ფორმირება</div>
+                            <field name="last_generated" readonly="1" nolabel="1" class="o_vk_card_value"/>
+                        </div>
+                        <div class="o_vk_card" invisible="not last_user_id">
+                            <div class="o_vk_card_label"><i class="fa fa-user-o" title="პასუხისმგებელი"/> პასუხისმგებელი</div>
+                            <field name="last_user_id" readonly="1" nolabel="1" widget="many2one_avatar"
+                                   options="{'no_open': True}" class="o_vk_card_value"/>
+                        </div>
+                        <div class="o_vk_card o_vk_card_wide" invisible="not last_reason">
+                            <div class="o_vk_card_label"><i class="fa fa-comment-o" title="მიზეზი"/> მიზეზი</div>
+                            <field name="last_reason" readonly="1" nolabel="1" class="o_vk_card_value"/>
+                        </div>
+                    </div>
+                    <!-- what the popup wrote; kept on the record, hidden here -->
+                    <field name="project" invisible="1"/>
+                    <field name="f_building" invisible="1"/>
+                    <field name="f_view_ids" invisible="1"/>
+                    <field name="f_layout_ids" invisible="1"/>
+                    <field name="f_type_ids" invisible="1"/>
+                    <field name="f_state_ids" invisible="1"/>
+                    <field name="active" invisible="1"/>
+                    <field name="currency_id" invisible="1"/>
+                    <notebook>
+                        <page string="ტიპები" name="lines">
+                            <!-- the stage columns from the table itself: switch on, and the
+                                 plus adds a column pair on the right, the minus takes it off -->
+                            <div class="o_vk_add_stage">
+                                <field name="add_stage_open" widget="boolean_toggle" nolabel="1"
+                                       groups="vertikali_price_matrix.group_price_matrix_manager"/>
+                                <span class="o_vk_add_stage_label"
+                                      groups="vertikali_price_matrix.group_price_matrix_manager">ცვლილება</span>
+                                <!-- the count is read by the table's columns and by the minus
+                                     button, so it stays in the arch, unseen: the table's own
+                                     headers already say how many stages there are (D-50) -->
+                                <field name="stage_count" invisible="1"/>
+                                <span class="o_vk_add_stage_form" invisible="not add_stage_open"
+                                      groups="vertikali_price_matrix.group_price_matrix_manager">
+                                    <button name="action_add_stages" type="object" string="ეტაპის დამატება"
+                                            class="btn-primary btn-sm" icon="fa-plus"/>
+                                    <button name="action_remove_last_stage" type="object" string="ბოლო ეტაპის მოხსნა"
+                                            class="btn-link btn-sm" icon="fa-minus" invisible="stage_count &lt; 2"
+                                            confirm="ბოლო ეტაპის სვეტები წაიშლება, მისი ბინები წინა ეტაპს დაუბრუნდება. გავაგრძელოთ?"/>
+                                    <span class="text-muted">სვეტები ყველა ტიპს დაემატება, წინა ეტაპის ფასით -
+                                        შემდეგ ცხრილში უსწორებ იმ ტიპებს, რომლებსაც ახალი ფასი უნდა.</span>
+                                </span>
+                            </div>
+                            <field name="line_ids" context="{'default_matrix_id': id}" class="o_vk_matrix_lines">
+                                <list editable="bottom" default_order="sequence, code" class="o_vk_matrix_lines">
+                                    <field name="sequence" widget="handle"/>
+                                    <field name="code" string="ტიპი"/>
+                                    <field name="qty_total" string="სულ" sum="სულ"/>
+                                    <field name="qty_sold" string="გაყიდული" sum="სულ" optional="show" readonly="unit_count"/>
+                                    <field name="qty_reserved" string="დაჯავშნილი" sum="სულ" optional="show" readonly="unit_count"/>
+                                    <field name="qty_taken" string="გაყიდ. + ჯავშ." sum="სულ" optional="hide"/>
+                                    <field name="qty_left" string="დარჩა" sum="სულ" optional="hide"/>
+                                    <field name="qty_taken_peak" string="მაქს. გაყიდ. + ჯავშ." optional="hide"/>
+                                    <field name="stage_label" string="მოქმედი ეტაპი" widget="badge"
+                                           decoration-info="1"/>
+                                    <field name="price_current" string="მიმდინარე ფასი" decoration-bf="1" decoration-info="1"/>
+                                    <field name="qty_to_next" string="შემდეგ ეტაპამდე (ბინა)" optional="hide"
+                                           decoration-bf="qty_to_next > 0" decoration-muted="qty_to_next == 0"/>
+                                    <field name="stage_manual" string="ეტაპის არჩევა"/>
+                                    <field name="qty_1" string="I რაოდ."/>
+                                    <field name="price_1" string="I ფასი" decoration-bf="stage_current == 1"/>
+                                    <field name="qty_2" string="II რაოდ." column_invisible="parent.stage_count &lt; 2"/>
+                                    <field name="price_2" string="II ფასი" column_invisible="parent.stage_count &lt; 2" decoration-bf="stage_current == 2"/>
+                                    <field name="qty_3" string="III რაოდ." column_invisible="parent.stage_count &lt; 3"/>
+                                    <field name="price_3" string="III ფასი" column_invisible="parent.stage_count &lt; 3" decoration-bf="stage_current == 3"/>
+                                    <field name="qty_4" string="IV რაოდ." column_invisible="parent.stage_count &lt; 4"/>
+                                    <field name="price_4" string="IV ფასი" column_invisible="parent.stage_count &lt; 4" decoration-bf="stage_current == 4"/>
+                                    <field name="qty_5" string="V რაოდ." column_invisible="parent.stage_count &lt; 5"/>
+                                    <field name="price_5" string="V ფასი" column_invisible="parent.stage_count &lt; 5" decoration-bf="stage_current == 5"/>
+                                    <field name="qty_6" string="VI რაოდ." column_invisible="parent.stage_count &lt; 6"/>
+                                    <field name="price_6" string="VI ფასი" column_invisible="parent.stage_count &lt; 6" decoration-bf="stage_current == 6"/>
+                                    <field name="qty_7" string="VII რაოდ." column_invisible="parent.stage_count &lt; 7"/>
+                                    <field name="price_7" string="VII ფასი" column_invisible="parent.stage_count &lt; 7" decoration-bf="stage_current == 7"/>
+                                    <field name="qty_8" string="VIII რაოდ." column_invisible="parent.stage_count &lt; 8"/>
+                                    <field name="price_8" string="VIII ფასი" column_invisible="parent.stage_count &lt; 8" decoration-bf="stage_current == 8"/>
+                                    <field name="qty_9" string="IX რაოდ." column_invisible="parent.stage_count &lt; 9"/>
+                                    <field name="price_9" string="IX ფასი" column_invisible="parent.stage_count &lt; 9" decoration-bf="stage_current == 9"/>
+                                    <field name="qty_10" string="X რაოდ." column_invisible="parent.stage_count &lt; 10"/>
+                                    <field name="price_10" string="X ფასი" column_invisible="parent.stage_count &lt; 10" decoration-bf="stage_current == 10"/>
+                                    <button name="action_open_units" type="object" icon="fa-building-o"
+                                            title="ამ ტიპის ბინები" invisible="not unit_count"/>
+                                    <field name="unit_count" column_invisible="True"/>
+                                    <field name="unit_ids" column_invisible="True"/>
+                                    <field name="stage_current" column_invisible="True"/>
+                                    <field name="stage_count" column_invisible="True"/>
+                                    <field name="currency_id" column_invisible="True"/>
+                                    <field name="auto" column_invisible="True"/>
+                                </list>
+                            </field>
+                        </page>
+                        <page string="შენიშვნა" name="note">
+                            <field name="note" placeholder="შიდა შენიშვნები"/>
+                        </page>
+                    </notebook>
+                </sheet>
+                <!-- stage changes and units that join or leave are posted here (D-71) -->
+                <chatter/>
+            </form>
+        </field>
+    </record>
+
+    <record id="vk_price_matrix_view_list" model="ir.ui.view">
+        <field name="name">vertikali.price.matrix.list</field>
+        <field name="model">vertikali.price.matrix</field>
+        <field name="arch" type="xml">
+            <list string="ფასების მატრიცები">
+                <field name="name"/>
+                <field name="project_id"/>
+                <field name="project" optional="hide"/>
+                <field name="stage_count"/>
+                <field name="line_count"/>
+                <field name="sync_prices" widget="boolean_toggle" readonly="1" optional="show"/>
+                <field name="active" string="აქტიური" widget="boolean_toggle" readonly="1" optional="hide"/>
+                <field name="last_generated" optional="show"/>
+                <field name="last_user_id" optional="show"/>
+                <field name="last_reason" optional="show"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="vk_price_matrix_view_search" model="ir.ui.view">
+        <field name="name">vertikali.price.matrix.search</field>
+        <field name="model">vertikali.price.matrix</field>
+        <field name="arch" type="xml">
+            <search string="ფასების მატრიცა">
+                <field name="name"/>
+                <field name="project_id"/>
+                <filter name="vk_sync" string="ფასები ბინებზე" domain="[('sync_prices', '=', True)]"/>
+                <separator/>
+                <filter name="vk_inactive" string="გამორთული" domain="[('active', '=', False)]"/>
+            </search>
+        </field>
+    </record>
+
+    <record id="vk_price_matrix_action" model="ir.actions.act_window">
+        <field name="name">ფასების მატრიცა</field>
+        <field name="res_model">vertikali.price.matrix</field>
+        <field name="view_mode">list,form</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">მატრიცა ჯერ არ არის</p>
+            <p>დააჭირე „New“ და აირჩიე პროექტი: ტიპები და მათი რაოდენობა თვითონ ჩაისმება, ეტაპებს და ფასებს ცხრილში წერ.</p>
+        </field>
+    </record>
+
+    <!-- ============ all lines in one table, across matrices (grouping, sums) ============ -->
+    <record id="vk_price_matrix_line_view_list" model="ir.ui.view">
+        <field name="name">vertikali.price.matrix.line.list</field>
+        <field name="model">vertikali.price.matrix.line</field>
+        <field name="arch" type="xml">
+            <list string="ტიპები" editable="bottom" create="0" default_order="matrix_id, sequence, code" class="o_vk_matrix_lines">
+                <field name="matrix_id" optional="show"/>
+                <field name="code" string="ტიპი"/>
+                <field name="block" optional="hide"/>
+                <field name="view_class" optional="hide"/>
+                <field name="layout" optional="hide"/>
+                <field name="qty_total" string="სულ" sum="სულ"/>
+                <field name="qty_sold" string="გაყიდული" sum="სულ" readonly="unit_count"/>
+                <field name="qty_reserved" string="დაჯავშნილი" sum="სულ" readonly="unit_count"/>
+                <field name="qty_taken" string="გაყიდ. + ჯავშ." sum="სულ" optional="hide"/>
+                <field name="qty_left" string="დარჩა" sum="სულ"/>
+                <field name="stage_label" string="მოქმედი ეტაპი" widget="badge"
+                       decoration-info="1"/>
+                <field name="price_current" string="მიმდინარე ფასი" decoration-bf="1" decoration-info="1"/>
+                <field name="qty_to_next" string="შემდეგ ეტაპამდე (ბინა)" decoration-bf="qty_to_next > 0" decoration-muted="qty_to_next == 0"/>
+                <field name="stage_manual" string="ეტაპის არჩევა"/>
+                <field name="qty_1" string="I რაოდ."/>
+                <field name="price_1" string="I ფასი" decoration-bf="stage_current == 1"/>
+                <field name="qty_2" string="II რაოდ."/>
+                <field name="price_2" string="II ფასი" decoration-bf="stage_current == 2"/>
+                <field name="qty_3" string="III რაოდ."/>
+                <field name="price_3" string="III ფასი" decoration-bf="stage_current == 3"/>
+                <field name="qty_4" string="IV რაოდ." optional="hide"/>
+                <field name="price_4" string="IV ფასი" optional="hide" decoration-bf="stage_current == 4"/>
+                <field name="qty_5" string="V რაოდ." optional="hide"/>
+                <field name="price_5" string="V ფასი" optional="hide" decoration-bf="stage_current == 5"/>
+                <field name="qty_6" string="VI რაოდ." optional="hide"/>
+                <field name="price_6" string="VI ფასი" optional="hide" decoration-bf="stage_current == 6"/>
+                <field name="qty_7" string="VII რაოდ." optional="hide"/>
+                <field name="price_7" string="VII ფასი" optional="hide" decoration-bf="stage_current == 7"/>
+                <field name="qty_8" string="VIII რაოდ." optional="hide"/>
+                <field name="price_8" string="VIII ფასი" optional="hide" decoration-bf="stage_current == 8"/>
+                <field name="qty_9" string="IX რაოდ." optional="hide"/>
+                <field name="price_9" string="IX ფასი" optional="hide" decoration-bf="stage_current == 9"/>
+                <field name="qty_10" string="X რაოდ." optional="hide"/>
+                <field name="price_10" string="X ფასი" optional="hide" decoration-bf="stage_current == 10"/>
+                <button name="action_open_units" type="object" icon="fa-building-o"
+                        title="ამ ტიპის ბინები" invisible="not unit_count"/>
+                <field name="unit_count" column_invisible="True"/>
+                <field name="stage_current" column_invisible="True"/>
+                <field name="stage_count" column_invisible="True"/>
+                <field name="currency_id" column_invisible="True"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="vk_price_matrix_line_view_search" model="ir.ui.view">
+        <field name="name">vertikali.price.matrix.line.search</field>
+        <field name="model">vertikali.price.matrix.line</field>
+        <field name="arch" type="xml">
+            <search string="ტიპები">
+                <field name="code"/>
+                <field name="matrix_id"/>
+                <filter name="vk_left" string="დარჩენილია" domain="[('qty_left', '>', 0)]"/>
+                <filter name="vk_out" string="ამოწურული" domain="[('qty_left', '&lt;=', 0)]"/>
+                <separator/>
+                <filter name="vk_g_matrix" string="მატრიცა" context="{'group_by': 'matrix_id'}"/>
+                <filter name="vk_g_block" string="კორპუსი" context="{'group_by': 'block'}"/>
+                <filter name="vk_g_view" string="ხედის კლასი" context="{'group_by': 'view_class'}"/>
+                <filter name="vk_g_layout" string="ოთახიანობა" context="{'group_by': 'layout'}"/>
+                <filter name="vk_g_stage" string="მოქმედი ეტაპი" context="{'group_by': 'stage_current'}"/>
+            </search>
+        </field>
+    </record>
+
+    <record id="vk_price_matrix_line_action" model="ir.actions.act_window">
+        <field name="name">ტიპები და ფასები</field>
+        <field name="res_model">vertikali.price.matrix.line</field>
+        <field name="view_mode">list</field>
+        <field name="context">{'create': False}</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">ტიპი ჯერ არ არის</p>
+            <p>ტიპები მატრიცის ბარათიდან იქმნება - „მატრიცის ფორმირება“ → „ბინებიდან თავიდან დათვლა“.</p>
+        </field>
+    </record>
+
+    <!-- ============================ the popup ============================ -->
+    <!-- One job: which units the table is built from, and how many stage
+         columns it carries. Quantities and prices are typed in the table
+         itself (D-45). -->
+    <record id="vk_price_matrix_wizard_view_form" model="ir.ui.view">
+        <field name="name">vertikali.price.matrix.wizard.form</field>
+        <field name="model">vertikali.price.matrix.wizard</field>
+        <field name="arch" type="xml">
+            <form string="მატრიცის ფორმირება">
+                <field name="matrix_id" invisible="1"/>
+                <div class="alert alert-info mb-3" role="status">
+                    ცხრილი ბინებიდან აიწყობა: თითო ტიპზე ერთი ხაზი, „სული“ და „გაყიდული“ ბინებიდან.
+                    <b>რაოდენობასა და ფასს ეტაპებზე ცხრილში წერ</b> - აქ მხოლოდ ეუბნები, რამდენი სვეტი იყოს.
+                </div>
+                <group>
+                    <group string="რომელი ბინები">
+                        <field name="project_id" options="{'no_create': True}"/>
+                        <field name="f_building" placeholder="ცარიელი = ყველა"/>
+                        <field name="f_view_ids" widget="many2many_tags" options="{'no_create': True}"
+                               placeholder="ცარიელი = ყველა"/>
+                        <field name="f_layout_ids" widget="many2many_tags" options="{'no_create': True}"
+                               placeholder="ცარიელი = ყველა"/>
+                        <field name="available_type_ids" invisible="1"/>
+                        <field name="f_type_ids" widget="many2many_tags" options="{'no_create': True}"
+                               placeholder="ცარიელი = ყველა"
+                               domain="[('id', 'in', available_type_ids)]"/>
+                        <field name="f_state_ids" widget="many2many_tags" options="{'no_create': True}"
+                               placeholder="ცარიელი = ყველა"/>
+                        <field name="unit_count" invisible="not project_id"/>
+                    </group>
+                    <group string="ცხრილი">
+                        <field name="stage_count"/>
+                        <field name="user_id" options="{'no_create': True}"/>
+                        <field name="reason" placeholder="მაგ. ახალი კორპუსი დაემატა"/>
+                    </group>
+                </group>
+                <footer>
+                    <button name="action_generate" type="object" string="დაგენერირება" class="btn-primary"/>
+                    <button string="დახურვა" class="btn-secondary" special="cancel"/>
+                </footer>
+            </form>
+        </field>
+    </record>
+
+    <!-- Building the table from the units: no longer a button on the form,
+         but the ⚙ Actions menu of a matrix (D-48). -->
+    <record id="vk_price_matrix_wizard_action" model="ir.actions.act_window">
+        <field name="name">ცხრილის აწყობა ბინებიდან</field>
+        <field name="res_model">vertikali.price.matrix.wizard</field>
+        <field name="view_mode">form</field>
+        <field name="target">new</field>
+        <field name="binding_model_id" ref="model_vertikali_price_matrix"/>
+        <field name="binding_view_types">form</field>
+    </record>
+
+    <!-- Its own app on the home screen -->
+    <menuitem id="vk_menu_price_matrix" name="ფასების მატრიცა" sequence="17"
+              web_icon="vertikali_price_matrix,static/description/icon.png"
+              groups="vertikali_price_matrix.group_price_matrix_user"/>
+    <menuitem id="vk_menu_price_matrix_matrices" name="მატრიცები"
+              parent="vk_menu_price_matrix" action="vk_price_matrix_action" sequence="10"/>
+    <menuitem id="vk_menu_price_matrix_lines" name="ტიპები და ფასები"
+              parent="vk_menu_price_matrix" action="vk_price_matrix_line_action" sequence="20"/>
+
+    <!-- ============================ ისტორია ============================ -->
+    <record id="vk_price_matrix_history_view_list" model="ir.ui.view">
+        <field name="name">vertikali.price.matrix.history.list</field>
+        <field name="model">vertikali.price.matrix.history</field>
+        <field name="arch" type="xml">
+            <list string="ისტორია" editable="bottom" create="0" delete="0" default_order="date desc, id desc">
+                <field name="date" readonly="1"/>
+                <field name="user_id" readonly="1"/>
+                <field name="code" readonly="1"/>
+                <field name="field" readonly="1"/>
+                <field name="old_value" readonly="1" decoration-muted="1"/>
+                <field name="new_value" readonly="1" decoration-bf="1"/>
+                <field name="reason" placeholder="მიზეზი შემდეგაც შეიძლება ჩაიწეროს"/>
+                <field name="matrix_id" column_invisible="True"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="vk_price_matrix_history_view_search" model="ir.ui.view">
+        <field name="name">vertikali.price.matrix.history.search</field>
+        <field name="model">vertikali.price.matrix.history</field>
+        <field name="arch" type="xml">
+            <search string="ისტორია">
+                <field name="code"/>
+                <field name="field"/>
+                <field name="user_id"/>
+                <field name="reason"/>
+                <filter name="vk_prices" string="ფასები" domain="[('field', 'ilike', 'ფასი')]"/>
+                <filter name="vk_forms" string="ფორმირებები" domain="[('field', '=', 'მატრიცის ფორმირება')]"/>
+                <separator/>
+                <filter name="vk_g_code" string="ტიპი" context="{'group_by': 'code'}"/>
+                <filter name="vk_g_user" string="ვინ" context="{'group_by': 'user_id'}"/>
+                <filter name="vk_g_day" string="დღე" context="{'group_by': 'date:day'}"/>
+            </search>
+        </field>
+    </record>
+
+    <!-- ============================ ტიპები (catalogue) ============================ -->
+    <record id="vk_price_matrix_type_view_list" model="ir.ui.view">
+        <field name="name">vertikali.price.matrix.type.list</field>
+        <field name="model">vertikali.price.matrix.type</field>
+        <field name="arch" type="xml">
+            <list string="ტიპები" editable="bottom">
+                <field name="sequence" widget="handle"/>
+                <field name="code"/>
+                <field name="block"/>
+                <field name="view_class"/>
+                <field name="layout"/>
+                <field name="note" optional="show"/>
+                <field name="active" widget="boolean_toggle"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="vk_price_matrix_type_action" model="ir.actions.act_window">
+        <field name="name">ტიპები</field>
+        <field name="res_model">vertikali.price.matrix.type</field>
+        <field name="view_mode">list</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">ტიპი ჯერ არ არის</p>
+            <p>ტიპები ექსელის ატვირთვისას და ფორმირებისას თვითონ ჩნდება; აქ დაამატებ ან გადაარქმევ.</p>
+        </field>
+    </record>
+
+    <menuitem id="vk_menu_price_matrix_config" name="კონფიგურაცია"
+              parent="vk_menu_price_matrix" sequence="90"
+              groups="vertikali_price_matrix.group_price_matrix_manager"/>
+    <menuitem id="vk_menu_price_matrix_types" name="ტიპები"
+              parent="vk_menu_price_matrix_config" action="vk_price_matrix_type_action" sequence="10"/>
+
+</odoo>
