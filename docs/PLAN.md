@@ -1,10 +1,11 @@
-<!-- last-synced: 2026-09-15, commit: faac26e -->
+<!-- last-synced: 2026-09-29, commit: 07956eb -->
 # PLAN — მომდევნო ეტაპები
 
 წესი: ამ ფაილს მომხმარებელი ამტკიცებს კოდის დაწყებამდე; თითო ნაბიჯი ერთ სესიაში სრულდება.
 
 ## M-URGENT — SSH-ის აღდგენისთანავე (ბლოკერი: fail2ban-ის ბანი ამ სამუშაო მანქანაზე)
-- [ ] მომხმარებელმა სერვერზე: `sudo fail2ban-client banned` + `sudo fail2ban-client unban --all`
+- [x] მომხმარებელმა სერვერზე: unban (2026-09-29-ს SSH კვლავ მუშაობს; ⚠️ თუ fail2ban
+      გაჩერებით მოხდა, `systemctl start fail2ban` ისევ ჩასართავია)
 - [ ] vertikali_payment_calc v19.0.1.2.0 დეპლოი (ბალონის თვის წესი; ფაილები მზადაა
       `C:\Users\dchac\Desktop\vs code\vertikali_payment_calc`-ში, main-ზეც d6aeab3) →
       upgrade (module id=1450) → latest_version-შემოწმება → RPC-ტესტი (218,800/10-10-80,
@@ -40,6 +41,6 @@
 - [ ] figurebi_installment_data მოდულში ამავე წესების ასახვა (ჯერ v2.1.2-ის დონეზეა ჩამორჩენილი)
 
 ## Status
-Last session 2026-09-15: ბინის სვეტი+ფილტრი გაყიდვების სიებში (სვეტი manual 2448/2449-ით, ფილტრი სტანდარტული „Product"-ით, სათაურის mojibake გასწორდა); calc-მოდულის fold-წესი კოდში/main-ზე მზადაა, სერვერზე ვერ ავიდა.
-next: M-URGENT — fail2ban-ის unban მომხმარებლისგან → calc-დეპლოი + ტესტი → ბინის სვეტის მოდულში გადატანა (manual 2448/2449 წაშლით); მერე M0.
-watch out: სერვერზე calc v19.0.1.1.0-ია (ძველი!); fail2ban ბანებს რესტარტის მერეც ინახავს (sqlite); PS1 ქართულით ყოველთვის BOM-ით; data-მოდული v2.1.2-ზეა ჩამორჩენილი; repo public-ია.
+Last session 2026-09-29: vertikali_price_matrix v19.0.13.0.2 გადმოტანილია coral@0af0f3e-დან verbatim (main 9990125) და დაყენებულია სერვერზე; ტესტები გავიდა (ფასები/წერილები უცვლელი, sync_prices გამორთული); SSH აღდგა.
+next: M-URGENT-ის დარჩენილი ორი პუნქტი — calc v19.0.1.2.0 დეპლოი (სერვერზე ისევ v1.1.0-ია!) და ბინის სვეტის მოდულში გადატანა (manual 2448/2449 წაშლით) — SSH ახლა მუშაობს, პირველივე სესიაზე გასაკეთებელია; მერე M0.
+watch out: sync_prices („ფასები ბინებზე") არ ჩაირთოს user-ის ნებართვის გარეშე; wincred ახლა dlabadze-ა — refreshg-push მხოლოდ PAT-ით; fail2ban შესაძლოა გაჩერებულია — ჩასართავია; PS1 ქართულით BOM-ით; data-მოდული ჩამორჩენილია.

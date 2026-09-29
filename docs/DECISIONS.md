@@ -1,4 +1,4 @@
-<!-- last-synced: 2026-09-15, commit: faac26e -->
+<!-- last-synced: 2026-09-29, commit: 07956eb -->
 # Architecture Decision Records
 
 ### D-1: Calculator lives on sale.order, not crm.lead
@@ -55,3 +55,6 @@ Date: 2026-09-11 (user chose via question) · Context: the CRM "განვა�
 
 ### D-18: Interim UI changes via manual ir.ui.view records while SSH is down
 Date: 2026-09-15 · Context: file deploys need SSH; sshd rejected this workstation (fail2ban ban persisted across restarts via its sqlite db). Decision: the flat column on sale lists shipped as manual view records (ids 2448/2449) over RPC — the staging-era mechanism; flat FILTERING needed nothing (standard "Product" search entry already covers `order_line.product_id`). Consequence: fold into module views and delete 2448/2449 on the next SSH deploy. Lesson recorded: PS1 with Georgian must be UTF-8 BOM even in scratchpad — a BOM-less script mojibake'd the column label once.
+
+### D-19: vertikali_price_matrix ported verbatim; missing-vertikali features left dormant
+Date: 2026-09-29 (user first said "adapt", resolved as zero-diff) · Context: coral@0af0f3e's price matrix expects vk_manual_state and a 'notforsale' vk_state value; the target's older vertikali (19.0.3.5.3) has neither. Audit showed both usages are harmless without them (a `f in vals` tuple check and a comparison that can never match), so the module was copied byte-identical — the "not for sale" feature simply stays dormant until vertikali is upgraded, and a future upgrade cannot collide with local edits. Rejected: adding the field/selection from the matrix module (would clash with the eventual vertikali upgrade); stripping the code (needless fork). Consequence: sync_prices must stay OFF until the user allows it; commit on main is coral-style one-line ("price matrix: add ...", 9990125).

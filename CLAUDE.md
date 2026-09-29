@@ -654,8 +654,9 @@ One task at a time; standard Odoo solution checked before custom code (standard-
 ## Git
 - Remote `origin`: https://github.com/refreshg/fmg_flats_figurebi.git (company repo; vertikali lives on `main`)
 - Our work: branch **`figurebi`** (local = remote name) — NEVER push to `main`
-- Routine: `git pull` BEFORE starting work → commit → `git push` (plain commands work;
-  credential.helper=wincred is set in repo config, PAT backup in SECRETS.local.md)
+- Routine: `git pull` BEFORE starting work → commit → push. ⚠️ wincred now holds dlabadze's
+  identity (since the coral clone) — push to refreshg with the PAT from SECRETS.local.md:
+  `git -c credential.helper= push https://x-access-token:<PAT>@github.com/refreshg/fmg_flats_figurebi.git <branch>`
 - ⚠️ repo is currently public — no secrets in tracked files, ever
 
 ## Docs map

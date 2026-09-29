@@ -1,4 +1,4 @@
-<!-- last-synced: 2026-09-15, commit: faac26e -->
+<!-- last-synced: 2026-09-29, commit: 07956eb -->
 # Architecture — figurebi_installment
 
 ## Components
@@ -41,6 +41,7 @@ flowchart TD
 - Reads `vk_area_total` from the third-party `vertikali` module when present (soft dependency via getattr)
 
 ## Deployment topology
-- On-premise (production): the Python module in `/opt/odoo/custom-addons`; deploy = pscp + sudo cp + restart + RPC upgrade
+- On-premise (production): the Python module in `/opt/odoo/custom-addons`; deploy = pscp + sudo cp + restart + RPC upgrade.
+  Neighbours in the same addons dir (separate codebases, own docs): `vertikali`, `vertikali_payment_calc`, `vertikali_price_matrix` (from coral@0af0f3e, D-19)
 - Odoo.sh staging (demo): same behavior rebuilt as manual x_ records via `scripts/*.ps1` (no module; the two must never meet on one DB)
 - SaaS fallback: `figurebi_installment_data` (XML/CSV only, untested)
