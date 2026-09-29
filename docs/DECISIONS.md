@@ -1,4 +1,4 @@
-<!-- last-synced: 2026-09-03, commit: 1dd67a2 -->
+<!-- last-synced: 2026-09-15, commit: faac26e -->
 # Architecture Decision Records
 
 ### D-1: Calculator lives on sale.order, not crm.lead
@@ -49,3 +49,9 @@ Date: 2026-09-03, revised same day · Context: Odoo 19's humanized date display 
 
 ### D-16: Sales are VAT-free (Excel parity)
 Date: 2026-09-03 · Context: flats carried the default 15% tax; x_final_total (tax-incl.) diverged from the Excel reference. Decision: taxes cleared on all 126 flat products + open quote lines (RPC); the user then zeroed the default tax record itself (account.tax id=1 → "0%"/0.0), so new products stay harmless. Consequence: restore that record to 15 if real VAT is ever needed.
+
+### D-17: Balloon-month rule ported into vertikali_payment_calc, shipped on main
+Date: 2026-09-11 (user chose via question) · Context: the CRM "განვადების კალკულატორი" dialog turned out to live in a separate module `vertikali_payment_calc` (folder `C:\Users\dchac\Desktop\vs code\vertikali_payment_calc`, previously in no git repo), not in vertikali. Decision: the fold rule goes into the owning module's `_schedule_rows` (mirrors D-14), and the whole module was committed to the company repo's `main` (d6aeab3) — its first commit. Rejected: cross-module override from figurebi_installment; server-only patch. Consequence: the other developer must be told main gained a module; deploy to the server was still pending as of 2026-09-15 (SSH ban).
+
+### D-18: Interim UI changes via manual ir.ui.view records while SSH is down
+Date: 2026-09-15 · Context: file deploys need SSH; sshd rejected this workstation (fail2ban ban persisted across restarts via its sqlite db). Decision: the flat column on sale lists shipped as manual view records (ids 2448/2449) over RPC — the staging-era mechanism; flat FILTERING needed nothing (standard "Product" search entry already covers `order_line.product_id`). Consequence: fold into module views and delete 2448/2449 on the next SSH deploy. Lesson recorded: PS1 with Georgian must be UTF-8 BOM even in scratchpad — a BOM-less script mojibake'd the column label once.

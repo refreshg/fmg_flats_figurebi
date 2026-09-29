@@ -560,6 +560,23 @@ oddo-თი წაუკითხავია — ყველაფერს su
   სერვერზე ჯერ კიდევ არაა — v19.0.1.1.0 დგას; ბლოკერი: sshd TCP-ს იღებს, banner არ მოდის
   (სავარაუდოდ fail2ban/გაჭედილი sshd) — საჭიროა კონსოლიდან `systemctl restart ssh` + fail2ban
 
+## ფასების მატრიცა coral-იდან (2026-09-29, vertikali_price_matrix v19.0.13.0.2) ✅
+
+- გადმოტანილია **verbatim** coral@0af0f3e-დან (odoo.sh) მხოლოდ `vertikali_price_matrix/`;
+  main-ზე commit **9990125** („price matrix: add ...", coral-ის სტილში, ერთხაზიანი);
+  სერვერზე დაყენებულია: ir.module id=**1451**, state=installed, v19.0.13.0.2 ✓
+- **მორგება არ დასჭირდა**: სამიზნის ძველი vertikali-ის (v19.0.3.5.3) ორი ნაკლი უვნებელია —
+  `vk_manual_state` მხოლოდ VK_MATRIX_FIELDS tuple-შია (`f in vals`), `notforsale` შედარება
+  ვერასდროს დაემთხვევა → „არ იყიდება" ფუნქცია მიძინებულია vertikali-ის განახლებამდე
+- ტესტები: მენიუ „ფასების მატრიცა" ✓; Manager-ჯგუფი მხოლოდ admin ✓; სატესტო მატრიცა
+  (პროექტი Green Quarter) შეიქმნა/წაიშალა; sync_prices=False (⚠️ **არ ჩართო** — list_price-ს
+  შეცვლის!); 126 ბინის list_price ჯამი უცვლელი (24,198,300) ✓; mail.mail 40→40 ✓
+- ⚠️ RPC-create-ზე line_ids ცარიელია (ხაზებს UI-ის onchange აშენებს) — UI-ტესტი
+  („New" → პროექტი → ტიპები unit_count-ით) მომხმარებელმა ვიზუალურად დაადასტუროს
+- ⚠️ wincred-ში GitHub-ავტორიზაცია coral-ის კლონის მერე **dlabadze**-ზეა — refreshg-ზე
+  push-ები ახლა PAT-ით კეთდება (SECRETS.local.md); ⚠️ თუ fail2ban გაჩერებული დარჩა,
+  სერვერზე `sudo systemctl start fail2ban` ისევ ჩასართავია
+
 ## შემდეგი ნაბიჯები (2026-09-02 სესიის ბოლოს)
 
 1. **CRM მენეჯერები** ახალ სერვერზე: Settings → CRM → FIGUREBI — რეალური მენეჯერების არჩევა
@@ -598,8 +615,10 @@ oddo-თი წაუკითხავია — ყველაფერს su
   `plink oddo@192.168.100.71 "echo <ssh-pwd> | sudo -S sh -c 'cp -r /home/oddo/figurebi_installment /opt/odoo/custom-addons/ && chown -R odoo:odoo /opt/odoo/custom-addons/figurebi_installment && systemctl restart odoo'"`
 - Upgrade module: JSON-RPC `ir.module.module.button_immediate_upgrade [[1449]]` (db `odoo`, uid 2, API key as password);
   ALWAYS read back `latest_version` afterwards — "UPGRADE OK" also passes when the file never reached the server
-- SSH: only LAN `192.168.100.71:22` works; public `46.233.53.183:2222` accepts TCP but is NOT SSH
-  (closes on handshake — tested 2026-09-04). On LAN dropouts: retry, transient.
+- SSH: only LAN `192.168.100.71:22` works; public `46.233.53.183:2222` accepts TCP but is NOT SSH.
+  "Connection reset" before the banner = fail2ban ban on THIS machine's IP — bans survive
+  restarts (sqlite db); fix from the server: `sudo fail2ban-client unban --all`. Stop retrying
+  while banned — every attempt refreshes it.
 - Logs: `plink ... "echo <ssh-pwd> | sudo -S tail -50 /var/log/odoo/odoo.log"`
 - Odoo shell (debugging): `sudo -u odoo /opt/odoo/odoo-19/venv/bin/python /opt/odoo/odoo-19/odoo-bin shell -c /etc/odoo/odoo.conf -d odoo --no-http < script.py`
 - Tests: none automated — user tests functionally in the UI after each deploy

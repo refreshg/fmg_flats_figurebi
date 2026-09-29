@@ -1,4 +1,4 @@
-<!-- last-synced: 2026-09-03, commit: 345d4d9 -->
+<!-- last-synced: 2026-09-15, commit: faac26e -->
 # Architecture — figurebi_installment
 
 ## Components

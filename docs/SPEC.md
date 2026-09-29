@@ -1,4 +1,4 @@
-<!-- last-synced: 2026-09-03, commit: 1dd67a2 -->
+<!-- last-synced: 2026-09-15, commit: faac26e -->
 # Technical spec — figurebi_installment (Odoo 19)
 
 Module `figurebi_installment` v19.0.2.4.0, depends: `sale_management`, `crm`.

@@ -1,7 +1,17 @@
-<!-- last-synced: 2026-09-03, commit: 1dd67a2 -->
+<!-- last-synced: 2026-09-15, commit: faac26e -->
 # PLAN — მომდევნო ეტაპები
 
 წესი: ამ ფაილს მომხმარებელი ამტკიცებს კოდის დაწყებამდე; თითო ნაბიჯი ერთ სესიაში სრულდება.
+
+## M-URGENT — SSH-ის აღდგენისთანავე (ბლოკერი: fail2ban-ის ბანი ამ სამუშაო მანქანაზე)
+- [ ] მომხმარებელმა სერვერზე: `sudo fail2ban-client banned` + `sudo fail2ban-client unban --all`
+- [ ] vertikali_payment_calc v19.0.1.2.0 დეპლოი (ბალონის თვის წესი; ფაილები მზადაა
+      `C:\Users\dchac\Desktop\vs code\vertikali_payment_calc`-ში, main-ზეც d6aeab3) →
+      upgrade (module id=1450) → latest_version-შემოწმება → RPC-ტესტი (218,800/10-10-80,
+      end 04/30/2027 → 7 რიგი და არა 8)
+- [ ] ბინის სვეტი მოდულში: figurebi_installment/views/sale_order_views.xml-ს დაემატოს ორი
+      list-inherit (sale.view_quotation_tree + sale.view_order_tree, x_object_ref optional) →
+      ვერსია 19.0.2.4.1 → დეპლოი → **manual ვიუების 2448/2449 წაშლა დეპლოის წინ**
 
 ## M0 — პროდაქშენის კონფიგურაცია (კოდის გარეშე, მომხმარებლის ხელით)
 - [ ] Settings → CRM → FIGUREBI: რეალური EN/KA მენეჯერების არჩევა (crm_lead.py ამის გარეშე ლიდებს არ ანაწილებს)
@@ -30,6 +40,6 @@
 - [ ] figurebi_installment_data მოდულში ამავე წესების ასახვა (ჯერ v2.1.2-ის დონეზეა ჩამორჩენილი)
 
 ## Status
-Last session 2026-09-03: v19.0.2.4.0 დგას სერვერზე (ბალონის თვის წესი, 4 ათწილადი, figurebi_date ვიჯეტი — თვე სიტყვით+წლით, schedule-end ფიქსი, დღგ მოხსნილი); ყველაფერი დაკომიტებული და აწეულია GitHub-ზე.
-next: M0 — CRM მენეჯერები და ლოგო Settings-ში (მომხმარებლის ხელით); მომხმარებელმა ვიზუალურად დაადასტუროს ვიჯეტი (Ctrl+Shift+R); შემდეგ M1 ბინების იმპორტი.
-watch out: data-მოდული v2.1.2-ზეა ჩამორჩენილი; საჯარო 2222 SSH არაა (მხოლოდ LAN); deploy-ს ბოლოს ყოველთვის latest_version შეამოწმე; repo public-ია.
+Last session 2026-09-15: ბინის სვეტი+ფილტრი გაყიდვების სიებში (სვეტი manual 2448/2449-ით, ფილტრი სტანდარტული „Product"-ით, სათაურის mojibake გასწორდა); calc-მოდულის fold-წესი კოდში/main-ზე მზადაა, სერვერზე ვერ ავიდა.
+next: M-URGENT — fail2ban-ის unban მომხმარებლისგან → calc-დეპლოი + ტესტი → ბინის სვეტის მოდულში გადატანა (manual 2448/2449 წაშლით); მერე M0.
+watch out: სერვერზე calc v19.0.1.1.0-ია (ძველი!); fail2ban ბანებს რესტარტის მერეც ინახავს (sqlite); PS1 ქართულით ყოველთვის BOM-ით; data-მოდული v2.1.2-ზეა ჩამორჩენილი; repo public-ია.
